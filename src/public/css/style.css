@@ -1,579 +1,526 @@
-/* ============================================
-   TINY RECIBO PRO — Styles
-   ============================================ */
-
+/* ===================== TINY RECIBO PRO - V2.4 (FIX LINHAS PDF) ===================== */
 :root {
-  --bg-app: #0f0f13;
-  --bg-sidebar: #16161d;
-  --bg-preview: #1c1c26;
-  --bg-input: #21212e;
-  --bg-hover: #2a2a3a;
-
-  --text-primary: #e8e6f0;
-  --text-secondary: #8b89a0;
-  --text-muted: #5c5a6e;
-
-  --accent: #e94560;
-  --accent-glow: rgba(233, 69, 96, 0.15);
-  --accent-hover: #ff5a75;
-  --success: #2ecc71;
-  --warning: #f39c12;
-
-  --border: #2a2a3a;
-  --radius: 10px;
-  --radius-sm: 6px;
-
-  --font-body: 'DM Sans', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* Recibo (light theme within dark app) */
-  --recibo-bg: #ffffff;
-  --recibo-text: #1a1a2e;
-  --recibo-text-secondary: #64607a;
-  --recibo-border: #e8e6f0;
-  --recibo-accent: #1a1a2e;
-  --recibo-accent-color: #e94560;
+    --bg: #0f0f13;
+    --bg2: #16161d;
+    --bg3: #1c1c26;
+    --bg-input: #21212e;
+    --bg-hover: #2a2a3a;
+    --text: #e8e6f0;
+    --text2: #8b89a0;
+    --text3: #5c5a6e;
+    --accent: #e94560;
+    --accent-glow: rgba(233, 69, 96, .15);
+    --accent2: #ff5a75;
+    --green: #2ecc71;
+    --border: #2a2a3a;
+    --r: 10px;
+    --rs: 6px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  font-family: var(--font-body);
-  background: var(--bg-app);
-  color: var(--text-primary);
-  overflow: hidden;
-  height: 100vh;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
 }
 
-/* ---- App Layout ---- */
+/* ---- Sidebar e Interface (Mantido igual) ---- */
 .app {
-  display: flex;
-  height: 100vh;
+    display: flex;
+    height: 100vh;
 }
 
-/* ---- Sidebar ---- */
 .sidebar {
-  width: 340px;
-  min-width: 340px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
+    width: 340px;
+    min-width: 340px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
 }
 
 .sidebar-header {
-  padding: 24px 24px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-icon {
-  font-size: 28px;
-  line-height: 1;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--border);
 }
 
 .brand h1 {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
-.brand-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
 }
 
 .sidebar-content {
-  flex: 1;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  overflow-y: auto;
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
 }
 
 .sidebar-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ---- Inputs ---- */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
 }
 
 .input-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.input-row {
-  display: flex;
-  gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    display: block;
 }
 
 .input-row input {
-  flex: 1;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.input-row input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-.input-row input::placeholder {
-  color: var(--text-muted);
-}
-
-.input-hint {
-  font-size: 11px;
-  color: var(--text-muted);
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--rs);
+    padding: 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    outline: none;
 }
 
 #btnGerar {
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 10px 20px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  white-space: nowrap;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--rs);
+    padding: 10px 20px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-#btnGerar:hover {
-  background: var(--accent-hover);
-}
-
-#btnGerar:active {
-  transform: scale(0.97);
-}
-
-/* ---- Toggle Group ---- */
 .toggle-group {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-input);
-  border-radius: var(--radius-sm);
-  padding: 3px;
+    display: flex;
+    background: var(--bg-input);
+    border-radius: var(--rs);
+    padding: 3px;
 }
 
 .toggle {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: var(--text2);
+    cursor: pointer;
+    border-radius: 4px;
 }
 
 .toggle.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* ---- Error Box ---- */
-.error-box {
-  background: rgba(233, 69, 96, 0.1);
-  border: 1px solid rgba(233, 69, 96, 0.3);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  font-size: 13px;
-  color: var(--accent);
-  line-height: 1.5;
-}
-
-/* ---- Export Actions ---- */
-.export-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.export-actions h3 {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+    background: var(--accent);
+    color: #fff;
 }
 
 .btn-export {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px;
+    border-radius: var(--rs);
+    cursor: pointer;
+    text-align: left;
 }
 
-.btn-export:hover {
-  background: var(--bg-hover);
-  border-color: var(--accent);
+.upload-dropzone {
+    border: 1px dashed var(--border);
+    padding: 20px;
+    text-align: center;
+    border-radius: var(--rs);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 12px;
 }
 
-/* ---- Spinner ---- */
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+.uploaded-item {
+    background: var(--bg-input);
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 4px;
+    color: var(--green);
+    margin: 2px;
+    display: inline-block;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ---- Preview Area ---- */
+/* Preview Area */
 .preview-area {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  overflow-y: auto;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 50%, rgba(69, 96, 233, 0.03) 0%, transparent 50%),
-    var(--bg-preview);
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    overflow-y: auto;
+    background: #222;
 }
 
-/* ---- Empty State ---- */
 .empty-state {
-  text-align: center;
-  color: var(--text-muted);
+    text-align: center;
+    color: var(--text3);
+    margin-top: 20vh;
 }
 
 .empty-icon {
-  font-size: 56px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+    font-size: 56px;
+    margin-bottom: 16px;
+    opacity: .5;
 }
 
-.empty-state h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text-secondary);
-}
-
-.empty-state p {
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* ============================================
-   RECIBO — Design profissional (light)
-   ============================================ */
-
+/* ==========================================================================
+   RECIBO - MAGIC FIREWORKS
+   ========================================================================== */
 .recibo-wrapper {
-  width: 100%;
-  max-width: 520px;
-  animation: fadeUp 0.4s ease;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+    width: 100%;
+    max-width: 210mm;
 }
 
 .recibo {
-  background: var(--recibo-bg);
-  color: var(--recibo-text);
-  border-radius: 12px;
-  padding: 40px 36px;
-  box-shadow:
-    0 4px 24px rgba(0,0,0,0.3),
-    0 0 0 1px rgba(255,255,255,0.05);
-  font-size: 13px;
-  line-height: 1.5;
+    background: #fff;
+    color: #000;
+    padding: 15mm;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+    font-family: 'Arial', sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 400;
 }
 
-/* Recibo Header */
-.recibo-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 8px;
+/* LOGO */
+.r-logo-circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
 }
 
-.recibo-logo-area {
-  flex-shrink: 0;
-}
-
-.recibo-logo {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.recibo-empresa h2 {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--recibo-accent);
-  margin-bottom: 2px;
-}
-
-.recibo-cnpj {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--recibo-text-secondary);
-  margin-bottom: 4px;
-}
-
-.recibo-info-detalhe {
-  font-size: 12px;
-  color: var(--recibo-text-secondary);
-}
-
-/* Divider */
-.recibo-divider {
-  height: 1px;
-  background: var(--recibo-border);
-  margin: 20px 0;
-}
-
-/* Titulo */
-.recibo-titulo {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.recibo-titulo h3 {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--recibo-accent-color);
-  margin-bottom: 8px;
-}
-
-.recibo-meta {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  font-size: 12px;
-  color: var(--recibo-text-secondary);
-}
-
-.recibo-meta strong {
-  color: var(--recibo-text);
-  font-family: var(--font-mono);
-}
-
-/* Sections */
-.recibo-section {
-  margin-bottom: 18px;
-}
-
-.recibo-section h4 {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--recibo-text-secondary);
-  margin-bottom: 8px;
-}
-
-.recibo-cliente-info p {
-  font-size: 13px;
-}
-
-.recibo-cliente-info .recibo-info-detalhe {
-  margin-top: 2px;
-}
-
-/* Table */
-.recibo-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.recibo-table thead {
-  border-bottom: 2px solid var(--recibo-accent);
-}
-
-.recibo-table th {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--recibo-text-secondary);
-  padding: 8px 0;
-  text-align: left;
-}
-
-.recibo-table th.col-qtd,
-.recibo-table th.col-unit,
-.recibo-table th.col-total {
-  text-align: right;
-}
-
-.recibo-table td {
-  padding: 10px 0;
-  border-bottom: 1px solid #f0eef5;
-  font-size: 13px;
-  vertical-align: top;
-}
-
-.recibo-table td.col-qtd,
-.recibo-table td.col-unit,
-.recibo-table td.col-total {
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.recibo-table td.col-desc {
-  padding-right: 12px;
-}
-
-.recibo-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* Totais */
-.recibo-totais {
-  border-top: 2px solid var(--recibo-accent);
-  padding-top: 12px;
-  margin-bottom: 18px;
-}
-
-.recibo-totais-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 13px;
-}
-
-.recibo-totais-row span:last-child {
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-
-.valor-desconto {
-  color: var(--recibo-accent-color);
-}
-
-.recibo-totais-final {
-  padding-top: 10px;
-  margin-top: 6px;
-  border-top: 1px solid var(--recibo-border);
-  font-weight: 700;
-  font-size: 16px !important;
-}
-
-.recibo-totais-final span:last-child {
-  font-size: 16px !important;
-  color: var(--recibo-accent);
-}
-
-/* Pagamento */
-.recibo-pagamento {
-  text-align: center;
-}
-
-.recibo-pagamento-badge {
-  display: inline-block;
-  background: #f5f3fa;
-  border-radius: 20px;
-  padding: 8px 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--recibo-text-secondary);
-}
-
-/* Observações */
-.recibo-obs-text {
-  font-size: 12px;
-  color: var(--recibo-text-secondary);
-  font-style: italic;
-  line-height: 1.6;
-}
-
-/* Footer */
-.recibo-footer {
-  text-align: center;
-}
-
-.recibo-mensagem {
-  font-size: 12px;
-  color: var(--recibo-text-secondary);
-  font-weight: 500;
-  margin-top: 4px;
-}
-
-/* ---- Responsive ---- */
-@media (max-width: 768px) {
-  .app {
-    flex-direction: column;
-  }
-  .sidebar {
+.r-logo-circle img {
     width: 100%;
-    min-width: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidebar-content {
-    padding: 16px;
-  }
-  .preview-area {
-    padding: 20px;
-    overflow-y: auto;
-  }
-  .recibo {
-    padding: 28px 24px;
-  }
-  body {
-    overflow: auto;
-    height: auto;
-  }
+    height: 100%;
+    object-fit: cover;
+}
+
+/* CABEÇALHO */
+.doc-header-table {
+    width: 100%;
+    margin-bottom: 25px;
+    border-collapse: collapse;
+}
+
+.doc-header-table td {
+    vertical-align: middle;
+    padding: 0;
+    border: none !important;
+}
+
+#rEmpresaNome {
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+    margin-bottom: 5px;
+}
+
+.doc-info {
+    font-size: 12px;
+    color: #333;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* CAIXA DE NÚMERO */
+.doc-box-number {
+    border: 2px solid #000;
+    padding: 10px;
+    text-align: center;
+    min-width: 140px;
+    display: inline-block;
+    background: #fff;
+}
+
+.doc-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+}
+
+.doc-big-num {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 5px 0;
+    color: #000;
+}
+
+.doc-date {
+    border-top: 1px solid #000;
+    padding-top: 4px;
+    font-weight: 400;
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* DADOS CLIENTE */
+.doc-info-section {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+    padding: 12px 0;
+    margin-bottom: 20px;
+}
+
+.doc-grid {
+    display: flex;
+    justify-content: space-between;
+}
+
+.doc-col {
+    width: 48%;
+}
+
+.info-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 13px;
+    font-weight: 400;
+    color: #000;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+/* TABELA DE ITENS (VISUAL NA TELA) */
+.r-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 11px;
+}
+
+.r-table thead th {
+    background-color: #000 !important;
+    color: #fff !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 10px 8px;
+    border: 1px solid #000;
+    text-align: left;
+}
+
+.r-table td {
+    border: 1px solid #999;
+    border-bottom: 1px solid #000;
+    padding: 8px;
+    vertical-align: middle;
+    color: #000;
+    font-weight: 400;
+}
+
+/* Colunas */
+.c-img {
+    width: 75px;
+    text-align: center;
+    padding: 4px !important;
+}
+
+.c-item {
+    width: 35px;
+    text-align: center;
+}
+
+.c-sku {
+    width: 90px;
+    font-family: var(--mono);
+    font-size: 11px;
+}
+
+.c-desc {
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.c-qtd, .c-un {
+    text-align: center;
+}
+
+.c-preco, .c-total {
+    text-align: right;
+    font-family: var(--mono);
+}
+
+.prod-thumb {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+    border: 1px solid #eee;
+    background: #fff;
+    display: block;
+    margin: 0 auto;
+}
+
+/* TOTAIS */
+.totals-area {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.totals-table {
+    width: 280px;
+    border-collapse: collapse;
+}
+
+.totals-table td {
+    padding: 5px;
+    text-align: right;
+    font-size: 12px;
+    border: none;
+}
+
+.totals-label {
+    font-weight: 700;
+}
+
+.totals-value {
+    border-bottom: 1px solid #ccc !important;
+    font-family: var(--mono);
+    width: 120px;
+}
+
+.final-row td {
+    background: #000 !important;
+    color: #fff !important;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px;
+    border: 1px solid #000 !important;
+}
+
+/* RODAPÉ */
+.section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 1px solid #000;
+    margin-bottom: 8px;
+    color: #000;
+}
+
+.doc-obs-box {
+    border: 1px solid #000;
+    padding: 10px;
+    font-size: 11px;
+    min-height: 40px;
+    font-style: italic;
+    background: #fff;
+}
+
+.doc-footer {
+    margin-top: 30px;
+    border-top: 2px solid #000;
+    padding-top: 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   SOLUÇÃO DEFINITIVA PARA IMPRESSÃO (PDF)
+   ========================================================================== */
+@media print {
+    /* Esconde interface */
+    .sidebar, .export-actions, .empty-state, .connection-test, .upload-section, ::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    @page {
+        size: A4;
+        margin: 10mm; /* Margem segura */
+    }
+
+    body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .app, .preview-area {
+        display: block;
+        padding: 0;
+        background: #fff;
+    }
+
+    .recibo-wrapper {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        box-shadow: none;
+    }
+
+    .recibo {
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        width: 100%;
+    }
+
+    /* ---- A MÁGICA DAS BORDAS ---- */
+    .r-table {
+        width: 100%;
+        border-collapse: collapse !important; /* Funde as bordas vizinhas */
+    }
+
+    /* 1. Usamos 1pt (ponto) em vez de 1px. 1pt é físico e nunca some no PDF */
+    .r-table th,
+    .r-table td {
+        border: 1pt solid #000 !important;
+    }
+
+    /* 2. Força a cor preta sólida para evitar tons de cinza que somem */
+    .r-table td {
+        border-color: #000000 !important;
+    }
+
+    /* 3. Evita quebra de página no meio de uma linha (ajuda a renderizar a borda inferior) */
+    .r-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        background-color: transparent !important; /* Evita sobreposição de fundo na borda */
+    }
+
+    /* Repete cabeçalho */
+    .r-table thead {
+        display: table-header-group;
+    }
+
+    .r-table tfoot {
+        display: table-footer-group;
+    }
 }

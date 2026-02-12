@@ -1,11 +1,11 @@
 {
   "empresa": {
-    "nome": "Magic Fireworks",
-    "cnpj": "00.000.000/0001-00",
-    "endereco": "Rua Exemplo, 123 - Cidade/UF",
-    "telefone": "(00) 00000-0000",
-    "email": "contato@magicfireworks.com.br",
-    "logo": "/public/logo.png"
+    "nome": "MAGIC EFFECTS BRASIL IMPORTACOES LTDA",
+    "cnpj": "22.748.770/0001-50",
+    "endereco": "NUCLEO NUCLEO RURAL ALEXANDRE GUSMAO GLEBA 2 LOTE, 143 - BRAZLANDIA, Brasília, DF - 72.701-996",
+    "telefone": "(22) 99982-5488",
+    "email": "magiceffectsbrasil@gmail.com",
+    "logo": "/public/FireworksMagicLogo.jpg"
   },
   "recibo": {
     "corPrimaria": "#1a1a2e",

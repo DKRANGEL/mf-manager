@@ -1,173 +1,188 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tiny Recibo Pro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/public/css/style.css">
-  <!-- html2canvas + jsPDF for export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiny Recibo Pro - Magic Fireworks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/style.css">
 </head>
 <body>
-  <div class="app">
-    <!-- Sidebar / Controls -->
+<div class="app">
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="brand">
-          <span class="brand-icon">🧾</span>
-          <div>
-            <h1>Recibo Pro</h1>
-            <span class="brand-sub">Tiny ERP</span>
-          </div>
+        <div class="sidebar-header">
+            <div class="brand"><span class="brand-icon">🧾</span>
+                <div><h1>Recibo Pro</h1><span class="brand-sub">Tiny ERP</span></div>
+            </div>
         </div>
-      </div>
+        <div class="sidebar-content">
+            <div class="input-group">
+                <label for="pedidoId">Número do Pedido</label>
+                <div class="input-row">
+                    <input type="text" id="pedidoId" placeholder="Ex: 1" autocomplete="off">
+                    <button id="btnGerar" onclick="gerarRecibo()">
+                        <span class="btn-text">Gerar</span>
+                        <span class="btn-loading" style="display:none;"><span class="spinner"></span></span>
+                    </button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Tipo de busca</label>
+                <div class="toggle-group">
+                    <button class="toggle active" data-type="numero" onclick="setTipo(this)">Nº Pedido</button>
+                    <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Documento</label>
+                <div class="toggle-group">
+                    <button class="toggle active" data-type="pedido" onclick="setDocType(this)">Pedido de Venda</button>
+                    <button class="toggle" data-type="recibo" onclick="setDocType(this)">Recibo</button>
+                </div>
+            </div>
+            <div id="errorBox" class="error-box" style="display:none;"></div>
+            <div id="successBox" class="success-box" style="display:none;"></div>
 
-      <div class="sidebar-content">
-        <div class="input-group">
-          <label for="pedidoId">Número do Pedido</label>
-          <div class="input-row">
-            <input 
-              type="text" 
-              id="pedidoId" 
-              placeholder="Ex: 123456789"
-              autocomplete="off"
-            >
-            <button id="btnGerar" onclick="gerarRecibo()">
-              <span class="btn-text">Gerar</span>
-              <span class="btn-loading" style="display:none;">
-                <span class="spinner"></span>
-              </span>
-            </button>
-          </div>
-          <span class="input-hint">Cole o ID do pedido do Tiny PDV</span>
+            <div id="exportActions" class="export-actions" style="display:none;">
+                <h3>Salvar / Imprimir</h3>
+                <button class="btn-export" onclick="exportarPDF()">📄 Salvar como PDF / Imprimir</button>
+            </div>
+
+            <div class="upload-section">
+                <h3>Imagens de Produtos</h3>
+                <p class="upload-hint">Nome do arquivo = SKU (ex: MFSSS-001.png)</p>
+                <div class="upload-dropzone" id="dropzone">
+                    <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
+                           style="display:none;">
+                    <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📁 Selecionar
+                        Imagens
+                    </button>
+                </div>
+                <div id="uploadedList" class="uploaded-list"></div>
+            </div>
+            <div class="connection-test">
+                <button class="btn-test" onclick="testarConexao()">🔌 Testar conexão API</button>
+            </div>
         </div>
-
-        <div class="input-group">
-          <label>Tipo de busca</label>
-          <div class="toggle-group">
-            <button class="toggle active" data-type="pedido" onclick="setTipo(this)">Pedido</button>
-            <button class="toggle" data-type="pdv" onclick="setTipo(this)">PDV</button>
-          </div>
-        </div>
-
-        <div id="errorBox" class="error-box" style="display:none;"></div>
-
-        <div id="exportActions" class="export-actions" style="display:none;">
-          <h3>Exportar</h3>
-          <button class="btn-export" onclick="exportarImagem()">
-            📱 Imagem (WhatsApp)
-          </button>
-          <button class="btn-export btn-export--pdf" onclick="exportarPDF()">
-            📄 PDF
-          </button>
-        </div>
-      </div>
-
-      <div class="sidebar-footer">
-        <span>v1.0.0 • Integração Tiny API v2</span>
-      </div>
+        <div class="sidebar-footer"><span>v2.0 Magic Fireworks</span></div>
     </aside>
 
-    <!-- Main Content / Preview -->
     <main class="preview-area">
-      <div id="emptyState" class="empty-state">
-        <div class="empty-icon">📋</div>
-        <h2>Nenhum recibo gerado</h2>
-        <p>Digite o número do pedido e clique em <strong>Gerar</strong></p>
-      </div>
-
-      <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
-        <div id="recibo" class="recibo">
-          <!-- Header -->
-          <div class="recibo-header">
-            <div class="recibo-logo-area">
-              <img id="reciboLogo" src="/public/logo.png" alt="Logo" class="recibo-logo" onerror="this.style.display='none'">
-            </div>
-            <div class="recibo-empresa">
-              <h2 id="reciboEmpresaNome"></h2>
-              <p id="reciboEmpresaCnpj" class="recibo-cnpj"></p>
-              <p id="reciboEmpresaEndereco" class="recibo-info-detalhe"></p>
-              <p id="reciboEmpresaTelefone" class="recibo-info-detalhe"></p>
-            </div>
-          </div>
-
-          <div class="recibo-divider"></div>
-
-          <!-- Título -->
-          <div class="recibo-titulo">
-            <h3>RECIBO DE VENDA</h3>
-            <div class="recibo-meta">
-              <span>Pedido <strong id="reciboNumero"></strong></span>
-              <span id="reciboData"></span>
-            </div>
-          </div>
-
-          <!-- Cliente -->
-          <div id="reciboClienteSection" class="recibo-section" style="display:none;">
-            <h4>Cliente</h4>
-            <div class="recibo-cliente-info">
-              <p id="reciboClienteNome"></p>
-              <p id="reciboClienteDoc" class="recibo-info-detalhe"></p>
-            </div>
-          </div>
-
-          <!-- Itens -->
-          <div class="recibo-section">
-            <table class="recibo-table">
-              <thead>
-                <tr>
-                  <th class="col-desc">Descrição</th>
-                  <th class="col-qtd">Qtd</th>
-                  <th class="col-unit">Unitário</th>
-                  <th class="col-total">Total</th>
-                </tr>
-              </thead>
-              <tbody id="reciboItens"></tbody>
-            </table>
-          </div>
-
-          <!-- Totais -->
-          <div class="recibo-totais">
-            <div class="recibo-totais-row" id="reciboSubtotalRow">
-              <span>Subtotal</span>
-              <span id="reciboSubtotal"></span>
-            </div>
-            <div class="recibo-totais-row" id="reciboDescontoRow" style="display:none;">
-              <span>Desconto</span>
-              <span id="reciboDesconto" class="valor-desconto"></span>
-            </div>
-            <div class="recibo-totais-row recibo-totais-final">
-              <span>Total</span>
-              <span id="reciboTotal"></span>
-            </div>
-          </div>
-
-          <!-- Pagamento -->
-          <div id="reciboPagamentoSection" class="recibo-section recibo-pagamento">
-            <div class="recibo-pagamento-badge">
-              <span id="reciboPagamento"></span>
-            </div>
-          </div>
-
-          <!-- Observações -->
-          <div id="reciboObsSection" class="recibo-section" style="display:none;">
-            <h4>Observações</h4>
-            <p id="reciboObs" class="recibo-obs-text"></p>
-          </div>
-
-          <!-- Rodapé -->
-          <div class="recibo-footer">
-            <div class="recibo-divider"></div>
-            <p id="reciboMensagem" class="recibo-mensagem"></p>
-          </div>
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h2>Nenhum documento gerado</h2>
+            <p>Digite o número do pedido e clique em <strong>Gerar</strong></p>
         </div>
-      </div>
-    </main>
-  </div>
 
-  <script src="/public/js/app.js"></script>
+        <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
+            <div id="recibo" class="recibo">
+
+                <table class="doc-header-table">
+                    <tr>
+                        <td style="width: 130px;">
+                            <div class="r-logo-circle">
+                                <img id="reciboLogo" src="/public/FireworksMagicLogo.jpg" alt="Logo"
+                                     onerror="this.style.opacity='0'">
+                            </div>
+                        </td>
+                        <td style="padding-left: 20px;">
+                            <div id="rEmpresaNome">MAGIC FIREWORKS</div>
+                            <div id="rEmpresaCnpj" class="doc-info">CNPJ: 00.000.000/0001-00</div>
+                            <div id="rEmpresaEnd" class="doc-info">Endereço Completo, 123 - Cidade/UF</div>
+                        </td>
+                        <td style="text-align: right; width: 160px;">
+                            <div class="doc-box-number">
+                                <span class="doc-label" id="rDocTitulo">PEDIDO</span>
+                                <div id="rDocNum" class="doc-big-num">000</div>
+                                <div id="rData" class="doc-date">-</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="doc-info-section">
+                    <div class="doc-grid">
+                        <div class="doc-col">
+                            <div class="info-label">CLIENTE</div>
+                            <div class="info-value" id="rCliente">-</div>
+                            <div class="info-label">CPF/CNPJ</div>
+                            <div class="info-value" id="rClienteDoc" style="font-weight: normal;">-</div>
+                        </div>
+                        <div class="doc-col" style="text-align: right;">
+                            <div class="info-label">VENDEDOR(A)</div>
+                            <div class="info-value" id="rVendedor">-</div>
+                            <div class="info-label">Nº PEDIDO TINY</div>
+                            <div class="info-value" id="rNumero" style="font-weight: normal;">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="r-table">
+                    <thead>
+                    <tr>
+                        <th class="c-img">FOTO</th>
+                        <th class="c-item">ITEM</th>
+                        <th class="c-sku">SKU</th>
+                        <th class="c-desc">DESCRIÇÃO DO PRODUTO</th>
+                        <th class="c-qtd">QTD</th>
+                        <th class="c-un">UN</th>
+                        <th class="c-preco">UNITÁRIO</th>
+                        <th class="c-total">TOTAL</th>
+                    </tr>
+                    </thead>
+                    <tbody id="rItens"></tbody>
+                </table>
+
+                <div class="totals-area">
+                    <table class="totals-table">
+                        <tr>
+                            <td>SUBTOTAL PRODUTOS:</td>
+                            <td class="totals-value" id="rSubtotal">0,00</td>
+                        </tr>
+                        <tr id="rDescontoRow" style="display:none;">
+                            <td>DESCONTO:</td>
+                            <td class="totals-value" id="rDesconto">0,00</td>
+                        </tr>
+                        <tr class="final-row">
+                            <td style="background: transparent; color: #000; border: none;">TOTAL GERAL:</td>
+                            <td id="rTotal">0,00</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="doc-footer-section" style="margin-top: 30px;">
+                    <h4 class="section-title">FATURAMENTO / PAGAMENTO</h4>
+                    <table class="r-table" id="rPagTable" style="margin-bottom: 20px;">
+                        <thead>
+                        <tr>
+                            <th style="width: 50px;">DIAS</th>
+                            <th style="width: 100px;">VENCIMENTO</th>
+                            <th>FORMA DE PAGAMENTO</th>
+                            <th style="width: 100px; text-align: right;">VALOR</th>
+                            <th>OBS</th>
+                        </tr>
+                        </thead>
+                        <tbody id="rParcelas"></tbody>
+                    </table>
+
+                    <div id="rObsSection" style="display:none;">
+                        <h4 class="section-title">OBSERVAÇÕES</h4>
+                        <div class="doc-obs-box">
+                            <p id="rObs"></p>
+                        </div>
+                    </div>
+
+                    <div class="doc-footer">
+                        <p id="rMensagem"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+<script src="/public/js/app.js"></script>
 </body>
 </html>
