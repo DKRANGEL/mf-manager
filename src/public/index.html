@@ -13,60 +13,75 @@
 <div class="app">
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="brand"><span class="brand-icon">🧾</span>
-                <div><h1>Recibo Pro</h1><span class="brand-sub">Tiny ERP</span></div>
+            <div class="brand">
+                <div class="brand-icon">🧾</div>
+                <div>
+                    <h1>TINY RECIBO</h1>
+                    <span class="brand-sub">Magic Fireworks</span>
+                </div>
             </div>
         </div>
+
         <div class="sidebar-content">
             <div class="input-group">
-                <label for="pedidoId">Número do Pedido</label>
+                <label for="pedidoId">Buscar Pedido</label>
                 <div class="input-row">
-                    <input type="text" id="pedidoId" placeholder="Ex: 1" autocomplete="off">
+                    <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
                     <button id="btnGerar" onclick="gerarRecibo()">
-                        <span class="btn-text">Gerar</span>
-                        <span class="btn-loading" style="display:none;"><span class="spinner"></span></span>
+                        <span class="btn-text">GERAR</span>
+                        <span class="btn-loading" style="display:none;">...</span>
                     </button>
                 </div>
             </div>
+
             <div class="input-group">
-                <label>Tipo de busca</label>
+                <label>Critério de Busca</label>
                 <div class="toggle-group">
-                    <button class="toggle active" data-type="numero" onclick="setTipo(this)">Nº Pedido</button>
+                    <button class="toggle active" data-type="numero" onclick="setTipo(this)">Número Pedido</button>
                     <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
                 </div>
             </div>
+
             <div class="input-group">
-                <label>Documento</label>
+                <label>Tipo de Documento</label>
                 <div class="toggle-group">
-                    <button class="toggle active" data-type="pedido" onclick="setDocType(this)">Pedido de Venda</button>
-                    <button class="toggle" data-type="recibo" onclick="setDocType(this)">Recibo</button>
+                    <button class="toggle active" data-type="pedido" onclick="setDocType(this)">Pedido Venda</button>
+                    <button class="toggle" data-type="recibo" onclick="setDocType(this)">Recibo Simples</button>
                 </div>
             </div>
+
             <div id="errorBox" class="error-box" style="display:none;"></div>
             <div id="successBox" class="success-box" style="display:none;"></div>
 
             <div id="exportActions" class="export-actions" style="display:none;">
-                <h3>Salvar / Imprimir</h3>
-                <button class="btn-export" onclick="exportarPDF()">📄 Salvar como PDF / Imprimir</button>
+                <h3>Finalizar</h3>
+                <button class="btn-export" onclick="exportarPDF()">
+                    <span>📄</span> Salvar PDF / Imprimir
+                </button>
+                <button class="btn-export" onclick="exportarImagem()">
+                    <span>🖼️</span> Baixar como Imagem (PNG)
+                </button>
             </div>
 
             <div class="upload-section">
-                <h3>Imagens de Produtos</h3>
-                <p class="upload-hint">Nome do arquivo = SKU (ex: MFSSS-001.png)</p>
-                <div class="upload-dropzone" id="dropzone">
+                <h3>Fotos dos Produtos</h3>
+                <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <p class="upload-hint">Arraste ou clique para enviar</p>
+                    <button class="btn-upload">Selecionar Arquivos</button>
                     <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
                            style="display:none;">
-                    <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📁 Selecionar
-                        Imagens
-                    </button>
                 </div>
                 <div id="uploadedList" class="uploaded-list"></div>
             </div>
+
             <div class="connection-test">
-                <button class="btn-test" onclick="testarConexao()">🔌 Testar conexão API</button>
+                <button class="btn-test" onclick="testarConexao()">🔌 Verificar Conexão API</button>
             </div>
         </div>
-        <div class="sidebar-footer"><span>v2.0 Magic Fireworks</span></div>
+
+        <div class="sidebar-footer">
+            <span>Sistema v2.5 • Magic Fireworks</span>
+        </div>
     </aside>
 
     <main class="preview-area">

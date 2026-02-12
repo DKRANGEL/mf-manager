@@ -1,4 +1,4 @@
-/* ===================== TINY RECIBO PRO - V2.4 (FIX LINHAS PDF) ===================== */
+/* ===================== TINY RECIBO PRO - V1.2 ===================== */
 :root {
     --bg: #0f0f13;
     --bg2: #16161d;
@@ -33,84 +33,173 @@ body {
     height: 100vh;
 }
 
-/* ---- Sidebar e Interface (Mantido igual) ---- */
+/* ===================== SIDEBAR PREMIUM UI ===================== */
+
+/* Variáveis do Tema da Sidebar */
+:root {
+    --sb-bg: #121214; /* Fundo Sidebar (quase preto) */
+    --sb-input-bg: #1c1c1f; /* Fundo Inputs */
+    --sb-border: #2a2a2e; /* Bordas sutis */
+    --sb-text: #e1e1e6; /* Texto principal */
+    --sb-text-dim: #a8a8b3; /* Texto secundário */
+    --sb-accent: #e94560; /* Vermelho Magic */
+    --sb-accent-hover: #ff5a75;
+    --sb-radius: 8px; /* Arredondamento padrão */
+}
+
+/* Container Geral */
 .app {
     display: flex;
     height: 100vh;
+    background: #000;
 }
 
+/* --- SIDEBAR ESTRUTURA --- */
 .sidebar {
-    width: 340px;
-    min-width: 340px;
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
+    width: 360px; /* Um pouco mais larga para respirar */
+    min-width: 360px;
+    background: var(--sb-bg);
+    border-right: 1px solid var(--sb-border);
     display: flex;
     flex-direction: column;
-    z-index: 99;
+    z-index: 100;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
 }
 
 .sidebar-header {
-    padding: 24px 24px 20px;
-    border-bottom: 1px solid var(--border);
+    padding: 32px 28px;
+    border-bottom: 1px solid var(--sb-border);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 8px;
 }
 
 .brand h1 {
     font-size: 18px;
     font-weight: 700;
     color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.brand-sub {
+    font-size: 11px;
+    color: var(--sb-accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .sidebar-content {
     flex: 1;
-    padding: 24px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px; /* Espaço generoso entre grupos */
     overflow-y: auto;
 }
 
-.sidebar-footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text3);
+/* Barra de rolagem bonita */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
 }
 
-.input-group label {
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.sidebar-footer {
+    padding: 20px 28px;
+    border-top: 1px solid var(--sb-border);
     font-size: 11px;
-    font-weight: 600;
-    color: var(--text2);
+    color: #444;
+    text-align: center;
     text-transform: uppercase;
-    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+/* --- CONTROLES E INPUTS --- */
+
+/* Títulos de Seção */
+.input-group label, .upload-section h3, .export-actions h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sb-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
     display: block;
+}
+
+/* Grupo de Input Principal (Busca) */
+.input-row {
+    display: flex;
+    gap: 10px;
 }
 
 .input-row input {
     flex: 1;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--rs);
-    padding: 10px;
-    color: var(--text);
-    font-family: var(--mono);
-    outline: none;
-}
-
-#btnGerar {
-    background: var(--accent);
-    border: none;
-    border-radius: var(--rs);
-    padding: 10px 20px;
+    height: 44px; /* Mais alto */
+    background: var(--sb-input-bg);
+    border: 1px solid var(--sb-border);
+    border-radius: var(--sb-radius);
+    padding: 0 16px;
     color: #fff;
-    font-weight: 600;
-    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
 }
 
+.input-row input:focus {
+    border-color: var(--sb-accent);
+    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+    background: #202024;
+}
+
+/* Botão Gerar (Destaque) */
+#btnGerar {
+    height: 44px;
+    padding: 0 24px;
+    background: var(--sb-accent);
+    border: none;
+    border-radius: var(--sb-radius);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#btnGerar:hover {
+    background: var(--sb-accent-hover);
+    transform: translateY(-1px);
+}
+
+#btnGerar:active {
+    transform: translateY(0);
+}
+
+/* Toggles (Estilo iOS Segmented Control) */
 .toggle-group {
     display: flex;
-    background: var(--bg-input);
-    border-radius: var(--rs);
-    padding: 3px;
+    background: var(--sb-input-bg);
+    padding: 4px;
+    border-radius: var(--sb-radius);
+    border: 1px solid var(--sb-border);
 }
 
 .toggle {
@@ -118,44 +207,142 @@ body {
     background: transparent;
     border: none;
     padding: 8px;
-    color: var(--text2);
+    color: var(--sb-text-dim);
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
     border-radius: 4px;
+    transition: all 0.2s;
 }
 
-.toggle.active {
-    background: var(--accent);
+.toggle:hover {
     color: #fff;
 }
 
-.btn-export {
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 12px;
-    border-radius: var(--rs);
-    cursor: pointer;
-    text-align: left;
+.toggle.active {
+    background: #323238; /* Cinza médio destaque */
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Área de Upload Minimalista */
 .upload-dropzone {
-    border: 1px dashed var(--border);
-    padding: 20px;
+    border: 1px dashed var(--sb-border);
+    border-radius: var(--sb-radius);
+    padding: 24px;
+    margin-bottom: 16px;
     text-align: center;
-    border-radius: var(--rs);
+    background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
-    color: var(--text2);
-    font-size: 12px;
+    transition: 0.2s;
+}
+
+.upload-dropzone:hover {
+    border-color: var(--sb-text-dim);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.btn-upload {
+    background: transparent;
+    border: 1px solid var(--sb-border);
+    color: var(--sb-text);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    pointer-events: none; /* O clique vai no dropzone pai */
+}
+
+.upload-hint {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #555;
 }
 
 .uploaded-item {
-    background: var(--bg-input);
-    padding: 2px 6px;
     font-size: 10px;
+    background: #112818; /* Verde bem escuro */
+    color: #4cd677;
+    padding: 4px 8px;
     border-radius: 4px;
-    color: var(--green);
+    border: 1px solid #1a4224;
+    display: inline-flex;
+    align-items: center;
     margin: 2px;
-    display: inline-block;
+}
+
+/* Ações de Exportação (Cards) */
+.export-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-export {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--sb-input-bg);
+    border: 1px solid var(--sb-border);
+    border-radius: var(--sb-radius);
+    color: var(--sb-text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.btn-export:hover {
+    border-color: var(--sb-accent);
+    background: rgba(233, 69, 96, 0.05);
+}
+
+/* Teste de Conexão */
+.connection-test {
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.btn-test {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed #333;
+    color: #555;
+    padding: 10px;
+    font-size: 11px;
+    border-radius: var(--sb-radius);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-test:hover {
+    color: #888;
+    border-color: #555;
+}
+
+/* Status Boxes */
+.error-box, .success-box {
+    padding: 12px;
+    border-radius: var(--sb-radius);
+    font-size: 12px;
+    line-height: 1.4;
+    margin-top: 5px;
+}
+
+.error-box {
+    background: rgba(233, 69, 96, 0.1);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    color: #ff8fa3;
+}
+
+.success-box {
+    background: rgba(46, 204, 113, 0.1);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
 }
 
 /* Preview Area */
