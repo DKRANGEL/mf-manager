@@ -1,0 +1,579 @@
+/* ============================================
+   TINY RECIBO PRO — Styles
+   ============================================ */
+
+:root {
+  --bg-app: #0f0f13;
+  --bg-sidebar: #16161d;
+  --bg-preview: #1c1c26;
+  --bg-input: #21212e;
+  --bg-hover: #2a2a3a;
+
+  --text-primary: #e8e6f0;
+  --text-secondary: #8b89a0;
+  --text-muted: #5c5a6e;
+
+  --accent: #e94560;
+  --accent-glow: rgba(233, 69, 96, 0.15);
+  --accent-hover: #ff5a75;
+  --success: #2ecc71;
+  --warning: #f39c12;
+
+  --border: #2a2a3a;
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Recibo (light theme within dark app) */
+  --recibo-bg: #ffffff;
+  --recibo-text: #1a1a2e;
+  --recibo-text-secondary: #64607a;
+  --recibo-border: #e8e6f0;
+  --recibo-accent: #1a1a2e;
+  --recibo-accent-color: #e94560;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ---- App Layout ---- */
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  width: 340px;
+  min-width: 340px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.brand h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ---- Inputs ---- */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-row input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.input-row input::placeholder {
+  color: var(--text-muted);
+}
+
+.input-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+#btnGerar {
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+#btnGerar:hover {
+  background: var(--accent-hover);
+}
+
+#btnGerar:active {
+  transform: scale(0.97);
+}
+
+/* ---- Toggle Group ---- */
+.toggle-group {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.toggle {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---- Error Box ---- */
+.error-box {
+  background: rgba(233, 69, 96, 0.1);
+  border: 1px solid rgba(233, 69, 96, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--accent);
+  line-height: 1.5;
+}
+
+/* ---- Export Actions ---- */
+.export-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.export-actions h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-export {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.btn-export:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+/* ---- Spinner ---- */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Preview Area ---- */
+.preview-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(69, 96, 233, 0.03) 0%, transparent 50%),
+    var(--bg-preview);
+}
+
+/* ---- Empty State ---- */
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ============================================
+   RECIBO — Design profissional (light)
+   ============================================ */
+
+.recibo-wrapper {
+  width: 100%;
+  max-width: 520px;
+  animation: fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.recibo {
+  background: var(--recibo-bg);
+  color: var(--recibo-text);
+  border-radius: 12px;
+  padding: 40px 36px;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.3),
+    0 0 0 1px rgba(255,255,255,0.05);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Recibo Header */
+.recibo-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.recibo-logo-area {
+  flex-shrink: 0;
+}
+
+.recibo-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.recibo-empresa h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--recibo-accent);
+  margin-bottom: 2px;
+}
+
+.recibo-cnpj {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--recibo-text-secondary);
+  margin-bottom: 4px;
+}
+
+.recibo-info-detalhe {
+  font-size: 12px;
+  color: var(--recibo-text-secondary);
+}
+
+/* Divider */
+.recibo-divider {
+  height: 1px;
+  background: var(--recibo-border);
+  margin: 20px 0;
+}
+
+/* Titulo */
+.recibo-titulo {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.recibo-titulo h3 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--recibo-accent-color);
+  margin-bottom: 8px;
+}
+
+.recibo-meta {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  font-size: 12px;
+  color: var(--recibo-text-secondary);
+}
+
+.recibo-meta strong {
+  color: var(--recibo-text);
+  font-family: var(--font-mono);
+}
+
+/* Sections */
+.recibo-section {
+  margin-bottom: 18px;
+}
+
+.recibo-section h4 {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--recibo-text-secondary);
+  margin-bottom: 8px;
+}
+
+.recibo-cliente-info p {
+  font-size: 13px;
+}
+
+.recibo-cliente-info .recibo-info-detalhe {
+  margin-top: 2px;
+}
+
+/* Table */
+.recibo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recibo-table thead {
+  border-bottom: 2px solid var(--recibo-accent);
+}
+
+.recibo-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--recibo-text-secondary);
+  padding: 8px 0;
+  text-align: left;
+}
+
+.recibo-table th.col-qtd,
+.recibo-table th.col-unit,
+.recibo-table th.col-total {
+  text-align: right;
+}
+
+.recibo-table td {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0eef5;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.recibo-table td.col-qtd,
+.recibo-table td.col-unit,
+.recibo-table td.col-total {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.recibo-table td.col-desc {
+  padding-right: 12px;
+}
+
+.recibo-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Totais */
+.recibo-totais {
+  border-top: 2px solid var(--recibo-accent);
+  padding-top: 12px;
+  margin-bottom: 18px;
+}
+
+.recibo-totais-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.recibo-totais-row span:last-child {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.valor-desconto {
+  color: var(--recibo-accent-color);
+}
+
+.recibo-totais-final {
+  padding-top: 10px;
+  margin-top: 6px;
+  border-top: 1px solid var(--recibo-border);
+  font-weight: 700;
+  font-size: 16px !important;
+}
+
+.recibo-totais-final span:last-child {
+  font-size: 16px !important;
+  color: var(--recibo-accent);
+}
+
+/* Pagamento */
+.recibo-pagamento {
+  text-align: center;
+}
+
+.recibo-pagamento-badge {
+  display: inline-block;
+  background: #f5f3fa;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--recibo-text-secondary);
+}
+
+/* Observações */
+.recibo-obs-text {
+  font-size: 12px;
+  color: var(--recibo-text-secondary);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* Footer */
+.recibo-footer {
+  text-align: center;
+}
+
+.recibo-mensagem {
+  font-size: 12px;
+  color: var(--recibo-text-secondary);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-content {
+    padding: 16px;
+  }
+  .preview-area {
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .recibo {
+    padding: 28px 24px;
+  }
+  body {
+    overflow: auto;
+    height: auto;
+  }
+}

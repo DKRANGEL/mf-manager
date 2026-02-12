@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiny Recibo Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/style.css">
+  <!-- html2canvas + jsPDF for export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar / Controls -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-icon">🧾</span>
+          <div>
+            <h1>Recibo Pro</h1>
+            <span class="brand-sub">Tiny ERP</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="input-group">
+          <label for="pedidoId">Número do Pedido</label>
+          <div class="input-row">
+            <input 
+              type="text" 
+              id="pedidoId" 
+              placeholder="Ex: 123456789"
+              autocomplete="off"
+            >
+            <button id="btnGerar" onclick="gerarRecibo()">
+              <span class="btn-text">Gerar</span>
+              <span class="btn-loading" style="display:none;">
+                <span class="spinner"></span>
+              </span>
+            </button>
+          </div>
+          <span class="input-hint">Cole o ID do pedido do Tiny PDV</span>
+        </div>
+
+        <div class="input-group">
+          <label>Tipo de busca</label>
+          <div class="toggle-group">
+            <button class="toggle active" data-type="pedido" onclick="setTipo(this)">Pedido</button>
+            <button class="toggle" data-type="pdv" onclick="setTipo(this)">PDV</button>
+          </div>
+        </div>
+
+        <div id="errorBox" class="error-box" style="display:none;"></div>
+
+        <div id="exportActions" class="export-actions" style="display:none;">
+          <h3>Exportar</h3>
+          <button class="btn-export" onclick="exportarImagem()">
+            📱 Imagem (WhatsApp)
+          </button>
+          <button class="btn-export btn-export--pdf" onclick="exportarPDF()">
+            📄 PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <span>v1.0.0 • Integração Tiny API v2</span>
+      </div>
+    </aside>
+
+    <!-- Main Content / Preview -->
+    <main class="preview-area">
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h2>Nenhum recibo gerado</h2>
+        <p>Digite o número do pedido e clique em <strong>Gerar</strong></p>
+      </div>
+
+      <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
+        <div id="recibo" class="recibo">
+          <!-- Header -->
+          <div class="recibo-header">
+            <div class="recibo-logo-area">
+              <img id="reciboLogo" src="/public/logo.png" alt="Logo" class="recibo-logo" onerror="this.style.display='none'">
+            </div>
+            <div class="recibo-empresa">
+              <h2 id="reciboEmpresaNome"></h2>
+              <p id="reciboEmpresaCnpj" class="recibo-cnpj"></p>
+              <p id="reciboEmpresaEndereco" class="recibo-info-detalhe"></p>
+              <p id="reciboEmpresaTelefone" class="recibo-info-detalhe"></p>
+            </div>
+          </div>
+
+          <div class="recibo-divider"></div>
+
+          <!-- Título -->
+          <div class="recibo-titulo">
+            <h3>RECIBO DE VENDA</h3>
+            <div class="recibo-meta">
+              <span>Pedido <strong id="reciboNumero"></strong></span>
+              <span id="reciboData"></span>
+            </div>
+          </div>
+
+          <!-- Cliente -->
+          <div id="reciboClienteSection" class="recibo-section" style="display:none;">
+            <h4>Cliente</h4>
+            <div class="recibo-cliente-info">
+              <p id="reciboClienteNome"></p>
+              <p id="reciboClienteDoc" class="recibo-info-detalhe"></p>
+            </div>
+          </div>
+
+          <!-- Itens -->
+          <div class="recibo-section">
+            <table class="recibo-table">
+              <thead>
+                <tr>
+                  <th class="col-desc">Descrição</th>
+                  <th class="col-qtd">Qtd</th>
+                  <th class="col-unit">Unitário</th>
+                  <th class="col-total">Total</th>
+                </tr>
+              </thead>
+              <tbody id="reciboItens"></tbody>
+            </table>
+          </div>
+
+          <!-- Totais -->
+          <div class="recibo-totais">
+            <div class="recibo-totais-row" id="reciboSubtotalRow">
+              <span>Subtotal</span>
+              <span id="reciboSubtotal"></span>
+            </div>
+            <div class="recibo-totais-row" id="reciboDescontoRow" style="display:none;">
+              <span>Desconto</span>
+              <span id="reciboDesconto" class="valor-desconto"></span>
+            </div>
+            <div class="recibo-totais-row recibo-totais-final">
+              <span>Total</span>
+              <span id="reciboTotal"></span>
+            </div>
+          </div>
+
+          <!-- Pagamento -->
+          <div id="reciboPagamentoSection" class="recibo-section recibo-pagamento">
+            <div class="recibo-pagamento-badge">
+              <span id="reciboPagamento"></span>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div id="reciboObsSection" class="recibo-section" style="display:none;">
+            <h4>Observações</h4>
+            <p id="reciboObs" class="recibo-obs-text"></p>
+          </div>
+
+          <!-- Rodapé -->
+          <div class="recibo-footer">
+            <div class="recibo-divider"></div>
+            <p id="reciboMensagem" class="recibo-mensagem"></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/public/js/app.js"></script>
+</body>
+</html>
