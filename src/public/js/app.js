@@ -1,4 +1,4 @@
-// ===================== TINY RECIBO PRO v2.1 - CLEAN FONT =====================
+// ===================== TINY RECIBO PRO v3.1 =====================
 
 let config = {};
 let tipoBusca = 'numero';
@@ -43,12 +43,6 @@ function setTipo(el) {
     tipoBusca = el.dataset.type;
 }
 
-function setDocType(el) {
-    document.querySelectorAll('.toggle[data-type="pedido"],.toggle[data-type="recibo"]').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    docType = el.dataset.type;
-}
-
 // ---- Gerar ----
 async function gerarRecibo() {
     const id = document.getElementById('pedidoId').value.trim();
@@ -78,30 +72,72 @@ async function gerarRecibo() {
     }
 }
 
-// ---- Render (Ajustado para Fontes Normais) ----
+// ---- Render Recibo ----
 async function renderRecibo(pedido) {
     const emp = config.empresa || {};
     const rc = config.recibo || {};
+    const cli = pedido.cliente || {};
 
-    // Empresa
+    // 1. Dados da Empresa
     setText('rEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
     setText('rEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
-    setText('rEmpresaEnd', emp.endereco || '');
+    setText('rEmpresaEnd', 'Brasília - DF');
 
-    // Cabeçalho Pedido
-    const titulo = docType === 'recibo' ? 'RECIBO' : 'PEDIDO DE VENDA';
-    setText('rDocTitulo', titulo);
+    // 2. Cabeçalho do Pedido
+    setText('rDocTitulo', 'PEDIDO DE VENDA');
     setText('rDocNum', pedido.numero || pedido.id || '000');
     setText('rData', formatDate(pedido.data_pedido || pedido.data_criacao));
 
-    // Cliente
-    const cliente = pedido.cliente || {};
-    setText('rCliente', (cliente.nome || 'Consumidor Final').toUpperCase());
-    setText('rClienteDoc', formatDoc(cliente.cpf_cnpj || ''));
-    setText('rVendedor', (pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase());
-    setText('rNumero', pedido.numero || pedido.id || '-');
+    // 3. DADOS DO CLIENTE (HIERARQUIA VISUAL)
+    const nomeCliente = cli.nome_fantasia || cli.nome || 'Consumidor Final';
 
-    // Tabela Itens
+    const enderecoCompleto = [
+        cli.endereco,
+        cli.numero,
+        cli.bairro,
+        cli.cidade ? `${cli.cidade}/${cli.uf}` : ''
+    ].filter(Boolean).join(', ');
+
+    const contato = [cli.fone, cli.celular, cli.email].filter(Boolean).join(' / ') || '-';
+
+    // HTML DA TABELA
+    const tabelaDadosHTML = `
+    <table class="client-data-table-title">
+        <tr>            
+            <td class="bg-black-title">VENDEDOR</td>
+            <td class="data-cell">${(pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase()}</td>
+            
+            <td class="bg-black-title">Nº PEDIDO</td>
+            <td class="data-cell">${pedido.numero || pedido.id || '-'}</td>
+        </tr>
+    </table>
+
+    <table class="client-data-table">
+        <tr>
+            <td class="bg-gray-title">CLIENTE</td>
+            <td class="data-cell highlight" colspan="3">${nomeCliente.toUpperCase()}</td>
+        </tr>
+    
+        <tr>
+            <td class="bg-gray-title">CNPJ/CPF</td>
+            <td class="data-cell">${formatDoc(cli.cpf_cnpj)}</td>
+        </tr>
+
+        <tr>
+            <td class="bg-gray-title">ENDEREÇO</td>
+            <td class="data-cell" colspan="3">${enderecoCompleto.toUpperCase()}</td>
+        </tr>
+
+        <tr>
+            <td class="bg-gray-title">CONTATO</td>
+            <td class="data-cell" colspan="3">${contato.toUpperCase()}</td>
+        </tr>
+    </table>
+    `;
+
+    document.getElementById('rDadosClienteContainer').innerHTML = tabelaDadosHTML;
+
+    // 4. Itens da Tabela
     const tbody = document.getElementById('rItens');
     tbody.innerHTML = '';
     const itens = pedido.itens || [];
@@ -121,7 +157,6 @@ async function renderRecibo(pedido) {
         const imgUrl = await getProductImage(sku);
 
         const tr = document.createElement('tr');
-        // AQUI: Garantindo que não há tags <b> ou <strong> dentro da tabela
         tr.innerHTML = `
             <td class="c-img">
                 ${imgUrl ? `<img src="${imgUrl}" class="prod-thumb">` : ''}
@@ -137,7 +172,7 @@ async function renderRecibo(pedido) {
         tbody.appendChild(tr);
     }
 
-    // Totais
+    // 5. Totais
     const desconto = parseFloat(pedido.desconto) || 0;
     const totalPedido = parseFloat(pedido.totalPedido || pedido.valor) || (subtotal - desconto);
 
@@ -151,7 +186,7 @@ async function renderRecibo(pedido) {
         hide('rDescontoRow');
     }
 
-    // Parcelas
+    // 6. Parcelas
     const parcelasBody = document.getElementById('rParcelas');
     parcelasBody.innerHTML = '';
     const parcelas = pedido.parcelas || [];
@@ -178,7 +213,7 @@ async function renderRecibo(pedido) {
         }
     }
 
-    // Rodapé
+    // 7. Rodapé e Obs
     const obs = pedido.obs || pedido.observacoes || pedido.observacao || '';
     if (obs) {
         setText('rObs', obs);
@@ -189,22 +224,9 @@ async function renderRecibo(pedido) {
     setText('rMensagem', rc.mensagemRodape || 'MAGIC FIREWORKS - QUALIDADE E SEGURANÇA');
 }
 
-// ---- Exportar (Nativo) ----
+// Exportar PDF
 function exportarPDF() {
     window.print();
-}
-
-async function exportarImagem() {
-    const el = document.getElementById('recibo');
-    try {
-        const canvas = await html2canvas(el, {scale: 2, backgroundColor: '#fff', useCORS: true, logging: false});
-        const link = document.createElement('a');
-        link.download = `${docType}-${ultimoPedido?.numero || 'doc'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    } catch (err) {
-        showError('Erro: ' + err.message);
-    }
 }
 
 // Helpers
@@ -233,7 +255,7 @@ async function handleFiles(files) {
             const json = await res.json();
             if (json.success) {
                 imgCache[sku] = json.path;
-                addUploadedItem(sku);
+                showSuccess(`Upload OK: ${sku}`);
             }
         } catch (err) {
             showError(err.message);
@@ -248,20 +270,9 @@ async function loadUploadedImages() {
         if (json.files) json.files.forEach(f => {
             const sku = f.substring(0, f.lastIndexOf('.'));
             imgCache[sku] = `/public/produtos/${f}`;
-            addUploadedItem(sku);
         });
     } catch {
     }
-}
-
-function addUploadedItem(sku) {
-    const list = document.getElementById('uploadedList');
-    if (list.querySelector(`[data-sku="${sku}"]`)) return;
-    const el = document.createElement('span');
-    el.className = 'uploaded-item';
-    el.dataset.sku = sku;
-    el.textContent = `✓ ${sku}`;
-    list.appendChild(el);
 }
 
 async function testarConexao() { /* ... */
@@ -341,6 +352,5 @@ function hideSuccess() {
 function setLoading(l) {
     const b = document.getElementById('btnGerar');
     b.disabled = l;
-    b.querySelector('.btn-text').style.display = l ? 'none' : '';
-    b.querySelector('.btn-loading').style.display = l ? 'inline-flex' : 'none';
+    b.innerText = l ? '...' : 'GERAR';
 }

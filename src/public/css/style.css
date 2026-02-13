@@ -1,20 +1,15 @@
-/* ===================== TINY RECIBO PRO - V1.2 ===================== */
+/* ===================== TINY RECIBO PRO - V3.2 (PDF FIXED) ===================== */
+
+/* --- VARIÁVEIS GERAIS --- */
 :root {
-    --bg: #0f0f13;
-    --bg2: #16161d;
-    --bg3: #1c1c26;
-    --bg-input: #21212e;
-    --bg-hover: #2a2a3a;
-    --text: #e8e6f0;
-    --text2: #8b89a0;
-    --text3: #5c5a6e;
-    --accent: #e94560;
-    --accent-glow: rgba(233, 69, 96, .15);
-    --accent2: #ff5a75;
-    --green: #2ecc71;
-    --border: #2a2a3a;
-    --r: 10px;
-    --rs: 6px;
+    --sb-bg: #121214;
+    --sb-input-bg: #202024;
+    --sb-border: #29292e;
+    --sb-text: #e1e1e6;
+    --sb-text-dim: #a8a8b3;
+    --sb-accent: #e94560;
+    --sb-accent-hover: #d13650;
+    --sb-radius: 6px;
     --font: 'DM Sans', sans-serif;
     --mono: 'JetBrains Mono', monospace;
 }
@@ -27,43 +22,27 @@
 
 body {
     font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
+    background: #09090a;
+    color: var(--sb-text);
     overflow: hidden;
     height: 100vh;
 }
 
-/* ===================== SIDEBAR PREMIUM UI ===================== */
-
-/* Variáveis do Tema da Sidebar */
-:root {
-    --sb-bg: #121214; /* Fundo Sidebar (quase preto) */
-    --sb-input-bg: #1c1c1f; /* Fundo Inputs */
-    --sb-border: #2a2a2e; /* Bordas sutis */
-    --sb-text: #e1e1e6; /* Texto principal */
-    --sb-text-dim: #a8a8b3; /* Texto secundário */
-    --sb-accent: #e94560; /* Vermelho Magic */
-    --sb-accent-hover: #ff5a75;
-    --sb-radius: 8px; /* Arredondamento padrão */
-}
-
-/* Container Geral */
 .app {
     display: flex;
     height: 100vh;
-    background: #000;
 }
 
-/* --- SIDEBAR ESTRUTURA --- */
+/* --- SIDEBAR --- */
 .sidebar {
-    width: 360px; /* Um pouco mais larga para respirar */
+    width: 360px;
     min-width: 360px;
     background: var(--sb-bg);
     border-right: 1px solid var(--sb-border);
     display: flex;
     flex-direction: column;
     z-index: 100;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .sidebar-header {
@@ -79,9 +58,14 @@ body {
 
 .brand-icon {
     font-size: 24px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 8px;
+    border: 1px solid var(--sb-border);
 }
 
 .brand h1 {
@@ -97,7 +81,7 @@ body {
     color: var(--sb-accent);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .sidebar-content {
@@ -105,44 +89,30 @@ body {
     padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 24px; /* Espaço generoso entre grupos */
+    gap: 24px;
     overflow-y: auto;
 }
 
-/* Barra de rolagem bonita */
 .sidebar-content::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb {
     background: #333;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
-.sidebar-footer {
-    padding: 20px 28px;
-    border-top: 1px solid var(--sb-border);
-    font-size: 11px;
-    color: #444;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* --- CONTROLES E INPUTS --- */
-
-/* Títulos de Seção */
+/* Inputs */
 .input-group label, .upload-section h3, .export-actions h3 {
     font-size: 11px;
     font-weight: 700;
     color: var(--sb-text-dim);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.5px;
     margin-bottom: 8px;
     display: block;
 }
 
-/* Grupo de Input Principal (Busca) */
 .input-row {
     display: flex;
     gap: 10px;
@@ -150,7 +120,7 @@ body {
 
 .input-row input {
     flex: 1;
-    height: 44px; /* Mais alto */
+    height: 48px;
     background: var(--sb-input-bg);
     border: 1px solid var(--sb-border);
     border-radius: var(--sb-radius);
@@ -159,18 +129,17 @@ body {
     font-family: var(--mono);
     font-size: 14px;
     outline: none;
-    transition: all 0.2s ease;
+    transition: 0.2s;
 }
 
 .input-row input:focus {
     border-color: var(--sb-accent);
-    box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
-    background: #202024;
+    background: #27272c;
+    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.15);
 }
 
-/* Botão Gerar (Destaque) */
 #btnGerar {
-    height: 44px;
+    height: 48px;
     padding: 0 24px;
     background: var(--sb-accent);
     border: none;
@@ -178,7 +147,6 @@ body {
     color: #fff;
     font-weight: 700;
     font-size: 13px;
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     cursor: pointer;
     transition: background 0.2s;
@@ -186,14 +154,9 @@ body {
 
 #btnGerar:hover {
     background: var(--sb-accent-hover);
-    transform: translateY(-1px);
 }
 
-#btnGerar:active {
-    transform: translateY(0);
-}
-
-/* Toggles (Estilo iOS Segmented Control) */
+/* Toggle */
 .toggle-group {
     display: flex;
     background: var(--sb-input-bg);
@@ -212,25 +175,20 @@ body {
     font-weight: 600;
     cursor: pointer;
     border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.toggle:hover {
-    color: #fff;
+    transition: 0.2s;
 }
 
 .toggle.active {
-    background: #323238; /* Cinza médio destaque */
+    background: #323238;
     color: #fff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Área de Upload Minimalista */
+/* Upload & Export */
 .upload-dropzone {
     border: 1px dashed var(--sb-border);
     border-radius: var(--sb-radius);
-    padding: 24px;
-    margin-bottom: 16px;
+    padding: 20px;
     text-align: center;
     background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
@@ -238,70 +196,64 @@ body {
 }
 
 .upload-dropzone:hover {
-    border-color: var(--sb-text-dim);
+    border-color: #666;
     background: rgba(255, 255, 255, 0.04);
+}
+
+.upload-hint {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .btn-upload {
     background: transparent;
-    border: 1px solid var(--sb-border);
-    color: var(--sb-text);
-    padding: 8px 16px;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 6px 12px;
     border-radius: 4px;
     font-size: 11px;
-    font-weight: 600;
-    pointer-events: none; /* O clique vai no dropzone pai */
+    pointer-events: none;
 }
 
-.upload-hint {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 11px;
-    color: #555;
-}
-
-.uploaded-item {
-    font-size: 10px;
-    background: #112818; /* Verde bem escuro */
-    color: #4cd677;
-    padding: 4px 8px;
-    border-radius: 4px;
-    border: 1px solid #1a4224;
-    display: inline-flex;
-    align-items: center;
-    margin: 2px;
-}
-
-/* Ações de Exportação (Cards) */
 .export-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    margin-top: 10px;
 }
 
 .btn-export {
     width: 100%;
+    height: 50px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    background: var(--sb-input-bg);
-    border: 1px solid var(--sb-border);
+    justify-content: center;
+    gap: 10px;
+    background: #e1e1e6;
+    color: #000;
+    border: none;
     border-radius: var(--sb-radius);
-    color: var(--sb-text);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
+    transition: 0.2s;
 }
 
 .btn-export:hover {
-    border-color: var(--sb-accent);
-    background: rgba(233, 69, 96, 0.05);
+    background: #fff;
+    transform: translateY(-1px);
 }
 
-/* Teste de Conexão */
+/* Status */
+.error-box {
+    background: rgba(233, 69, 96, 0.1);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    color: #ff8fa3;
+    padding: 12px;
+    border-radius: var(--sb-radius);
+    font-size: 12px;
+    margin-top: 10px;
+}
+
 .connection-test {
     margin-top: auto;
     padding-top: 20px;
@@ -324,51 +276,40 @@ body {
     border-color: #555;
 }
 
-/* Status Boxes */
-.error-box, .success-box {
-    padding: 12px;
-    border-radius: var(--sb-radius);
-    font-size: 12px;
-    line-height: 1.4;
-    margin-top: 5px;
+.sidebar-footer {
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid var(--sb-border);
+    font-size: 10px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.error-box {
-    background: rgba(233, 69, 96, 0.1);
-    border: 1px solid rgba(233, 69, 96, 0.3);
-    color: #ff8fa3;
-}
-
-.success-box {
-    background: rgba(46, 204, 113, 0.1);
-    border: 1px solid rgba(46, 204, 113, 0.3);
-    color: #2ecc71;
-}
-
-/* Preview Area */
+/* --- PREVIEW AREA --- */
 .preview-area {
     flex: 1;
     display: flex;
     justify-content: center;
     padding: 40px;
     overflow-y: auto;
-    background: #222;
+    background: #18181b;
 }
 
 .empty-state {
     text-align: center;
-    color: var(--text3);
+    color: #555;
     margin-top: 20vh;
 }
 
 .empty-icon {
     font-size: 56px;
     margin-bottom: 16px;
-    opacity: .5;
+    opacity: .3;
 }
 
 /* ==========================================================================
-   RECIBO - MAGIC FIREWORKS
+   O DOCUMENTO (RECIBO)
    ========================================================================== */
 .recibo-wrapper {
     width: 100%;
@@ -379,33 +320,31 @@ body {
     background: #fff;
     color: #000;
     padding: 15mm;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     font-family: 'Arial', sans-serif;
     font-size: 12px;
     line-height: 1.3;
     font-weight: 400;
 }
 
-/* LOGO */
-.r-logo-circle {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    border: 2px solid #000;
-    overflow: hidden;
+/* LOGO RETANGULAR */
+.r-logo-rect {
+    width: 200px;
+    height: 100px;
+    border: none;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #000;
+    justify-content: flex-start;
+    background: transparent;
 }
 
-.r-logo-circle img {
+.r-logo-rect img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
-/* CABEÇALHO */
+/* Cabeçalho */
 .doc-header-table {
     width: 100%;
     margin-bottom: 25px;
@@ -433,7 +372,6 @@ body {
     font-weight: 400;
 }
 
-/* CAIXA DE NÚMERO */
 .doc-box-number {
     border: 2px solid #000;
     padding: 10px;
@@ -467,40 +405,149 @@ body {
     margin-top: 4px;
 }
 
-/* DADOS CLIENTE */
-.doc-info-section {
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
-    padding: 12px 0;
-    margin-bottom: 20px;
+/* ==========================================================================
+   DADOS DO CLIENTE (HIERARQUIA PROFISSIONAL)
+   ========================================================================== */
+
+.client-data-table-title {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    border: 2px solid #000;
+    background: #000; /* Fundo base */
 }
 
-.doc-grid {
-    display: flex;
-    justify-content: space-between;
+.client-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    background: #000; /* Fundo base */
 }
 
-.doc-col {
-    width: 48%;
-}
-
-.info-label {
-    font-size: 10px;
+/* NÍVEL 1: TÍTULOS PRINCIPAIS (Preto Sólido) - Cliente / Vendedor */
+.bg-black-title {
+    background-color: #000 !important;
+    color: #fff !important;
     font-weight: 700;
     text-transform: uppercase;
-    color: #555;
-    margin-bottom: 2px;
+    text-align: center;
+    width: 120px;
+    vertical-align: middle;
+    padding: 5px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
-.info-value {
-    font-size: 13px;
-    font-weight: 400;
-    color: #000;
-    margin-bottom: 8px;
+/* NÍVEL 2: TÍTULOS SECUNDÁRIOS (Cinza Claro) - CNPJ, Endereço, etc. */
+.bg-gray-title {
+    background-color: #e6e6e6 !important; /* Cinza suave profissional */
+    color: #000 !important;
+    font-weight: 700;
     text-transform: uppercase;
+    text-align: center;
+    width: 120px;
+    vertical-align: middle;
+    padding: 8px;
+    border: 1px solid #000; /* Borda preta para grade */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
-/* TABELA DE ITENS (VISUAL NA TELA) */
+/* DADOS (Fundo Branco) */
+.data-cell {
+    background-color: #fff !important;
+    color: #000 !important;
+    font-weight: 500;
+    text-transform: uppercase;
+    text-align: left;
+    vertical-align: middle;
+    padding: 8px 12px;
+    border: 2px solid #000;
+}
+
+.data-cell.highlight {
+    font-weight: 800;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   IMPRESSÃO PDF (FIXED)
+   ========================================================================== */
+@media print {
+    .sidebar, .export-actions, .empty-state, .connection-test, .upload-section, ::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+
+    body {
+        background: #fff;
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .app, .preview-area {
+        display: block;
+        padding: 0;
+        background: #fff;
+    }
+
+    .recibo-wrapper {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        box-shadow: none;
+    }
+
+    .recibo {
+        padding: 0;
+        box-shadow: none;
+        border: none;
+        width: 100%;
+    }
+
+    /* Força Bordas Físicas em Tudo */
+    .r-table, .client-data-table {
+        width: 100%;
+        border-collapse: collapse !important;
+    }
+
+    .r-table th, .r-table td,
+    .client-data-table td {
+        border: 1pt solid #000 !important; /* Garante a linha no PDF */
+    }
+
+    /* Ajustes Específicos de Cor para Impressão */
+    .bg-black-title {
+        background-color: #000 !important;
+        color: #fff !important;
+        border-color: #fff !important; /* Mantém contraste */
+    }
+
+    .bg-gray-title {
+        background-color: #e6e6e6 !important; /* Cinza sai na impressão */
+        color: #000 !important;
+        border-color: #000 !important;
+    }
+
+    tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .r-table thead {
+        display: table-header-group;
+    }
+}
+
+/* ==========================================================================
+   TABELA DE ITENS (PADRÃO)
+   ========================================================================== */
 .r-table {
     width: 100%;
     border-collapse: collapse;
@@ -516,6 +563,8 @@ body {
     padding: 10px 8px;
     border: 1px solid #000;
     text-align: left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
 .r-table td {
@@ -527,7 +576,6 @@ body {
     font-weight: 400;
 }
 
-/* Colunas */
 .c-img {
     width: 75px;
     text-align: center;
@@ -569,7 +617,7 @@ body {
     margin: 0 auto;
 }
 
-/* TOTAIS */
+/* Totais */
 .totals-area {
     display: flex;
     justify-content: flex-end;
@@ -607,7 +655,7 @@ body {
     border: 1px solid #000 !important;
 }
 
-/* RODAPÉ */
+/* Rodapé */
 .section-title {
     font-size: 11px;
     font-weight: 700;
@@ -634,80 +682,4 @@ body {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-}
-
-/* ==========================================================================
-   SOLUÇÃO DEFINITIVA PARA IMPRESSÃO (PDF)
-   ========================================================================== */
-@media print {
-    /* Esconde interface */
-    .sidebar, .export-actions, .empty-state, .connection-test, .upload-section, ::-webkit-scrollbar {
-        display: none !important;
-    }
-
-    @page {
-        size: A4;
-        margin: 10mm; /* Margem segura */
-    }
-
-    body {
-        background: #fff;
-        margin: 0;
-        padding: 0;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    .app, .preview-area {
-        display: block;
-        padding: 0;
-        background: #fff;
-    }
-
-    .recibo-wrapper {
-        max-width: 100%;
-        width: 100%;
-        margin: 0;
-        box-shadow: none;
-    }
-
-    .recibo {
-        padding: 0;
-        box-shadow: none;
-        border: none;
-        width: 100%;
-    }
-
-    /* ---- A MÁGICA DAS BORDAS ---- */
-    .r-table {
-        width: 100%;
-        border-collapse: collapse !important; /* Funde as bordas vizinhas */
-    }
-
-    /* 1. Usamos 1pt (ponto) em vez de 1px. 1pt é físico e nunca some no PDF */
-    .r-table th,
-    .r-table td {
-        border: 1pt solid #000 !important;
-    }
-
-    /* 2. Força a cor preta sólida para evitar tons de cinza que somem */
-    .r-table td {
-        border-color: #000000 !important;
-    }
-
-    /* 3. Evita quebra de página no meio de uma linha (ajuda a renderizar a borda inferior) */
-    .r-table tr {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        background-color: transparent !important; /* Evita sobreposição de fundo na borda */
-    }
-
-    /* Repete cabeçalho */
-    .r-table thead {
-        display: table-header-group;
-    }
-
-    .r-table tfoot {
-        display: table-footer-group;
-    }
 }

@@ -27,10 +27,7 @@
                 <label for="pedidoId">Buscar Pedido</label>
                 <div class="input-row">
                     <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
-                    <button id="btnGerar" onclick="gerarRecibo()">
-                        <span class="btn-text">GERAR</span>
-                        <span class="btn-loading" style="display:none;">...</span>
-                    </button>
+                    <button id="btnGerar" onclick="gerarRecibo()">GERAR</button>
                 </div>
             </div>
 
@@ -42,36 +39,24 @@
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>Tipo de Documento</label>
-                <div class="toggle-group">
-                    <button class="toggle active" data-type="pedido" onclick="setDocType(this)">Pedido Venda</button>
-                    <button class="toggle" data-type="recibo" onclick="setDocType(this)">Recibo Simples</button>
-                </div>
-            </div>
-
             <div id="errorBox" class="error-box" style="display:none;"></div>
             <div id="successBox" class="success-box" style="display:none;"></div>
 
             <div id="exportActions" class="export-actions" style="display:none;">
                 <h3>Finalizar</h3>
                 <button class="btn-export" onclick="exportarPDF()">
-                    <span>📄</span> Salvar PDF / Imprimir
-                </button>
-                <button class="btn-export" onclick="exportarImagem()">
-                    <span>🖼️</span> Baixar como Imagem (PNG)
+                    📄 Salvar PDF / Imprimir
                 </button>
             </div>
 
             <div class="upload-section">
                 <h3>Fotos dos Produtos</h3>
                 <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-                    <p class="upload-hint">Arraste ou clique para enviar</p>
-                    <button class="btn-upload">Selecionar Arquivos</button>
+                    <p class="upload-hint">Arraste ou clique para adicionar</p>
+                    <button class="btn-upload">Selecionar Imagens</button>
                     <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
                            style="display:none;">
                 </div>
-                <div id="uploadedList" class="uploaded-list"></div>
             </div>
 
             <div class="connection-test">
@@ -80,36 +65,35 @@
         </div>
 
         <div class="sidebar-footer">
-            <span>Sistema v2.5 • Magic Fireworks</span>
+            <span>Sistema v3.1 • Magic Fireworks</span>
         </div>
     </aside>
 
     <main class="preview-area">
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">📋</div>
-            <h2>Nenhum documento gerado</h2>
-            <p>Digite o número do pedido e clique em <strong>Gerar</strong></p>
+            <h2>Pronto para gerar</h2>
+            <p>Digite o número do pedido e clique em <strong>GERAR</strong></p>
         </div>
 
         <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
             <div id="recibo" class="recibo">
-
                 <table class="doc-header-table">
                     <tr>
-                        <td style="width: 130px;">
-                            <div class="r-logo-circle">
-                                <img id="reciboLogo" src="/public/FireworksMagicLogo.jpg" alt="Logo"
+                        <td style="width: 220px; margin-right: 100px;">
+                            <div class="r-logo-rect">
+                                <img id="reciboLogo" src="/public/MagicFireworksLogo.jpeg" alt="Logo"
                                      onerror="this.style.opacity='0'">
                             </div>
                         </td>
-                        <td style="padding-left: 20px;">
+                        <td style="padding-left: 10px;">
                             <div id="rEmpresaNome">MAGIC FIREWORKS</div>
                             <div id="rEmpresaCnpj" class="doc-info">CNPJ: 00.000.000/0001-00</div>
                             <div id="rEmpresaEnd" class="doc-info">Endereço Completo, 123 - Cidade/UF</div>
                         </td>
                         <td style="text-align: right; width: 160px;">
                             <div class="doc-box-number">
-                                <span class="doc-label" id="rDocTitulo">PEDIDO</span>
+                                <span class="doc-label" id="rDocTitulo">PEDIDO DE VENDA</span>
                                 <div id="rDocNum" class="doc-big-num">000</div>
                                 <div id="rData" class="doc-date">-</div>
                             </div>
@@ -117,22 +101,7 @@
                     </tr>
                 </table>
 
-                <div class="doc-info-section">
-                    <div class="doc-grid">
-                        <div class="doc-col">
-                            <div class="info-label">CLIENTE</div>
-                            <div class="info-value" id="rCliente">-</div>
-                            <div class="info-label">CPF/CNPJ</div>
-                            <div class="info-value" id="rClienteDoc" style="font-weight: normal;">-</div>
-                        </div>
-                        <div class="doc-col" style="text-align: right;">
-                            <div class="info-label">VENDEDOR(A)</div>
-                            <div class="info-value" id="rVendedor">-</div>
-                            <div class="info-label">Nº PEDIDO TINY</div>
-                            <div class="info-value" id="rNumero" style="font-weight: normal;">-</div>
-                        </div>
-                    </div>
-                </div>
+                <div id="rDadosClienteContainer" style="margin-top: 20px;"></div>
 
                 <table class="r-table">
                     <thead>
@@ -193,7 +162,6 @@
                         <p id="rMensagem"></p>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
