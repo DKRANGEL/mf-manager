@@ -1,4 +1,4 @@
-﻿/* ===================== DOCUMENTO - IDENTIDADE VISUAL MAGIC FIREWORKS ===================== */
+/* ===================== DOCUMENTO - IDENTIDADE VISUAL MAGIC FIREWORKS ===================== */
 /* Baseado no catálogo oficial: header preto, linhas horizontais finas, sem bordas laterais  */
 /* Mexer aqui = mexer no que sai no PDF. Não afeta sidebar nem interface.                    */
 
@@ -38,14 +38,14 @@
 }
 
 .r-logo-rect {
-    width: 160px;
-    height: 90px;
+    width: 150px;
+    height: 75px;
     border: none;
     display: flex;
+    align-items: center;
     justify-content: flex-start;
     background: transparent;
-    margin-left: 0px;
-    padding: 0;
+    margin-left: -10px;
 }
 
 .r-logo-rect img {
@@ -73,15 +73,15 @@
 
 /* Caixa número do pedido — fundo preto como catálogo */
 .doc-box-number {
-    border: 2px solid #e0e0e0;
+    border: 1px solid #cdcdcd !important;
+    color: #000 !important;
     padding: 10px 14px;
     text-align: center;
     min-width: 140px;
     display: inline-block;
+    background-color: #f0f0f0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    background-color: #f0f0f0 !important;
-    color: #000 !important;
 }
 
 .doc-label {
@@ -101,7 +101,7 @@
 }
 
 .doc-date {
-    border-top: 1px solid #ccc;
+    border-top: 1px solid #cdcdcd;
     padding-top: 4px;
     font-weight: 400;
     display: block;
@@ -131,18 +131,18 @@
 }
 
 .client-data-table-title td {
-    border-right: 1px solid #e0e0e0 !important;
-    border-bottom: 1px solid #e0e0e0 !important;
+    border-right: 1px solid #ccc !important;
+    border-bottom: 1px solid #ccc !important;
     border-top: none !important;
     border-left: none !important;
 }
 
 .client-data-table-title td:first-child {
-    border-left: 1px solid #e0e0e0 !important;
+    border-left: 1px solid #ccc !important;
 }
 
 .client-data-table-title tr:first-child td {
-    border-top: 1px solid #e0e0e0 !important;
+    border-top: 1px solid #ccc !important;
 }
 
 /* Dados do cliente */
@@ -155,18 +155,18 @@
 }
 
 .client-data-table td {
-    border-right: 1px solid #e0e0e0 !important;
-    border-bottom: 1px solid #e0e0e0 !important;
+    border-right: 1px solid #ccc !important;
+    border-bottom: 1px solid #ccc !important;
     border-top: none !important;
     border-left: none !important;
 }
 
 .client-data-table tr:first-child td {
-    border-top: 1px solid #e0e0e0 !important;
+    border-top: 1px solid #ccc !important;
 }
 
 .client-data-table td:first-child {
-    border-left: 1px solid #e0e0e0 !important;
+    border-left: 1px solid #ccc !important;
 }
 
 /* Nível 1: Títulos pretos (VENDEDOR, Nº PEDIDO) */
@@ -233,7 +233,6 @@
 }
 
 .r-table thead th {
-    border: 1px solid #e0e0e0;
     background-color: #000 !important;
     color: #fff !important;
     font-weight: 700;
@@ -248,20 +247,19 @@
 }
 
 .r-table tbody td {
-    border-right: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-    border-top: none;
-    border-left: none;
+    border: 1px solid #e0e0e0;
     padding: 10px 12px;
     vertical-align: middle;
     color: #1a1a1a;
     font-weight: 400;
 }
 
+/* Sem borda externa: esquerda da primeira coluna, direita da última */
 .r-table thead th:first-child,
 .r-table tbody td:first-child {
     border-left: none !important;
 }
+
 .r-table thead th:last-child,
 .r-table tbody td:last-child {
     border-right: none !important;
@@ -425,6 +423,18 @@
         width: 100%;
     }
 
+    .r-table thead th,
+    .bg-black-title,
+    .final-row td {
+        background-color: #000 !important;
+        color: #fff !important;
+    }
+
+    .bg-gray-title {
+        background-color: #f0f0f0 !important;
+        color: #000 !important;
+    }
+
     .r-table,
     .client-data-table,
     .client-data-table-title,
@@ -433,47 +443,33 @@
         border-spacing: 0 !important;
     }
 
-    .r-table thead th,
-    .bg-black-title,
-    .final-row td {
-        background-color: #000 !important;
-        color: #fff !important;
-    }
-
-    .doc-box-number {
-        background-color: #f0f0f0 !important;
-        color: #000 !important;
-    }
-
-    .bg-gray-title {
-        background-color: #f0f0f0 !important;
-        color: #000 !important;
-    }
-
-    .client-data-table-title td,
-    .client-data-table td {
-        border-right: 1px solid #e0e0e0 !important;
-        border-bottom: 1px solid #e0e0e0 !important;
-        border-top: none !important;
-        border-left: none !important;
-    }
-
     .client-data-table tr:first-child td,
     .client-data-table-title tr:first-child td {
-        border-top: 1px solid #e0e0e0 !important;
+        border-top: 1px solid #ccc !important;
     }
 
     .client-data-table td:first-child,
     .client-data-table-title td:first-child {
-        border-left: 1px solid #e0e0e0 !important;
+        border-left: 1px solid #ccc !important;
     }
 
     .bg-gray-title,
     .data-cell {
-        border-right: 1px solid #ccc !important;
-        border-bottom: 1px solid #ccc !important;
-        border-top: none !important;
+        border: 1px solid #ccc !important;
+    }
+
+    .r-table thead th:first-child,
+    .r-table tbody td:first-child {
         border-left: none !important;
+    }
+
+    .r-table thead th:last-child,
+    .r-table tbody td:last-child {
+        border-right: none !important;
+    }
+
+    .r-table tbody tr:last-child td {
+        border-bottom: 2px solid #000 !important;
     }
 
     .r-table tbody td {
@@ -481,10 +477,6 @@
         border-bottom: 1px solid #e0e0e0 !important;
         border-top: none !important;
         border-left: none !important;
-    }
-
-    .r-table tbody tr:last-child td {
-        border-bottom: 2px solid #000 !important;
     }
 
     tr {

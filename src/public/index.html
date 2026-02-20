@@ -24,22 +24,109 @@
         </div>
 
         <div class="sidebar-content">
+            <!-- ===== TOGGLE DE MODO ===== -->
             <div class="input-group">
-                <label for="pedidoId">Buscar Pedido</label>
-                <div class="input-row">
-                    <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
-                    <button id="btnGerar" onclick="gerarRecibo()">GERAR</button>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Critério de Busca</label>
+                <label>Tipo de Documento</label>
                 <div class="toggle-group">
-                    <button class="toggle active" data-type="numero" onclick="setTipo(this)">Número Pedido</button>
-                    <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
+                    <button class="toggle active" data-mode="pedido" onclick="setModo(this)">Pedido de Venda</button>
+                    <button class="toggle" data-mode="equipamento" onclick="setModo(this)">Ordem Equipamento</button>
                 </div>
             </div>
 
+            <!-- ===== MODO: PEDIDO DE VENDA ===== -->
+            <div id="modoPedido">
+                <div class="input-group">
+                    <label for="pedidoId">Buscar Pedido</label>
+                    <div class="input-row">
+                        <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
+                        <button id="btnGerar" onclick="gerarRecibo()">GERAR</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Critério de Busca</label>
+                    <div class="toggle-group">
+                        <button class="toggle active" data-type="numero" onclick="setTipo(this)">Número Pedido</button>
+                        <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== MODO: ORDEM DE EQUIPAMENTO ===== -->
+            <div id="modoEquipamento" style="display:none;">
+                <!-- Ações principais -->
+                <div class="input-group">
+                    <label>Ações</label>
+                    <button class="btn-export" onclick="novaOrdem()" style="background: var(--sb-accent); color: #fff;">
+                        ＋ Nova Ordem de Equipamento
+                    </button>
+                    <div class="input-row" style="margin-top: 8px;">
+                        <input type="text" id="osBusca" placeholder="Nº da OS (ex: 1, 2, 3...)" autocomplete="off">
+                        <button id="btnGerarOS" onclick="buscarOS()">IR</button>
+                    </div>
+                </div>
+
+                <!-- Link pra cadastro -->
+                <a href="/equipamentos" class="btn-link-equip" target="_blank">
+                    📦 Gerenciar Cadastro de Equipamentos
+                </a>
+
+                <div id="osFormulario" style="display:none;">
+                    <div class="input-group">
+                        <label for="osEvento">Nome do Evento</label>
+                        <input type="text" id="osEvento" class="sidebar-input" placeholder="Ex: Show Henrique & Juliano" list="listaEventos">
+                        <datalist id="listaEventos"></datalist>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="osLocal">Local</label>
+                        <input type="text" id="osLocal" class="sidebar-input" placeholder="Ex: Arena BRB Mané Garrincha" list="listaLocais">
+                        <datalist id="listaLocais"></datalist>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Datas</label>
+                        <div class="input-row">
+                            <input type="date" id="osDataSaida" class="sidebar-input" title="Data de Saída">
+                            <input type="date" id="osDataRetorno" class="sidebar-input" title="Data de Retorno">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="osRespEntrega">Responsável pela Entrega</label>
+                        <input type="text" id="osRespEntrega" class="sidebar-input" placeholder="Nome do responsável" list="listaRespEntrega">
+                        <datalist id="listaRespEntrega"></datalist>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="osRespEquip">Responsável pelo Equipamento</label>
+                        <input type="text" id="osRespEquip" class="sidebar-input" placeholder="Nome do responsável" list="listaRespEquip">
+                        <datalist id="listaRespEquip"></datalist>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Adicionar Equipamentos</label>
+                        <div class="input-row">
+                            <input type="text" id="osBuscaProduto" class="sidebar-input" placeholder="Buscar por nome ou código...">
+                            <button class="btn-accent-sm" onclick="buscarProdutos()">🔍</button>
+                        </div>
+                        <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
+                    </div>
+
+                    <div id="osItensLista" class="os-itens-lista"></div>
+
+                    <div class="input-group">
+                        <label for="osObs">Observações</label>
+                        <textarea id="osObs" class="sidebar-textarea" placeholder="Observações opcionais..." rows="2"></textarea>
+                    </div>
+
+                    <button class="btn-export" onclick="gerarOrdemEquipamento()" style="margin-top: 10px;">
+                        📋 Gerar Ordem de Equipamento
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== COMUNS ===== -->
             <div id="errorBox" class="error-box" style="display:none;"></div>
             <div id="successBox" class="success-box" style="display:none;"></div>
 
@@ -50,7 +137,7 @@
                 </button>
             </div>
 
-            <div class="upload-section">
+            <div class="upload-section" id="uploadSection">
                 <h3>Fotos dos Produtos</h3>
                 <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
                     <p class="upload-hint">Arraste ou clique para adicionar</p>
@@ -66,7 +153,7 @@
         </div>
 
         <div class="sidebar-footer">
-            <span>Sistema v3.1 • Magic Fireworks</span>
+            <span>Sistema v4.0 • Magic Fireworks</span>
         </div>
     </aside>
 
@@ -74,11 +161,10 @@
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">📋</div>
             <h2>Pronto para gerar</h2>
-            <p>Digite o número do pedido e clique em <strong>GERAR</strong></p>
+            <p>Escolha o tipo de documento e preencha os dados</p>
         </div>
 
         <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
-            <!-- O template do documento é injetado aqui pelo JS -->
             <div id="recibo" class="recibo"></div>
         </div>
     </main>

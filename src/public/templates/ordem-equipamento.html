@@ -1,0 +1,87 @@
+<!-- ORDEM DE SAÍDA DE EQUIPAMENTOS — Template -->
+<!-- Mesma identidade visual do pedido.html, classes compartilhadas do documento.css -->
+
+<table class="doc-header-table">
+    <tr>
+        <td style="width: 140px; padding: 0;">
+            <div class="r-logo-rect">
+                <img id="oeLogoImg" src="/public/MagicFireworksLogo.jpeg" alt="Logo"
+                     onerror="this.style.opacity='0'">
+            </div>
+        </td>
+        <td style="padding-left: 12px;">
+            <div id="oeEmpresaNome">MAGIC FIREWORKS</div>
+            <div id="oeEmpresaCnpj" class="doc-info">CNPJ: 00.000.000/0001-00</div>
+            <div id="oeEmpresaEnd" class="doc-info">Brasília - DF</div>
+        </td>
+        <td style="text-align: right; width: 160px;">
+            <div class="doc-box-number">
+                <span class="doc-label" id="oeDocTitulo">ORDEM DE EQUIPAMENTO</span>
+                <div id="oeDocNum" class="doc-big-num">000</div>
+                <div id="oeDocData" class="doc-date">-</div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Dados do Evento -->
+<div id="oeDadosEventoContainer"></div>
+
+<!-- Tabela de Equipamentos -->
+<table class="r-table">
+    <thead>
+    <tr>
+        <th class="c-item">ITEM</th>
+        <th class="c-sku">CÓD</th>
+        <th class="c-desc">DESCRIÇÃO DO EQUIPAMENTO</th>
+        <th class="c-qtd">QTD SAÍDA</th>
+        <th class="c-qtd">QTD RETORNO</th>
+        <th style="text-align: center; width: 80px;">STATUS</th>
+    </tr>
+    </thead>
+    <tbody id="oeItens"></tbody>
+</table>
+
+<!-- Resumo -->
+<div class="totals-area">
+    <table class="totals-table">
+        <tr>
+            <td>TOTAL DE ITENS:</td>
+            <td class="totals-value" id="oeTotalItens">0</td>
+        </tr>
+        <tr class="final-row">
+            <td style="background: transparent; color: #000; border: none;">PENDENTES DE RETORNO:</td>
+            <td id="oePendentes">0</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Observações -->
+<div id="oeObsSection" style="display:none; margin-top: 25px;">
+    <h4 class="section-title">OBSERVAÇÕES</h4>
+    <div class="doc-obs-box">
+        <p id="oeObs"></p>
+    </div>
+</div>
+
+<!-- Assinaturas -->
+<div style="margin-top: 40px;">
+    <h4 class="section-title">CONFERÊNCIA E ASSINATURAS</h4>
+    <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+        <tr>
+            <td style="width: 50%; padding: 30px 20px 0 0; vertical-align: bottom;">
+                <div style="border-bottom: 1px solid #000; margin-bottom: 4px; border-collapse: separate;"></div>
+                <div style="text-align: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;" id="oeAssinaEntrega">RESPONSÁVEL PELA ENTREGA</div>
+            </td>
+            <td style="width: 50%; padding: 30px 0 0 20px; vertical-align: bottom;">
+                <div style="border-bottom: 1px solid #000; margin-bottom: 4px; border-collapse: separate;"></div>
+                <div style="text-align: center; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;" id="oeAssinaEquip">RESPONSÁVEL PELO EQUIPAMENTO</div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Rodapé -->
+<div class="doc-footer">
+    <p id="oeMensagem">MAGIC FIREWORKS - CONTROLE DE EQUIPAMENTOS</p>
+</div>

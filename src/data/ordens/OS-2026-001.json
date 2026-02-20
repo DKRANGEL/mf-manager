@@ -1,0 +1,33 @@
+{
+  "numero": "OS-2026-001",
+  "evento": "Show Henrique e Juliano",
+  "local": "Arena BRB Mané Garrincha",
+  "data_saida": "2026-02-20",
+  "data_retorno": "",
+  "responsavel_entrega": "Bertholdo",
+  "responsavel_equipamento": "Bertholdo",
+  "status": "aberta",
+  "itens": [
+    {
+      "sku": "MD12-001",
+      "descricao": "Cabo MD12 / 3 Metros",
+      "qtd_saida": 5,
+      "qtd_retorno": 0
+    },
+    {
+      "sku": "MESA-001",
+      "descricao": "Mesa MD12",
+      "qtd_saida": 5,
+      "qtd_retorno": 0
+    },
+    {
+      "sku": "REG-001",
+      "descricao": "Régua MD12",
+      "qtd_saida": 5,
+      "qtd_retorno": 0
+    }
+  ],
+  "observacoes": "",
+  "data_criacao": "2026-02-20T12:13:06.967Z",
+  "data_atualizacao": "2026-02-20T12:13:06.968Z"
+}

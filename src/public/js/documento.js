@@ -1,14 +1,22 @@
-﻿// ===================== DOCUMENTO (TEMPLATE + RENDER) =====================
+// ===================== DOCUMENTO (TEMPLATE + RENDER) =====================
 // Este arquivo controla SOMENTE o conteúdo do documento gerado.
 // Mexer aqui = mexer no que aparece no pedido/recibo.
 
 let _templateCache = null;
+let _templateOECache = null;
 
 async function carregarTemplate() {
     if (_templateCache) return _templateCache;
     const res = await fetch('/public/templates/pedido.html');
     _templateCache = await res.text();
     return _templateCache;
+}
+
+async function carregarTemplateOE() {
+    if (_templateOECache) return _templateOECache;
+    const res = await fetch('/public/templates/ordem-equipamento.html');
+    _templateOECache = await res.text();
+    return _templateOECache;
 }
 
 async function renderDocumento(pedido, config) {
@@ -35,7 +43,12 @@ async function renderDocumento(pedido, config) {
     const vendedor = (pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase();
     const numPedido = pedido.numero || pedido.id || '-';
 
-    const enderecoCompleto = [cli.endereco, cli.numero, cli.bairro, cli.cidade ? `${cli.cidade}/${cli.uf}` : ''].filter(Boolean).join(', ');
+    const enderecoCompleto = [
+        cli.endereco,
+        cli.numero,
+        cli.bairro,
+        cli.cidade ? `${cli.cidade}/${cli.uf}` : ''
+    ].filter(Boolean).join(', ');
 
     const contato = [cli.fone, cli.celular, cli.email].filter(Boolean).join(' / ') || '-';
 
@@ -157,6 +170,110 @@ async function renderDocumento(pedido, config) {
     setText('rMensagem', rc.mensagemRodape || 'MAGIC FIREWORKS - QUALIDADE E SEGURANÇA');
 }
 
+// ===================== ORDEM DE EQUIPAMENTO (RENDER) =====================
+
+async function renderOrdemEquipamento(ordem, config) {
+    const template = await carregarTemplateOE();
+    const container = document.getElementById('recibo');
+    container.innerHTML = template;
+
+    const emp = config.empresa || {};
+
+    // 1. Dados da Empresa
+    setText('oeEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
+    setText('oeEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
+    setText('oeEmpresaEnd', 'Brasília - DF');
+
+    // 2. Cabeçalho — número curto (ex: "001" extraído de "OS-2026-001")
+    const numCurto = (ordem.numero || '000').replace(/^OS-\d{4}-/, '');
+    setText('oeDocTitulo', 'ORDEM DE EQUIPAMENTO');
+    setText('oeDocNum', numCurto);
+    setText('oeDocData', formatDate(ordem.data_criacao));
+
+    // 3. Dados do Evento — mesma estrutura visual das tabelas de cliente
+    const dadosEventoHTML = `
+    <table class="client-data-table-title">
+        <tr>
+            <td class="bg-black-title">EVENTO</td>
+            <td class="data-cell highlight" colspan="3">${esc((ordem.evento || '-').toUpperCase())}</td>
+        </tr>
+    </table>
+    <table class="client-data-table">
+        <tr>
+            <td class="bg-gray-title">LOCAL</td>
+            <td class="data-cell" colspan="3">${esc((ordem.local || '-').toUpperCase())}</td>
+        </tr>
+        <tr>
+            <td class="bg-gray-title">SAÍDA</td>
+            <td class="data-cell">${formatDate(ordem.data_saida)}</td>
+            <td class="bg-gray-title">RETORNO</td>
+            <td class="data-cell">${formatDate(ordem.data_retorno)}</td>
+        </tr>
+        <tr>
+            <td class="bg-gray-title">RESP. ENTREGA</td>
+            <td class="data-cell" colspan="3">${esc((ordem.responsavel_entrega || '-').toUpperCase())}</td>
+        </tr>
+        <tr>
+            <td class="bg-gray-title">RESP. EQUIP.</td>
+            <td class="data-cell" colspan="3">${esc((ordem.responsavel_equipamento || '-').toUpperCase())}</td>
+        </tr>
+    </table>
+    `;
+    document.getElementById('oeDadosEventoContainer').innerHTML = dadosEventoHTML;
+
+    // 4. Itens
+    const tbody = document.getElementById('oeItens');
+    tbody.innerHTML = '';
+    const itens = ordem.itens || [];
+    let totalItens = 0;
+    let pendentes = 0;
+
+    itens.forEach((item, i) => {
+        const qtdSaida = parseInt(item.qtd_saida) || 0;
+        const qtdRetorno = parseInt(item.qtd_retorno) || 0;
+        const diff = qtdSaida - qtdRetorno;
+        totalItens += qtdSaida;
+        pendentes += Math.max(0, diff);
+
+        let status = 'PENDENTE';
+        let statusStyle = 'color: #c0392b; font-weight: 700;';
+        if (diff === 0 && qtdSaida > 0) {
+            status = 'OK';
+            statusStyle = 'color: #27ae60; font-weight: 700;';
+        } else if (qtdRetorno > 0 && diff > 0) {
+            status = 'PARCIAL';
+            statusStyle = 'color: #e67e22; font-weight: 700;';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="c-item">${i + 1}</td>
+            <td class="c-sku">${esc(item.sku || '-')}</td>
+            <td class="c-desc">${esc(item.descricao || '-')}</td>
+            <td class="c-qtd">${qtdSaida}</td>
+            <td class="c-qtd">${qtdRetorno}</td>
+            <td style="text-align: center; font-size: 10px; ${statusStyle}">${status}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // 5. Totais
+    setText('oeTotalItens', totalItens.toString());
+    setText('oePendentes', pendentes.toString());
+
+    // 6. Assinaturas
+    setText('oeAssinaEntrega', `RESP. ENTREGA: ${(ordem.responsavel_entrega || '').toUpperCase()}`);
+    setText('oeAssinaEquip', `RESP. EQUIPAMENTO: ${(ordem.responsavel_equipamento || '').toUpperCase()}`);
+
+    // 7. Observações
+    if (ordem.observacoes) {
+        setText('oeObs', ordem.observacoes);
+        show('oeObsSection');
+    } else {
+        hide('oeObsSection');
+    }
+}
+
 // ---- Helpers de formatação ----
 
 function fmtMoney(v) {
@@ -169,7 +286,11 @@ function formatQtd(v) {
 
 function formatDate(d) {
     if (!d) return new Date().toLocaleDateString('pt-BR');
+    // Já formatada (DD/MM/YYYY)
     if (d.includes('/')) return d;
+    // ISO datetime (2026-02-20T12:13:06.967Z) — pega só a parte da data
+    if (d.includes('T')) d = d.split('T')[0];
+    // YYYY-MM-DD
     const p = d.split('-');
     return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
 }

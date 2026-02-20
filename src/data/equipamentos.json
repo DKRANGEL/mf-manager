@@ -1,0 +1,599 @@
+{
+  "proximo_id": 82,
+  "equipamentos": [
+    {
+      "id": 1,
+      "sku": "CHI-001",
+      "nome": "Chicote 1 Metro / 3 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 3,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 2,
+      "sku": "CHI-002",
+      "nome": "Chicote 20 Metros / 6 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 6,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 3,
+      "sku": "CHI-003",
+      "nome": "Chicote 40 Metros / 8 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 4,
+      "sku": "CHI-004",
+      "nome": "Chicote 50 Metros / 20 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 5,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 5,
+      "sku": "CHI-005",
+      "nome": "Chicote 100 Metros / 4 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 6,
+      "sku": "CHI-006",
+      "nome": "Chicote 1,5 Metros / 32 Vias",
+      "categoria": "Chicotes",
+      "quantidade": 54,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 7,
+      "sku": "DMX-001",
+      "nome": "Cabo DMX 5 Metros",
+      "categoria": "Cabos DMX",
+      "quantidade": 34,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 8,
+      "sku": "DMX-002",
+      "nome": "Cabo DMX 10 Metros (Velho)",
+      "categoria": "Cabos DMX",
+      "quantidade": 6,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 9,
+      "sku": "DMX-003",
+      "nome": "Cabo DMX 10 Metros (Novo)",
+      "categoria": "Cabos DMX",
+      "quantidade": 3,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 10,
+      "sku": "DMX-004",
+      "nome": "Cabo DMX 15 Metros",
+      "categoria": "Cabos DMX",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 11,
+      "sku": "DMX-005",
+      "nome": "Cabo DMX 25 Metros",
+      "categoria": "Cabos DMX",
+      "quantidade": 10,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 12,
+      "sku": "DMX-006",
+      "nome": "Cabo DMX 30 Metros",
+      "categoria": "Cabos DMX",
+      "quantidade": 1,
+      "em_manutencao": 1,
+      "observacoes": ""
+    },
+    {
+      "id": 13,
+      "sku": "DMX-007",
+      "nome": "Cabo DMX 50 Metros",
+      "categoria": "Cabos DMX",
+      "quantidade": 5,
+      "em_manutencao": 1,
+      "observacoes": ""
+    },
+    {
+      "id": 14,
+      "sku": "MD12-001",
+      "nome": "Cabo MD12 / 3 Metros",
+      "categoria": "Cabos MD12",
+      "quantidade": 18,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 15,
+      "sku": "MD12-002",
+      "nome": "Cabo MD12 / 5 Metros",
+      "categoria": "Cabos MD12",
+      "quantidade": 15,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 16,
+      "sku": "MD12-003",
+      "nome": "Cabo MD12 / 10 Metros",
+      "categoria": "Cabos MD12",
+      "quantidade": 5,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 17,
+      "sku": "MD12-004",
+      "nome": "Cabo MD12 / 15 Metros",
+      "categoria": "Cabos MD12",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 18,
+      "sku": "MD12-005",
+      "nome": "Cabo MD12 / 25 Metros",
+      "categoria": "Cabos MD12",
+      "quantidade": 5,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 19,
+      "sku": "MD30-001",
+      "nome": "Cabo MD30 / 3 Metros",
+      "categoria": "Cabos MD30",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 20,
+      "sku": "MD30-002",
+      "nome": "Cabo MD30 / 5 Metros",
+      "categoria": "Cabos MD30",
+      "quantidade": 15,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 21,
+      "sku": "MD30-003",
+      "nome": "Cabo MD30 / 10 Metros",
+      "categoria": "Cabos MD30",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 22,
+      "sku": "MD30-004",
+      "nome": "Cabo MD30 / 25 Metros",
+      "categoria": "Cabos MD30",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 23,
+      "sku": "MD30-005",
+      "nome": "Cabo MD30 / 50 Metros",
+      "categoria": "Cabos MD30",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 24,
+      "sku": "MESA-001",
+      "nome": "Mesa MD12",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 25,
+      "sku": "MESA-002",
+      "nome": "Mesa MD30",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 3,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 26,
+      "sku": "MESA-003",
+      "nome": "Mesa MD60",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 27,
+      "sku": "MESA-004",
+      "nome": "Maleta Via Rádio",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 3,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 28,
+      "sku": "MESA-005",
+      "nome": "Maleta Fire One",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 29,
+      "sku": "MESA-006",
+      "nome": "Fx Comander Magic",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 30,
+      "sku": "MESA-007",
+      "nome": "Mesa BMX 12 Canais",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 1,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 31,
+      "sku": "FO-001",
+      "nome": "Cabo Fire One 30 Cm",
+      "categoria": "Cabos Fire One",
+      "quantidade": 18,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 32,
+      "sku": "FO-002",
+      "nome": "Cabo Fire One 60 Cm",
+      "categoria": "Cabos Fire One",
+      "quantidade": 29,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 33,
+      "sku": "FO-003",
+      "nome": "Régua Fire One",
+      "categoria": "Cabos Fire One",
+      "quantidade": 33,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 34,
+      "sku": "REG-001",
+      "nome": "Régua MD12",
+      "categoria": "Réguas",
+      "quantidade": 33,
+      "em_manutencao": 0,
+      "observacoes": "03 paralelas"
+    },
+    {
+      "id": 35,
+      "sku": "REG-002",
+      "nome": "Régua MD30",
+      "categoria": "Réguas",
+      "quantidade": 27,
+      "em_manutencao": 0,
+      "observacoes": "07 paralelas"
+    },
+    {
+      "id": 36,
+      "sku": "REG-003",
+      "nome": "Micro Rail",
+      "categoria": "Réguas",
+      "quantidade": 14,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 37,
+      "sku": "MAQ-001",
+      "nome": "Máquina CO2",
+      "categoria": "Máquinas",
+      "quantidade": 26,
+      "em_manutencao": 0,
+      "observacoes": "2 unidades Magic FX"
+    },
+    {
+      "id": 38,
+      "sku": "MAQ-002",
+      "nome": "Máquina de Bolha",
+      "categoria": "Máquinas",
+      "quantidade": 2,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 39,
+      "sku": "MAQ-003",
+      "nome": "Máquina de Neve",
+      "categoria": "Máquinas",
+      "quantidade": 2,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 40,
+      "sku": "EFX-001",
+      "nome": "Cycling Flamer",
+      "categoria": "Equipamentos de Efeito",
+      "quantidade": 6,
+      "em_manutencao": 2,
+      "observacoes": "6 cabos de força"
+    },
+    {
+      "id": 41,
+      "sku": "EFX-002",
+      "nome": "UFlamer",
+      "categoria": "Equipamentos de Efeito",
+      "quantidade": 9,
+      "em_manutencao": 2,
+      "observacoes": "7 cabos de força"
+    },
+    {
+      "id": 42,
+      "sku": "EFX-003",
+      "nome": "Sparklar",
+      "categoria": "Equipamentos de Efeito",
+      "quantidade": 24,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 43,
+      "sku": "EFX-004",
+      "nome": "Fire Nacional",
+      "categoria": "Equipamentos de Efeito",
+      "quantidade": 12,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 44,
+      "sku": "RACK-001",
+      "nome": "Rack Monotiro",
+      "categoria": "Racks e Bases de Tiro",
+      "quantidade": 59,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 45,
+      "sku": "RACK-002",
+      "nome": "Rack 25 Tubos",
+      "categoria": "Racks e Bases de Tiro",
+      "quantidade": 6,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 46,
+      "sku": "RACK-003",
+      "nome": "Arco Curto 30 Tubos",
+      "categoria": "Racks e Bases de Tiro",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 47,
+      "sku": "RACK-004",
+      "nome": "Arco Longo 30 Tubos",
+      "categoria": "Racks e Bases de Tiro",
+      "quantidade": 5,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 48,
+      "sku": "EXT-001",
+      "nome": "Extensão 2 Metros",
+      "categoria": "Extensões",
+      "quantidade": 38,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 49,
+      "sku": "EXT-002",
+      "nome": "Extensão 5 Metros",
+      "categoria": "Extensões",
+      "quantidade": 23,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 50,
+      "sku": "EXT-003",
+      "nome": "Extensão 10 Metros",
+      "categoria": "Extensões",
+      "quantidade": 14,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 51,
+      "sku": "EXT-004",
+      "nome": "Extensão 20 Metros",
+      "categoria": "Extensões",
+      "quantidade": 28,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 52,
+      "sku": "EXT-005",
+      "nome": "Extensão 25 Metros",
+      "categoria": "Extensões",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 53,
+      "sku": "EXT-006",
+      "nome": "Extensão 50 Metros",
+      "categoria": "Extensões",
+      "quantidade": 10,
+      "em_manutencao": 1,
+      "observacoes": ""
+    },
+    {
+      "id": 54,
+      "sku": "EXT-007",
+      "nome": "Extensão 100 Metros",
+      "categoria": "Extensões",
+      "quantidade": 2,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 55,
+      "sku": "MANG-001",
+      "nome": "Mangueira 2 Metros",
+      "categoria": "Mangueiras",
+      "quantidade": 18,
+      "em_manutencao": 0,
+      "observacoes": "Bom estado"
+    },
+    {
+      "id": 56,
+      "sku": "MANG-002",
+      "nome": "Mangueira 5 Metros",
+      "categoria": "Mangueiras",
+      "quantidade": 20,
+      "em_manutencao": 0,
+      "observacoes": "15 Bom estado"
+    },
+    {
+      "id": 57,
+      "sku": "MANG-003",
+      "nome": "Mangueira 10 Metros",
+      "categoria": "Mangueiras",
+      "quantidade": 17,
+      "em_manutencao": 0,
+      "observacoes": "11 Bom estado"
+    },
+    {
+      "id": 58,
+      "sku": "MANG-004",
+      "nome": "Mangueira 20 Metros",
+      "categoria": "Mangueiras",
+      "quantidade": 6,
+      "em_manutencao": 0,
+      "observacoes": "1 Mal estado"
+    },
+    {
+      "id": 59,
+      "sku": "BASE-001",
+      "nome": "Base Alumínio 10 Canos",
+      "categoria": "Bases",
+      "quantidade": 8,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 60,
+      "sku": "BASE-002",
+      "nome": "Base Alumínio 12 Canos",
+      "categoria": "Bases",
+      "quantidade": 29,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 61,
+      "sku": "BASE-003",
+      "nome": "Base 30 Canos",
+      "categoria": "Bases",
+      "quantidade": 24,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 62,
+      "sku": "BASE-004",
+      "nome": "Base 34 Canos",
+      "categoria": "Bases",
+      "quantidade": 17,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 63,
+      "sku": "BASE-005",
+      "nome": "Base 36 Canos",
+      "categoria": "Bases",
+      "quantidade": 16,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 64,
+      "sku": "CONS-001",
+      "nome": "Pó de Sparkler Showven",
+      "categoria": "Consumíveis",
+      "quantidade": 25,
+      "em_manutencao": 0,
+      "observacoes": ""
+    },
+    {
+      "id": 65,
+      "sku": "CONS-002",
+      "nome": "Pó de Sparkler Jânio",
+      "categoria": "Consumíveis",
+      "quantidade": 8,
+      "em_manutencao": 0,
+      "observacoes": "200G"
+    },
+    {
+      "id": 66,
+      "sku": "CONS-003",
+      "nome": "Cartões Sparkler",
+      "categoria": "Consumíveis",
+      "quantidade": 4,
+      "em_manutencao": 0,
+      "observacoes": ""
+    }
+  ]
+}

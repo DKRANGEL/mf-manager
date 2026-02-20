@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const apiRoutes = require('./routes/api');
+const equipamentosRoutes = require('./routes/equipamentos');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -11,6 +12,12 @@ const PORT = process.env.PORT || 3002;
 const produtosDir = path.join(__dirname, 'public', 'produtos');
 if (!fs.existsSync(produtosDir)) {
   fs.mkdirSync(produtosDir, { recursive: true });
+}
+
+// Ensure equipment data directories exist
+const ordensDir = path.join(__dirname, 'data', 'ordens');
+if (!fs.existsSync(ordensDir)) {
+  fs.mkdirSync(ordensDir, { recursive: true });
 }
 
 // Middleware
@@ -50,9 +57,17 @@ app.get('/upload/produtos', (req, res) => {
 // API routes (proxy para Tiny)
 app.use('/api', apiRoutes);
 
+// Rotas de equipamentos
+app.use('/api/equipamentos', equipamentosRoutes);
+
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Página de gerenciamento de equipamentos
+app.get('/equipamentos', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'equipamentos.html'));
 });
 
 app.listen(PORT, () => {
