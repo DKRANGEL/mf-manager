@@ -4,9 +4,6 @@
 
 let _templateCache = null;
 
-/**
- * Carrega o template HTML do pedido (uma vez, cacheia).
- */
 async function carregarTemplate() {
     if (_templateCache) return _templateCache;
     const res = await fetch('/public/templates/pedido.html');
@@ -14,9 +11,6 @@ async function carregarTemplate() {
     return _templateCache;
 }
 
-/**
- * Injeta o template no container e preenche com os dados do pedido.
- */
 async function renderDocumento(pedido, config) {
     const template = await carregarTemplate();
     const container = document.getElementById('recibo');
@@ -36,53 +30,45 @@ async function renderDocumento(pedido, config) {
     setText('rDocNum', pedido.numero || pedido.id || '000');
     setText('rData', formatDate(pedido.data_pedido || pedido.data_criacao));
 
-    // 3. Dados do Cliente
+    // 3. Dados do Cliente — estilo catálogo (barra preta + linhas horizontais)
     const nomeCliente = cli.nome_fantasia || cli.nome || 'Consumidor Final';
+    const vendedor = (pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase();
+    const numPedido = pedido.numero || pedido.id || '-';
 
-    const enderecoCompleto = [
-        cli.endereco,
-        cli.numero,
-        cli.bairro,
-        cli.cidade ? `${cli.cidade}/${cli.uf}` : ''
-    ].filter(Boolean).join(', ');
+    const enderecoCompleto = [cli.endereco, cli.numero, cli.bairro, cli.cidade ? `${cli.cidade}/${cli.uf}` : ''].filter(Boolean).join(', ');
 
     const contato = [cli.fone, cli.celular, cli.email].filter(Boolean).join(' / ') || '-';
 
-    const tabelaDadosHTML = `
+    const dadosClienteHTML = `
     <table class="client-data-table-title">
-        <tr>            
+        <tr>
             <td class="bg-black-title">VENDEDOR</td>
-            <td class="data-cell">${(pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase()}</td>
-            
+            <td class="data-cell">${esc(vendedor)}</td>
             <td class="bg-black-title">Nº PEDIDO</td>
-            <td class="data-cell">${pedido.numero || pedido.id || '-'}</td>
+            <td class="data-cell">${esc(numPedido)}</td>
         </tr>
     </table>
-
     <table class="client-data-table">
         <tr>
             <td class="bg-gray-title">CLIENTE</td>
-            <td class="data-cell highlight" colspan="3">${nomeCliente.toUpperCase()}</td>
+            <td class="data-cell highlight" colspan="3">${esc(nomeCliente.toUpperCase())}</td>
         </tr>
-    
         <tr>
             <td class="bg-gray-title">CNPJ/CPF</td>
-            <td class="data-cell">${formatDoc(cli.cpf_cnpj)}</td>
+            <td class="data-cell" colspan="3">${formatDoc(cli.cpf_cnpj)}</td>
         </tr>
-
         <tr>
             <td class="bg-gray-title">ENDEREÇO</td>
-            <td class="data-cell" colspan="3">${enderecoCompleto.toUpperCase()}</td>
+            <td class="data-cell" colspan="3">${esc(enderecoCompleto.toUpperCase())}</td>
         </tr>
-
         <tr>
             <td class="bg-gray-title">CONTATO</td>
-            <td class="data-cell" colspan="3">${contato.toUpperCase()}</td>
+            <td class="data-cell" colspan="3">${esc(contato.toUpperCase())}</td>
         </tr>
     </table>
     `;
 
-    document.getElementById('rDadosClienteContainer').innerHTML = tabelaDadosHTML;
+    document.getElementById('rDadosClienteContainer').innerHTML = dadosClienteHTML;
 
     // 4. Itens da Tabela
     const tbody = document.getElementById('rItens');
@@ -171,7 +157,7 @@ async function renderDocumento(pedido, config) {
     setText('rMensagem', rc.mensagemRodape || 'MAGIC FIREWORKS - QUALIDADE E SEGURANÇA');
 }
 
-// ---- Helpers de formatação (usados pelo documento) ----
+// ---- Helpers de formatação ----
 
 function fmtMoney(v) {
     return v.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});

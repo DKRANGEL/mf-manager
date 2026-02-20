@@ -1,6 +1,8 @@
-﻿/* ===================== DOCUMENTO (PEDIDO DE VENDA / RECIBO) ===================== */
-/* Este arquivo controla SOMENTE a aparência do documento gerado.                   */
-/* Mexer aqui = mexer no que sai no PDF. Não afeta sidebar nem interface.            */
+﻿/* ===================== DOCUMENTO - IDENTIDADE VISUAL MAGIC FIREWORKS ===================== */
+/* Baseado no catálogo oficial: header preto, linhas horizontais finas, sem bordas laterais  */
+/* Mexer aqui = mexer no que sai no PDF. Não afeta sidebar nem interface.                    */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* --- CONTAINER --- */
 .recibo-wrapper {
@@ -10,37 +12,23 @@
 
 .recibo {
     background: #fff;
-    color: #000;
+    color: #1a1a1a;
     padding: 15mm;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    font-family: 'Arial', sans-serif;
-    font-size: 12px;
-    line-height: 1.3;
+    font-family: 'Inter', 'DM Sans', sans-serif;
+    font-size: 11px;
+    line-height: 1.4;
     font-weight: 400;
 }
 
-/* --- LOGO RETANGULAR --- */
-.r-logo-rect {
-    width: 200px;
-    height: 100px;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    background: transparent;
-}
-
-.r-logo-rect img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* --- CABEÇALHO --- */
+/* ==========================================================================
+   CABEÇALHO DA EMPRESA
+   ========================================================================== */
 .doc-header-table {
     width: 100%;
     margin-bottom: 25px;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .doc-header-table td {
@@ -49,144 +37,242 @@
     border: none !important;
 }
 
+.r-logo-rect {
+    width: 160px;
+    height: 90px;
+    border: none;
+    display: flex;
+    justify-content: flex-start;
+    background: transparent;
+    margin-left: 0px;
+    padding: 0;
+}
+
+.r-logo-rect img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 #rEmpresaNome {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
     text-transform: uppercase;
     color: #000;
-    margin-bottom: 5px;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
 }
 
 .doc-info {
-    font-size: 12px;
-    color: #333;
-    margin: 0;
+    font-size: 11px;
+    color: #555;
+    margin: 2px 0;
     font-weight: 400;
+    letter-spacing: 0.3px;
 }
 
+/* Caixa número do pedido — fundo preto como catálogo */
 .doc-box-number {
-    border: 2px solid #000;
-    padding: 10px;
+    border: 2px solid #e0e0e0;
+    padding: 10px 14px;
     text-align: center;
     min-width: 140px;
     display: inline-block;
-    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
 }
 
 .doc-label {
     display: block;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
     color: #000;
+    letter-spacing: 1px;
 }
 
 .doc-big-num {
-    font-size: 24px;
-    font-weight: 700;
-    margin: 5px 0;
+    font-size: 26px;
+    font-weight: 800;
+    margin: 4px 0;
     color: #000;
 }
 
 .doc-date {
-    border-top: 1px solid #000;
+    border-top: 1px solid #ccc;
     padding-top: 4px;
     font-weight: 400;
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     margin-top: 4px;
+    color: #000;
 }
 
-/* --- DADOS DO CLIENTE --- */
+/* Linha decorativa preta grossa (estilo catálogo) */
+.doc-header-line {
+    height: 3px;
+    background: #000;
+    margin: 15px 0 20px 0;
+    border: none;
+}
+
+/* ==========================================================================
+   DADOS DO CLIENTE — Tabelas com barra preta + linhas cinza (estilo catálogo)
+   ========================================================================== */
+
+/* Barra preta: VENDEDOR / Nº PEDIDO */
 .client-data-table-title {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 25px;
-    border: 2px solid #000;
-    background: #000;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 20px;
 }
 
+.client-data-table-title td {
+    border-right: 1px solid #e0e0e0 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    border-top: none !important;
+    border-left: none !important;
+}
+
+.client-data-table-title td:first-child {
+    border-left: 1px solid #e0e0e0 !important;
+}
+
+.client-data-table-title tr:first-child td {
+    border-top: 1px solid #e0e0e0 !important;
+}
+
+/* Dados do cliente */
 .client-data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-bottom: 25px;
-    background: #000;
+    border-bottom: 3px solid #000;
 }
 
+.client-data-table td {
+    border-right: 1px solid #e0e0e0 !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+    border-top: none !important;
+    border-left: none !important;
+}
+
+.client-data-table tr:first-child td {
+    border-top: 1px solid #e0e0e0 !important;
+}
+
+.client-data-table td:first-child {
+    border-left: 1px solid #e0e0e0 !important;
+}
+
+/* Nível 1: Títulos pretos (VENDEDOR, Nº PEDIDO) */
 .bg-black-title {
     background-color: #000 !important;
     color: #fff !important;
     font-weight: 700;
+    font-size: 10px;
     text-transform: uppercase;
     text-align: center;
-    width: 120px;
+    letter-spacing: 1px;
+    width: 110px;
     vertical-align: middle;
-    padding: 5px;
+    padding: 10px 12px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
+/* Nível 2: Labels cinza (CLIENTE, CNPJ, etc.) */
 .bg-gray-title {
-    background-color: #e6e6e6 !important;
+    background-color: #f0f0f0 !important;
     color: #000 !important;
     font-weight: 700;
+    font-size: 10px;
     text-transform: uppercase;
-    text-align: center;
-    width: 120px;
+    text-align: left;
+    letter-spacing: 0.5px;
+    width: 110px;
     vertical-align: middle;
-    padding: 8px;
-    border: 1px solid #000;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
+/* Células de dados */
 .data-cell {
     background-color: #fff !important;
-    color: #000 !important;
-    font-weight: 500;
+    color: #1a1a1a !important;
+    font-weight: 400;
     text-transform: uppercase;
     text-align: left;
     vertical-align: middle;
-    padding: 8px 12px;
-    border: 2px solid #000;
+    padding: 8px 14px;
+    border-bottom: 1px solid #e0e0e0 !important;
+    font-size: 12px;
 }
 
 .data-cell.highlight {
-    font-weight: 800;
+    font-weight: 700;
     font-size: 13px;
+    letter-spacing: 0.3px;
 }
 
-/* --- TABELA DE ITENS --- */
+/* ==========================================================================
+   TABELA DE ITENS — Header preto, linhas horizontais, sem bordas laterais
+   ========================================================================== */
 .r-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-bottom: 20px;
     font-size: 11px;
 }
 
 .r-table thead th {
+    border: 1px solid #e0e0e0;
     background-color: #000 !important;
     color: #fff !important;
     font-weight: 700;
     text-transform: uppercase;
-    padding: 10px 8px;
-    border: 1px solid #000;
+    padding: 10px 12px;
+    border: none;
     text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.8px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
 
-.r-table td {
-    border: 1px solid #999;
-    border-bottom: 1px solid #000;
-    padding: 8px;
+.r-table tbody td {
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    border-top: none;
+    border-left: none;
+    padding: 10px 12px;
     vertical-align: middle;
-    color: #000;
+    color: #1a1a1a;
     font-weight: 400;
 }
 
+.r-table thead th:first-child,
+.r-table tbody td:first-child {
+    border-left: none !important;
+}
+.r-table thead th:last-child,
+.r-table tbody td:last-child {
+    border-right: none !important;
+}
+
+.r-table tbody tr:last-child td {
+    border-bottom: 2px solid #000;
+}
+
 .c-img {
-    width: 75px;
+    width: 65px;
     text-align: center;
     padding: 4px !important;
 }
@@ -194,31 +280,36 @@
 .c-item {
     width: 35px;
     text-align: center;
+    font-weight: 600;
 }
 
 .c-sku {
-    width: 90px;
+    width: 100px;
     font-family: var(--mono);
     font-size: 11px;
+    font-weight: 700;
+    color: #000;
 }
 
 .c-desc {
     font-weight: 400;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .c-qtd, .c-un {
     text-align: center;
+    font-weight: 500;
 }
 
 .c-preco, .c-total {
     text-align: right;
     font-family: var(--mono);
+    font-weight: 600;
 }
 
 .prod-thumb {
-    width: 65px;
-    height: 65px;
+    width: 55px;
+    height: 55px;
     object-fit: contain;
     border: 1px solid #eee;
     background: #fff;
@@ -226,74 +317,89 @@
     margin: 0 auto;
 }
 
-/* --- TOTAIS --- */
+/* ==========================================================================
+   TOTAIS
+   ========================================================================== */
 .totals-area {
     display: flex;
     justify-content: flex-end;
     margin-top: 10px;
+    margin-bottom: 20px;
 }
 
 .totals-table {
     width: 280px;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .totals-table td {
-    padding: 5px;
+    padding: 6px 10px;
     text-align: right;
-    font-size: 12px;
+    font-size: 11px;
     border: none;
-}
-
-.totals-label {
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .totals-value {
-    border-bottom: 1px solid #ccc !important;
+    border-bottom: 1px solid #ddd !important;
     font-family: var(--mono);
     width: 120px;
+    font-weight: 600;
 }
 
 .final-row td {
     background: #000 !important;
     color: #fff !important;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 800;
     padding: 10px;
-    border: 1px solid #000 !important;
+    border: none !important;
+    letter-spacing: 0.5px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
-/* --- RODAPÉ DO DOCUMENTO --- */
+/* ==========================================================================
+   RODAPÉ — Pagamento, Observações, Footer
+   ========================================================================== */
 .section-title {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    border-bottom: 1px solid #000;
-    margin-bottom: 8px;
+    letter-spacing: 1.5px;
     color: #000;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #000;
+    margin-bottom: 0;
 }
 
 .doc-obs-box {
-    border: 1px solid #000;
-    padding: 10px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
     font-size: 11px;
-    min-height: 40px;
+    min-height: 30px;
     font-style: italic;
-    background: #fff;
+    background: transparent;
+    color: #444;
 }
 
 .doc-footer {
     margin-top: 30px;
-    border-top: 2px solid #000;
-    padding-top: 10px;
+    border-top: 3px solid #000;
+    padding-top: 12px;
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #000;
 }
 
-/* --- IMPRESSÃO PDF --- */
+/* ==========================================================================
+   IMPRESSÃO PDF
+   ========================================================================== */
 @media print {
     @page {
         size: A4;
@@ -319,26 +425,66 @@
         width: 100%;
     }
 
-    .r-table, .client-data-table {
-        width: 100%;
-        border-collapse: collapse !important;
+    .r-table,
+    .client-data-table,
+    .client-data-table-title,
+    .totals-table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
     }
 
-    .r-table th, .r-table td,
-    .client-data-table td {
-        border: 1pt solid #000 !important;
-    }
-
-    .bg-black-title {
+    .r-table thead th,
+    .bg-black-title,
+    .final-row td {
         background-color: #000 !important;
         color: #fff !important;
-        border-color: #fff !important;
+    }
+
+    .doc-box-number {
+        background-color: #f0f0f0 !important;
+        color: #000 !important;
     }
 
     .bg-gray-title {
-        background-color: #e6e6e6 !important;
+        background-color: #f0f0f0 !important;
         color: #000 !important;
-        border-color: #000 !important;
+    }
+
+    .client-data-table-title td,
+    .client-data-table td {
+        border-right: 1px solid #e0e0e0 !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+        border-top: none !important;
+        border-left: none !important;
+    }
+
+    .client-data-table tr:first-child td,
+    .client-data-table-title tr:first-child td {
+        border-top: 1px solid #e0e0e0 !important;
+    }
+
+    .client-data-table td:first-child,
+    .client-data-table-title td:first-child {
+        border-left: 1px solid #e0e0e0 !important;
+    }
+
+    .bg-gray-title,
+    .data-cell {
+        border-right: 1px solid #ccc !important;
+        border-bottom: 1px solid #ccc !important;
+        border-top: none !important;
+        border-left: none !important;
+    }
+
+    .r-table tbody td {
+        border-right: 1px solid #e0e0e0 !important;
+        border-bottom: 1px solid #e0e0e0 !important;
+        border-top: none !important;
+        border-left: none !important;
+    }
+
+    .r-table tbody tr:last-child td {
+        border-bottom: 2px solid #000 !important;
     }
 
     tr {
