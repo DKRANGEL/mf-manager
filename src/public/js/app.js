@@ -390,6 +390,26 @@ async function gerarInventario() {
     }
 }
 
+async function gerarInventarioProdutos() {
+    hideError(); hideSuccess();
+
+    try {
+        showSuccess('Carregando produtos do Tiny...');
+        const res = await fetch('/api/produtos/estoque');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+
+        await renderInventarioProdutos(json.data, config);
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('reciboWrapper').style.display = 'block';
+        document.getElementById('exportActions').style.display = 'flex';
+        showSuccess(`Estoque gerado — ${json.total} produtos em ${Object.keys(json.data).length} categorias`);
+    } catch (err) {
+        showError(err.message);
+    }
+}
+
 // ---- Testar conexão ----
 async function testarConexao() { /* ... */ }
 

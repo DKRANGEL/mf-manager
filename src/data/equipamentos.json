@@ -12,7 +12,7 @@
     },
     {
       "id": 2,
-      "sku": "CHI-002",
+      "sku": "CHI-020",
       "nome": "Chicote 20 Metros / 6 Vias",
       "categoria": "Chicotes",
       "quantidade": 6,
@@ -21,7 +21,7 @@
     },
     {
       "id": 3,
-      "sku": "CHI-003",
+      "sku": "CHI-040",
       "nome": "Chicote 40 Metros / 8 Vias",
       "categoria": "Chicotes",
       "quantidade": 4,
@@ -30,7 +30,7 @@
     },
     {
       "id": 4,
-      "sku": "CHI-004",
+      "sku": "CHI-050",
       "nome": "Chicote 50 Metros / 20 Vias",
       "categoria": "Chicotes",
       "quantidade": 5,
@@ -39,7 +39,7 @@
     },
     {
       "id": 5,
-      "sku": "CHI-005",
+      "sku": "CHI-100",
       "nome": "Chicote 100 Metros / 4 Vias",
       "categoria": "Chicotes",
       "quantidade": 4,
@@ -48,7 +48,7 @@
     },
     {
       "id": 6,
-      "sku": "CHI-006",
+      "sku": "CHI-002",
       "nome": "Chicote 1,5 Metros / 32 Vias",
       "categoria": "Chicotes",
       "quantidade": 54,
@@ -111,7 +111,7 @@
     },
     {
       "id": 14,
-      "sku": "MD12-001",
+      "sku": "MD12-003",
       "nome": "Cabo MD12 / 3 Metros",
       "categoria": "Cabos MD12",
       "quantidade": 18,
@@ -120,7 +120,7 @@
     },
     {
       "id": 15,
-      "sku": "MD12-002",
+      "sku": "MD12-005",
       "nome": "Cabo MD12 / 5 Metros",
       "categoria": "Cabos MD12",
       "quantidade": 15,
@@ -129,7 +129,7 @@
     },
     {
       "id": 16,
-      "sku": "MD12-003",
+      "sku": "MD12-010",
       "nome": "Cabo MD12 / 10 Metros",
       "categoria": "Cabos MD12",
       "quantidade": 5,
@@ -138,7 +138,7 @@
     },
     {
       "id": 17,
-      "sku": "MD12-004",
+      "sku": "MD12-015",
       "nome": "Cabo MD12 / 15 Metros",
       "categoria": "Cabos MD12",
       "quantidade": 1,
@@ -147,7 +147,7 @@
     },
     {
       "id": 18,
-      "sku": "MD12-005",
+      "sku": "MD12-025",
       "nome": "Cabo MD12 / 25 Metros",
       "categoria": "Cabos MD12",
       "quantidade": 5,
@@ -156,7 +156,7 @@
     },
     {
       "id": 19,
-      "sku": "MD30-001",
+      "sku": "MD30-003",
       "nome": "Cabo MD30 / 3 Metros",
       "categoria": "Cabos MD30",
       "quantidade": 1,
@@ -165,7 +165,7 @@
     },
     {
       "id": 20,
-      "sku": "MD30-002",
+      "sku": "MD30-005",
       "nome": "Cabo MD30 / 5 Metros",
       "categoria": "Cabos MD30",
       "quantidade": 15,
@@ -174,7 +174,7 @@
     },
     {
       "id": 21,
-      "sku": "MD30-003",
+      "sku": "MD30-010",
       "nome": "Cabo MD30 / 10 Metros",
       "categoria": "Cabos MD30",
       "quantidade": 1,
@@ -183,7 +183,7 @@
     },
     {
       "id": 22,
-      "sku": "MD30-004",
+      "sku": "MD30-025",
       "nome": "Cabo MD30 / 25 Metros",
       "categoria": "Cabos MD30",
       "quantidade": 4,
@@ -192,7 +192,7 @@
     },
     {
       "id": 23,
-      "sku": "MD30-005",
+      "sku": "MD30-050",
       "nome": "Cabo MD30 / 50 Metros",
       "categoria": "Cabos MD30",
       "quantidade": 1,
@@ -346,7 +346,7 @@
     {
       "id": 40,
       "sku": "EFX-001",
-      "nome": "Cycling Flamer",
+      "nome": "Circle Flamer Showven",
       "categoria": "Equipamentos de Efeito",
       "quantidade": 6,
       "em_manutencao": 2,
@@ -355,16 +355,16 @@
     {
       "id": 41,
       "sku": "EFX-002",
-      "nome": "UFlamer",
+      "nome": "U flamer Showven",
       "categoria": "Equipamentos de Efeito",
-      "quantidade": 9,
+      "quantidade": 3,
       "em_manutencao": 2,
-      "observacoes": "7 cabos de força"
+      "observacoes": "1 cabo de força"
     },
     {
       "id": 42,
       "sku": "EFX-003",
-      "nome": "Sparklar",
+      "nome": "Sparkular",
       "categoria": "Equipamentos de Efeito",
       "quantidade": 24,
       "em_manutencao": 0,
@@ -382,8 +382,8 @@
     {
       "id": 44,
       "sku": "RACK-007",
-      "nome": "Rack Alumínio | 36/48 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio | 36/48 Shots - 1.2\"",
+      "categoria": "Racks 1.2\"",
       "quantidade": 59,
       "em_manutencao": 0,
       "observacoes": ""
@@ -391,8 +391,8 @@
     {
       "id": 45,
       "sku": "RACK-003",
-      "nome": "Rack Alumínio / 25 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio / 25 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 6,
       "em_manutencao": 0,
       "observacoes": ""
@@ -400,8 +400,8 @@
     {
       "id": 46,
       "sku": "RACK-008",
-      "nome": "Rack Alumínio Leque Europeu Curto / 30 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio Leque Europeu Curto / 30 Shots - 1.2\"",
+      "categoria": "Racks 1.2\"",
       "quantidade": 4,
       "em_manutencao": 0,
       "observacoes": ""
@@ -409,8 +409,8 @@
     {
       "id": 47,
       "sku": "RACK-009",
-      "nome": "Rack Alumínio Leque Europeu Longo / 30 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio Leque Europeu Longo / 30 Shots - 1.2\"",
+      "categoria": "Racks 1.2\"",
       "quantidade": 5,
       "em_manutencao": 0,
       "observacoes": ""
@@ -517,8 +517,8 @@
     {
       "id": 59,
       "sku": "RACK-001",
-      "nome": "Rack Alumínio / 10 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio / 10 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 8,
       "em_manutencao": 0,
       "observacoes": ""
@@ -526,8 +526,8 @@
     {
       "id": 60,
       "sku": "RACK-002",
-      "nome": "Rack Alumínio / 12 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio / 12 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 29,
       "em_manutencao": 0,
       "observacoes": ""
@@ -535,8 +535,8 @@
     {
       "id": 61,
       "sku": "RACK-004",
-      "nome": "Rack Ferro / 30 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Ferro / 30 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 24,
       "em_manutencao": 0,
       "observacoes": ""
@@ -544,8 +544,8 @@
     {
       "id": 62,
       "sku": "RACK-005",
-      "nome": "Rack Alumínio / 34 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Alumínio / 34 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 17,
       "em_manutencao": 0,
       "observacoes": ""
@@ -553,8 +553,8 @@
     {
       "id": 63,
       "sku": "RACK-006",
-      "nome": "Rack Ferro / 36 Shots - 1.2 Polegadas",
-      "categoria": "Racks e Bases de Tiro",
+      "nome": "Rack Ferro / 36 Shots - 0.8\"",
+      "categoria": "Racks 0.8\"",
       "quantidade": 16,
       "em_manutencao": 0,
       "observacoes": ""
@@ -562,7 +562,7 @@
     {
       "id": 64,
       "sku": "CONS-001",
-      "nome": "Pó de Sparkler Showven",
+      "nome": "Pó de Sparkular Showven",
       "categoria": "Consumíveis",
       "quantidade": 25,
       "em_manutencao": 0,
@@ -571,7 +571,7 @@
     {
       "id": 65,
       "sku": "CONS-002",
-      "nome": "Pó de Sparkler Jânio",
+      "nome": "Pó de Sparkular Jânio",
       "categoria": "Consumíveis",
       "quantidade": 8,
       "em_manutencao": 0,
@@ -580,7 +580,7 @@
     {
       "id": 66,
       "sku": "CONS-003",
-      "nome": "Cartões Sparkler",
+      "nome": "Cartões Sparkular",
       "categoria": "Consumíveis",
       "quantidade": 4,
       "em_manutencao": 0,

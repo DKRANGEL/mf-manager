@@ -373,6 +373,105 @@ async function renderInventario(catalogo, config) {
     catContainer.innerHTML = html;
 }
 
+// ===================== INVENTÁRIO DE PRODUTOS TINY (RENDER) =====================
+
+async function renderInventarioProdutos(catalogo, config, meta = {}) {
+    const template = await carregarTemplateInv();
+    const container = document.getElementById('recibo');
+    container.innerHTML = template;
+
+    const emp = config.empresa || {};
+
+    // 1. Cabeçalho
+    setText('invEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
+    setText('invEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
+    setText('invEmpresaEnd', 'Brasília - DF');
+    setText('invDocData', new Date().toLocaleDateString('pt-BR'));
+
+    // 2. Totais gerais
+    const categorias = Object.keys(catalogo).sort();
+    let totalItens = 0;
+    let totalUnidades = 0;
+
+    categorias.forEach(cat => {
+        catalogo[cat].forEach(p => {
+            totalItens++;
+            totalUnidades += (p.quantidade || 0);
+        });
+    });
+
+    setText('invTotalItens', totalItens.toString());
+    setText('invTotalUnidades', totalUnidades.toString());
+    setText('invTotalManut', '-');          // Produtos Tiny não têm manutenção
+    setText('invTotalCategorias', categorias.length.toString());
+
+    // Ajusta label do resumo para contexto de produtos
+    const resumoManutEl = document.getElementById('invTotalManut');
+    if (resumoManutEl) {
+        // Substitui o texto "em manutenção" pelo valor total em R$
+        const totalValor = categorias.reduce((s, cat) =>
+            s + catalogo[cat].reduce((ss, p) => ss + (p.quantidade || 0) * (p.preco || 0), 0), 0
+        );
+        resumoManutEl.closest('td').innerHTML = resumoManutEl.closest('td').innerHTML
+            .replace(/\d+ em manutenção/, `R$ ${fmtMoney(totalValor)} em estoque`);
+    }
+
+    // 3. Tabelas por categoria
+    const catContainer = document.getElementById('invCategoriasContainer');
+    let html = '';
+
+    categorias.forEach(cat => {
+        const itens = catalogo[cat];
+        const catQtd = itens.reduce((s, p) => s + (p.quantidade || 0), 0);
+        const catValor = itens.reduce((s, p) => s + (p.quantidade || 0) * (p.preco || 0), 0);
+
+        html += `
+    <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
+      <tr>
+        <td class="bg-black-title" style="text-align: left; padding: 8px 14px;">
+          ${esc(cat.toUpperCase())}
+        </td>
+        <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
+          ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.
+          ${catValor > 0 ? ' &nbsp;•&nbsp; R$ ' + fmtMoney(catValor) : ''}
+        </td>
+      </tr>
+    </table>
+    <table class="r-table" style="margin-bottom: 15px;">
+      <thead>
+        <tr>
+          <th class="c-item">Nº</th>
+          <th class="c-sku">CÓDIGO</th>
+          <th class="c-desc">DESCRIÇÃO</th>
+          <th class="c-un" style="width:40px;">UN</th>
+          <th class="c-qtd">QTD</th>
+          <th class="c-preco">PREÇO</th>
+          <th class="c-total">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+        itens.forEach((p, i) => {
+            const total = (p.quantidade || 0) * (p.preco || 0);
+            const qtdStyle = (p.quantidade || 0) === 0 ? 'color: #c0392b; font-weight: 700;' : 'font-weight: 700;';
+            html += `
+        <tr>
+          <td class="c-item">${i + 1}</td>
+          <td class="c-sku">${esc(p.sku || '-')}</td>
+          <td class="c-desc">${esc(p.nome || '-')}</td>
+          <td class="c-un" style="text-align:center;">${esc(p.unidade || 'UN')}</td>
+          <td class="c-qtd" style="${qtdStyle}">${formatQtd(p.quantidade || 0)}</td>
+          <td class="c-preco">${p.preco > 0 ? fmtMoney(p.preco) : '-'}</td>
+          <td class="c-total">${total > 0 ? fmtMoney(total) : '-'}</td>
+        </tr>`;
+        });
+
+        html += '</tbody></table>';
+    });
+
+    catContainer.innerHTML = html;
+}
+
 // ---- Helpers de formatação ----
 
 function fmtMoney(v) {
