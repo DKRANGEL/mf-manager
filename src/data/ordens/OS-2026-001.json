@@ -1,33 +1,45 @@
 {
   "numero": "OS-2026-001",
-  "evento": "Show Henrique e Juliano",
-  "local": "Arena BRB Mané Garrincha",
-  "data_saida": "2026-02-20",
-  "data_retorno": "",
-  "responsavel_entrega": "Bertholdo",
-  "responsavel_equipamento": "Bertholdo",
+  "evento": "Baile de Formatura B2",
+  "local": "Open Hall",
+  "data_saida": "2026-02-21",
+  "data_retorno": "2026-02-22",
+  "responsavel_entrega": "Bertholdo José da Silva Neto",
+  "responsavel_equipamento": "Bertholdo José da Silva Neto",
   "status": "aberta",
   "itens": [
     {
-      "sku": "MD12-001",
-      "descricao": "Cabo MD12 / 3 Metros",
+      "sku": "MANG-010",
+      "descricao": "Mangueira 10 Metros",
       "qtd_saida": 5,
       "qtd_retorno": 0
     },
     {
-      "sku": "MESA-001",
-      "descricao": "Mesa MD12",
-      "qtd_saida": 5,
+      "sku": "CHI-003",
+      "descricao": "Chicote 40 Metros / 8 Vias",
+      "qtd_saida": 1,
       "qtd_retorno": 0
     },
     {
-      "sku": "REG-001",
-      "descricao": "Régua MD12",
-      "qtd_saida": 5,
+      "sku": "EXT-020",
+      "descricao": "Extensão 20 Metros",
+      "qtd_saida": 2,
+      "qtd_retorno": 0
+    },
+    {
+      "sku": "MAQ-001",
+      "descricao": "Jet Set CO2",
+      "qtd_saida": 6,
+      "qtd_retorno": 0
+    },
+    {
+      "sku": "MESA-008",
+      "descricao": "Botoeira Disparo CO2",
+      "qtd_saida": 1,
       "qtd_retorno": 0
     }
   ],
   "observacoes": "",
-  "data_criacao": "2026-02-20T12:13:06.967Z",
-  "data_atualizacao": "2026-02-20T12:13:06.968Z"
+  "data_criacao": "2026-02-21T14:26:58.892Z",
+  "data_atualizacao": "2026-02-21T14:26:58.892Z"
 }

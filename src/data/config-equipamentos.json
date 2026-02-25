@@ -1,16 +1,20 @@
 {
   "responsaveis_entrega": [
     "Bertholdo",
-    "Dérick"
+    "Dérick",
+    "Bertholdo José da Silva Neto"
   ],
   "responsaveis_equipamento": [
-    "Bertholdo"
+    "Bertholdo",
+    "Bertholdo José da Silva Neto"
   ],
   "locais_frequentes": [
-    "Arena BRB Mané Garrincha"
+    "Arena BRB Mané Garrincha",
+    "Open Hall"
   ],
   "eventos_recentes": [
-    "Show Henrique e Juliano"
+    "Show Henrique e Juliano",
+    "Baile de Formatura B2"
   ],
-  "proximo_numero": 3
+  "proximo_numero": 10
 }

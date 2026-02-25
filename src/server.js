@@ -6,7 +6,7 @@ const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 
 // Ensure products image directory exists
 const produtosDir = path.join(__dirname, 'public', 'produtos');

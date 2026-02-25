@@ -4,6 +4,7 @@
 
 let _templateCache = null;
 let _templateOECache = null;
+let _templateInvCache = null;
 
 async function carregarTemplate() {
     if (_templateCache) return _templateCache;
@@ -17,6 +18,13 @@ async function carregarTemplateOE() {
     const res = await fetch('/public/templates/ordem-equipamento.html');
     _templateOECache = await res.text();
     return _templateOECache;
+}
+
+async function carregarTemplateInv() {
+    if (_templateInvCache) return _templateInvCache;
+    const res = await fetch('/public/templates/inventario.html');
+    _templateInvCache = await res.text();
+    return _templateInvCache;
 }
 
 async function renderDocumento(pedido, config) {
@@ -272,6 +280,97 @@ async function renderOrdemEquipamento(ordem, config) {
     } else {
         hide('oeObsSection');
     }
+}
+
+// ===================== INVENTÁRIO DE EQUIPAMENTOS (RENDER) =====================
+
+async function renderInventario(catalogo, config) {
+    const template = await carregarTemplateInv();
+    const container = document.getElementById('recibo');
+    container.innerHTML = template;
+
+    const emp = config.empresa || {};
+
+    // 1. Dados da Empresa
+    setText('invEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
+    setText('invEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
+    setText('invEmpresaEnd', 'Brasília - DF');
+    setText('invDocData', new Date().toLocaleDateString('pt-BR'));
+
+    // 2. Calcular totais gerais
+    const categorias = Object.keys(catalogo).sort();
+    let totalItens = 0;
+    let totalUnidades = 0;
+    let totalManut = 0;
+
+    categorias.forEach(cat => {
+        catalogo[cat].forEach(e => {
+            totalItens++;
+            totalUnidades += (e.quantidade || 0);
+            totalManut += (e.em_manutencao || 0);
+        });
+    });
+
+    setText('invTotalItens', totalItens.toString());
+    setText('invTotalUnidades', totalUnidades.toString());
+    setText('invTotalManut', totalManut.toString());
+    setText('invTotalCategorias', categorias.length.toString());
+
+    // 3. Gerar tabelas por categoria
+    const catContainer = document.getElementById('invCategoriasContainer');
+    let html = '';
+
+    categorias.forEach(cat => {
+        const itens = catalogo[cat];
+        const catQtd = itens.reduce((s, e) => s + (e.quantidade || 0), 0);
+        const catManut = itens.reduce((s, e) => s + (e.em_manutencao || 0), 0);
+
+        // Título da categoria — barra preta
+        html += `
+        <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
+            <tr>
+                <td class="bg-black-title" style="width: auto; text-align: left; padding: 8px 14px;">
+                    ${esc(cat.toUpperCase())}
+                </td>
+                <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
+                    ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.${catManut > 0 ? ' &nbsp;•&nbsp; ' + catManut + ' em manut.' : ''}
+                </td>
+            </tr>
+        </table>`;
+
+        // Tabela de itens da categoria
+        html += `
+        <table class="r-table" style="margin-bottom: 15px;">
+            <thead>
+                <tr>
+                    <th class="c-item">Nº</th>
+                    <th class="c-sku">CÓDIGO</th>
+                    <th class="c-desc">DESCRIÇÃO</th>
+                    <th class="c-qtd">QTD</th>
+                    <th class="c-qtd">MANUT.</th>
+                    <th style="text-align: left; width: 180px;">OBS</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        itens.forEach((e, i) => {
+            const manutStr = (e.em_manutencao > 0) ? e.em_manutencao.toString() : '-';
+            const manutStyle = (e.em_manutencao > 0) ? 'color: #c0392b; font-weight: 700;' : 'color: #999;';
+            html += `
+                <tr>
+                    <td class="c-item">${i + 1}</td>
+                    <td class="c-sku">${esc(e.sku || '-')}</td>
+                    <td class="c-desc">${esc(e.nome || '-')}</td>
+                    <td class="c-qtd" style="font-weight: 700;">${e.quantidade || 0}</td>
+                    <td class="c-qtd" style="${manutStyle}">${manutStr}</td>
+                    <td style="font-size: 10px; color: #666;">${esc(e.observacoes || '')}</td>
+                </tr>`;
+        });
+
+        html += '</tbody></table>';
+    });
+
+    catContainer.innerHTML = html;
 }
 
 // ---- Helpers de formatação ----

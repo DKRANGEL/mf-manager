@@ -91,6 +91,7 @@
             <span class="brand-sub">Magic Fireworks — Controle de Estoque</span>
         </div>
         <div class="header-actions">
+            <button class="btn-back" onclick="gerarInventarioPDF()" style="border-color: var(--sb-accent); color: var(--sb-accent);">📋 Inventário PDF</button>
             <a href="/" class="btn-back">← Voltar ao Recibo</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Equipamento</button>
         </div>
@@ -346,6 +347,11 @@ async function deletarEquipamento(id, nome) {
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') fecharModal();
 });
+
+// Gerar inventário PDF — abre a página principal com parâmetro
+function gerarInventarioPDF() {
+    window.open('/?inventario=1', '_blank');
+}
 </script>
 </body>
 </html>

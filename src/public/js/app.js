@@ -34,6 +34,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadUploadedImages();
     carregarConfigEquipamentos();
 
+    // Se abriu com ?inventario=1, gera automaticamente
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('inventario') === '1') {
+        // Muda pra modo equipamento e gera
+        const btnEquip = document.querySelector('.toggle[data-mode="equipamento"]');
+        if (btnEquip) setModo(btnEquip);
+        setTimeout(() => gerarInventario(), 300);
+    }
+
     // Drag & drop
     const dz = document.getElementById('dropzone');
     dz.addEventListener('dragover', e => {
@@ -355,6 +364,27 @@ async function gerarOrdemEquipamento() {
 
         // Atualiza datalists com novos valores
         carregarConfigEquipamentos();
+    } catch (err) {
+        showError(err.message);
+    }
+}
+
+// ===================== INVENTÁRIO GERAL =====================
+
+async function gerarInventario() {
+    hideError(); hideSuccess();
+
+    try {
+        const res = await fetch('/api/equipamentos/catalogo');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+
+        await renderInventario(json.data, config);
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('reciboWrapper').style.display = 'block';
+        document.getElementById('exportActions').style.display = 'flex';
+        showSuccess(`Inventário gerado — ${json.total} equipamentos`);
     } catch (err) {
         showError(err.message);
     }

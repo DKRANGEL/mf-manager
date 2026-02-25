@@ -1,5 +1,5 @@
 {
-  "proximo_id": 82,
+  "proximo_id": 83,
   "equipamentos": [
     {
       "id": 1,
@@ -57,7 +57,7 @@
     },
     {
       "id": 7,
-      "sku": "DMX-001",
+      "sku": "DMX-005",
       "nome": "Cabo DMX 5 Metros",
       "categoria": "Cabos DMX",
       "quantidade": 34,
@@ -66,25 +66,16 @@
     },
     {
       "id": 8,
-      "sku": "DMX-002",
-      "nome": "Cabo DMX 10 Metros (Velho)",
+      "sku": "DMX-010",
+      "nome": "Cabo DMX 10 Metros",
       "categoria": "Cabos DMX",
-      "quantidade": 6,
+      "quantidade": 9,
       "em_manutencao": 0,
-      "observacoes": ""
-    },
-    {
-      "id": 9,
-      "sku": "DMX-003",
-      "nome": "Cabo DMX 10 Metros (Novo)",
-      "categoria": "Cabos DMX",
-      "quantidade": 3,
-      "em_manutencao": 0,
-      "observacoes": ""
+      "observacoes": "3 Novos"
     },
     {
       "id": 10,
-      "sku": "DMX-004",
+      "sku": "DMX-015",
       "nome": "Cabo DMX 15 Metros",
       "categoria": "Cabos DMX",
       "quantidade": 1,
@@ -93,7 +84,7 @@
     },
     {
       "id": 11,
-      "sku": "DMX-005",
+      "sku": "DMX-025",
       "nome": "Cabo DMX 25 Metros",
       "categoria": "Cabos DMX",
       "quantidade": 10,
@@ -102,7 +93,7 @@
     },
     {
       "id": 12,
-      "sku": "DMX-006",
+      "sku": "DMX-030",
       "nome": "Cabo DMX 30 Metros",
       "categoria": "Cabos DMX",
       "quantidade": 1,
@@ -111,7 +102,7 @@
     },
     {
       "id": 13,
-      "sku": "DMX-007",
+      "sku": "DMX-050",
       "nome": "Cabo DMX 50 Metros",
       "categoria": "Cabos DMX",
       "quantidade": 5,
@@ -328,7 +319,7 @@
     {
       "id": 37,
       "sku": "MAQ-001",
-      "nome": "Máquina CO2",
+      "nome": "Jet Set CO2",
       "categoria": "Máquinas",
       "quantidade": 26,
       "em_manutencao": 0,
@@ -390,8 +381,8 @@
     },
     {
       "id": 44,
-      "sku": "RACK-001",
-      "nome": "Rack Monotiro",
+      "sku": "RACK-007",
+      "nome": "Rack Alumínio | 36/48 Shots - 1.2 Polegadas",
       "categoria": "Racks e Bases de Tiro",
       "quantidade": 59,
       "em_manutencao": 0,
@@ -399,8 +390,8 @@
     },
     {
       "id": 45,
-      "sku": "RACK-002",
-      "nome": "Rack 25 Tubos",
+      "sku": "RACK-003",
+      "nome": "Rack Alumínio / 25 Shots - 1.2 Polegadas",
       "categoria": "Racks e Bases de Tiro",
       "quantidade": 6,
       "em_manutencao": 0,
@@ -408,8 +399,8 @@
     },
     {
       "id": 46,
-      "sku": "RACK-003",
-      "nome": "Arco Curto 30 Tubos",
+      "sku": "RACK-008",
+      "nome": "Rack Alumínio Leque Europeu Curto / 30 Shots - 1.2 Polegadas",
       "categoria": "Racks e Bases de Tiro",
       "quantidade": 4,
       "em_manutencao": 0,
@@ -417,8 +408,8 @@
     },
     {
       "id": 47,
-      "sku": "RACK-004",
-      "nome": "Arco Longo 30 Tubos",
+      "sku": "RACK-009",
+      "nome": "Rack Alumínio Leque Europeu Longo / 30 Shots - 1.2 Polegadas",
       "categoria": "Racks e Bases de Tiro",
       "quantidade": 5,
       "em_manutencao": 0,
@@ -426,7 +417,7 @@
     },
     {
       "id": 48,
-      "sku": "EXT-001",
+      "sku": "EXT-002",
       "nome": "Extensão 2 Metros",
       "categoria": "Extensões",
       "quantidade": 38,
@@ -435,7 +426,7 @@
     },
     {
       "id": 49,
-      "sku": "EXT-002",
+      "sku": "EXT-005",
       "nome": "Extensão 5 Metros",
       "categoria": "Extensões",
       "quantidade": 23,
@@ -444,7 +435,7 @@
     },
     {
       "id": 50,
-      "sku": "EXT-003",
+      "sku": "EXT-010",
       "nome": "Extensão 10 Metros",
       "categoria": "Extensões",
       "quantidade": 14,
@@ -453,7 +444,7 @@
     },
     {
       "id": 51,
-      "sku": "EXT-004",
+      "sku": "EXT-020",
       "nome": "Extensão 20 Metros",
       "categoria": "Extensões",
       "quantidade": 28,
@@ -462,7 +453,7 @@
     },
     {
       "id": 52,
-      "sku": "EXT-005",
+      "sku": "EXT-025",
       "nome": "Extensão 25 Metros",
       "categoria": "Extensões",
       "quantidade": 4,
@@ -471,7 +462,7 @@
     },
     {
       "id": 53,
-      "sku": "EXT-006",
+      "sku": "EXT-050",
       "nome": "Extensão 50 Metros",
       "categoria": "Extensões",
       "quantidade": 10,
@@ -480,7 +471,7 @@
     },
     {
       "id": 54,
-      "sku": "EXT-007",
+      "sku": "EXT-100",
       "nome": "Extensão 100 Metros",
       "categoria": "Extensões",
       "quantidade": 2,
@@ -489,7 +480,7 @@
     },
     {
       "id": 55,
-      "sku": "MANG-001",
+      "sku": "MANG-002",
       "nome": "Mangueira 2 Metros",
       "categoria": "Mangueiras",
       "quantidade": 18,
@@ -498,7 +489,7 @@
     },
     {
       "id": 56,
-      "sku": "MANG-002",
+      "sku": "MANG-005",
       "nome": "Mangueira 5 Metros",
       "categoria": "Mangueiras",
       "quantidade": 20,
@@ -507,7 +498,7 @@
     },
     {
       "id": 57,
-      "sku": "MANG-003",
+      "sku": "MANG-010",
       "nome": "Mangueira 10 Metros",
       "categoria": "Mangueiras",
       "quantidade": 17,
@@ -516,7 +507,7 @@
     },
     {
       "id": 58,
-      "sku": "MANG-004",
+      "sku": "MANG-020",
       "nome": "Mangueira 20 Metros",
       "categoria": "Mangueiras",
       "quantidade": 6,
@@ -525,45 +516,45 @@
     },
     {
       "id": 59,
-      "sku": "BASE-001",
-      "nome": "Base Alumínio 10 Canos",
-      "categoria": "Bases",
+      "sku": "RACK-001",
+      "nome": "Rack Alumínio / 10 Shots - 1.2 Polegadas",
+      "categoria": "Racks e Bases de Tiro",
       "quantidade": 8,
       "em_manutencao": 0,
       "observacoes": ""
     },
     {
       "id": 60,
-      "sku": "BASE-002",
-      "nome": "Base Alumínio 12 Canos",
-      "categoria": "Bases",
+      "sku": "RACK-002",
+      "nome": "Rack Alumínio / 12 Shots - 1.2 Polegadas",
+      "categoria": "Racks e Bases de Tiro",
       "quantidade": 29,
       "em_manutencao": 0,
       "observacoes": ""
     },
     {
       "id": 61,
-      "sku": "BASE-003",
-      "nome": "Base 30 Canos",
-      "categoria": "Bases",
+      "sku": "RACK-004",
+      "nome": "Rack Ferro / 30 Shots - 1.2 Polegadas",
+      "categoria": "Racks e Bases de Tiro",
       "quantidade": 24,
       "em_manutencao": 0,
       "observacoes": ""
     },
     {
       "id": 62,
-      "sku": "BASE-004",
-      "nome": "Base 34 Canos",
-      "categoria": "Bases",
+      "sku": "RACK-005",
+      "nome": "Rack Alumínio / 34 Shots - 1.2 Polegadas",
+      "categoria": "Racks e Bases de Tiro",
       "quantidade": 17,
       "em_manutencao": 0,
       "observacoes": ""
     },
     {
       "id": 63,
-      "sku": "BASE-005",
-      "nome": "Base 36 Canos",
-      "categoria": "Bases",
+      "sku": "RACK-006",
+      "nome": "Rack Ferro / 36 Shots - 1.2 Polegadas",
+      "categoria": "Racks e Bases de Tiro",
       "quantidade": 16,
       "em_manutencao": 0,
       "observacoes": ""
@@ -594,6 +585,16 @@
       "quantidade": 4,
       "em_manutencao": 0,
       "observacoes": ""
+    },
+    {
+      "id": 82,
+      "sku": "MESA-008",
+      "nome": "Botoeira Disparo CO2",
+      "categoria": "Mesas e Controladores",
+      "quantidade": 3,
+      "em_manutencao": 0,
+      "observacoes": "",
+      "data_cadastro": "2026-02-21"
     }
   ]
 }
