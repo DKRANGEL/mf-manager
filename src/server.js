@@ -57,6 +57,9 @@ app.get('/upload/produtos', (req, res) => {
 // API routes (proxy para Tiny)
 app.use('/api', apiRoutes);
 
+// Rotas de produtos
+app.use('/api/produtos', apiRoutes);
+
 // Rotas de equipamentos
 app.use('/api/equipamentos', equipamentosRoutes);
 

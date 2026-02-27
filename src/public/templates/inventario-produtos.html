@@ -1,0 +1,50 @@
+﻿<!-- INVENTÁRIO GERAL DE PRODUTOS — Template -->
+<!-- Mesma identidade visual do pedido.html e ordem-equipamento.html -->
+<!-- Classes compartilhadas do documento.css -->
+
+<table class="doc-header-table">
+    <tr>
+        <td style="width: 140px; padding: 0;">
+            <div class="r-logo-rect">
+                <img id="invProdLogoImg" src="/public/MagicFireworksLogo.jpeg" alt="Logo"
+                     onerror="this.style.opacity='0'">
+            </div>
+        </td>
+        <td style="padding-left: 12px;">
+            <div id="invProdEmpresaNome">MAGIC FIREWORKS</div>
+            <div id="invProdEmpresaCnpj" class="doc-info">CNPJ: 00.000.000/0001-00</div>
+            <div id="invProdEmpresaEnd" class="doc-info">Brasília - DF</div>
+        </td>
+        <td style="text-align: right; width: 160px;">
+            <div class="doc-box-number">
+                <span class="doc-label">INVENTÁRIO GERAL</span>
+                <div class="doc-big-num" style="font-size: 18px;">PRODUTOS</div>
+                <div id="invProdDocData" class="doc-date">-</div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- Resumo Geral -->
+<table class="client-data-table-title">
+    <tr>
+        <td class="bg-black-title">RESUMO</td>
+        <td class="data-cell" id="invProdResumoCell">
+            <span id="invProdTotalItens" style="font-weight:700;">0</span> itens
+            &nbsp;•&nbsp;
+            <span id="invProdTotalUnidades" style="font-weight:700;">0</span> unidades em estoque
+            &nbsp;•&nbsp;
+            <span id="invProdTotalCategorias" style="font-weight:700;">0</span> categorias
+            &nbsp;•&nbsp;
+            R$ <span id="invProdValorTotal" style="font-weight:700;">0,00</span> em estoque
+        </td>
+    </tr>
+</table>
+
+<!-- Container onde as tabelas por categoria serão inseridas -->
+<div id="invProdCategoriasContainer"></div>
+
+<!-- Rodapé -->
+<div class="doc-footer" style="margin-top: 30px;">
+    <p>MAGIC FIREWORKS - INVENTÁRIO GERAL DE PRODUTOS</p>
+</div>

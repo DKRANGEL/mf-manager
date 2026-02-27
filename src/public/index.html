@@ -50,6 +50,14 @@
                         <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
                     </div>
                 </div>
+
+                <div class="input-group">
+                    <label>Relatórios</label>
+                    <button class="btn-export" onclick="gerarInventarioProdutos()"
+                            style="background: #323238; color: #e1e1e6;">
+                        📦 Inventário de Produtos (PDF)
+                    </button>
+                </div>
             </div>
 
             <!-- ===== MODO: ORDEM DE EQUIPAMENTO ===== -->
@@ -72,24 +80,23 @@
                 </a>
 
                 <!-- Inventário PDF -->
-                <button class="btn-export" onclick="gerarInventario()" style="background: #323238; color: #e1e1e6; margin-bottom: 16px;">
-                    📋 Gerar Inventário Geral de Equipamentos (PDF)
-                </button>
-
-                <button class="btn-export" onclick="gerarInventarioProdutos()" style="background: #2c3e50; color: #e1e1e6; margin-bottom: 16px;">
-                    📦 Gerar Estoque de Produtos (PDF)
+                <button class="btn-export" onclick="gerarInventario()"
+                        style="background: #323238; color: #e1e1e6; margin-bottom: 16px;">
+                    📋 Gerar Inventário Geral (PDF)
                 </button>
 
                 <div id="osFormulario" style="display:none;">
                     <div class="input-group">
                         <label for="osEvento">Nome do Evento</label>
-                        <input type="text" id="osEvento" class="sidebar-input" placeholder="Ex: Show Henrique & Juliano" list="listaEventos">
+                        <input type="text" id="osEvento" class="sidebar-input" placeholder="Ex: Show Henrique & Juliano"
+                               list="listaEventos">
                         <datalist id="listaEventos"></datalist>
                     </div>
 
                     <div class="input-group">
                         <label for="osLocal">Local</label>
-                        <input type="text" id="osLocal" class="sidebar-input" placeholder="Ex: Arena BRB Mané Garrincha" list="listaLocais">
+                        <input type="text" id="osLocal" class="sidebar-input" placeholder="Ex: Arena BRB Mané Garrincha"
+                               list="listaLocais">
                         <datalist id="listaLocais"></datalist>
                     </div>
 
@@ -103,20 +110,23 @@
 
                     <div class="input-group">
                         <label for="osRespEntrega">Responsável pela Entrega</label>
-                        <input type="text" id="osRespEntrega" class="sidebar-input" placeholder="Nome do responsável" list="listaRespEntrega">
+                        <input type="text" id="osRespEntrega" class="sidebar-input" placeholder="Nome do responsável"
+                               list="listaRespEntrega">
                         <datalist id="listaRespEntrega"></datalist>
                     </div>
 
                     <div class="input-group">
                         <label for="osRespEquip">Responsável pelo Equipamento</label>
-                        <input type="text" id="osRespEquip" class="sidebar-input" placeholder="Nome do responsável" list="listaRespEquip">
+                        <input type="text" id="osRespEquip" class="sidebar-input" placeholder="Nome do responsável"
+                               list="listaRespEquip">
                         <datalist id="listaRespEquip"></datalist>
                     </div>
 
                     <div class="input-group">
                         <label>Adicionar Equipamentos</label>
                         <div class="input-row">
-                            <input type="text" id="osBuscaProduto" class="sidebar-input" placeholder="Buscar por nome ou código...">
+                            <input type="text" id="osBuscaProduto" class="sidebar-input"
+                                   placeholder="Buscar por nome ou código...">
                             <button class="btn-accent-sm" onclick="buscarProdutos()">🔍</button>
                         </div>
                         <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
@@ -126,7 +136,8 @@
 
                     <div class="input-group">
                         <label for="osObs">Observações</label>
-                        <textarea id="osObs" class="sidebar-textarea" placeholder="Observações opcionais..." rows="2"></textarea>
+                        <textarea id="osObs" class="sidebar-textarea" placeholder="Observações opcionais..."
+                                  rows="2"></textarea>
                     </div>
 
                     <button class="btn-export" onclick="gerarOrdemEquipamento()" style="margin-top: 10px;">

@@ -5,6 +5,7 @@
 let _templateCache = null;
 let _templateOECache = null;
 let _templateInvCache = null;
+let _templateInvProdCache = null;
 
 async function carregarTemplate() {
     if (_templateCache) return _templateCache;
@@ -25,6 +26,13 @@ async function carregarTemplateInv() {
     const res = await fetch('/public/templates/inventario.html');
     _templateInvCache = await res.text();
     return _templateInvCache;
+}
+
+async function carregarTemplateInvProd() {
+    if (_templateInvProdCache) return _templateInvProdCache;
+    const res = await fetch('/public/templates/inventario-produtos.html');
+    _templateInvProdCache = await res.text();
+    return _templateInvProdCache;
 }
 
 async function renderDocumento(pedido, config) {
@@ -325,7 +333,6 @@ async function renderInventario(catalogo, config) {
         const catQtd = itens.reduce((s, e) => s + (e.quantidade || 0), 0);
         const catManut = itens.reduce((s, e) => s + (e.em_manutencao || 0), 0);
 
-        // Título da categoria — barra preta
         html += `
         <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
             <tr>
@@ -338,7 +345,6 @@ async function renderInventario(catalogo, config) {
             </tr>
         </table>`;
 
-        // Tabela de itens da categoria
         html += `
         <table class="r-table" style="margin-bottom: 15px;">
             <thead>
@@ -375,95 +381,182 @@ async function renderInventario(catalogo, config) {
 
 // ===================== INVENTÁRIO DE PRODUTOS TINY (RENDER) =====================
 
-async function renderInventarioProdutos(catalogo, config, meta = {}) {
-    const template = await carregarTemplateInv();
+// Mapeamento prefixo SKU → categoria legível.
+// IMPORTANTE: prefixos mais longos devem vir primeiro para evitar match prematuro.
+// Ex: MFCSM deve casar antes de MFCS, senão "MFCSM-001" seria classificado como Cake S.
+const SKU_CATEGORIAS = [
+    ['MFCSM', 'Smoke Mine'],           // antes de MFCS
+    ['MFSCW', 'Smoke Cake Waterfall'], // antes de MFSC*
+    ['MFSCH', 'Smoke Cake Hydra'],
+    ['MFSCM', 'Smoke Mine'],           // alias alternativo (sem o extra C)
+    ['MFSSS', 'Single Shot 0.8"'],
+    ['MFSS1', 'Single Shot 1.2"'],     // MFSS1.2 — ponto pode aparecer no SKU
+    ['MFS3I', 'Display Shell 3"'],
+    ['MFS4I', 'Display Shell 4"'],
+    ['MFS5I', 'Display Shell 5"'],
+    ['MFS6I', 'Display Shell 6"'],
+    ['MFCX', 'Cake X'],               // antes de MFC genérico
+    ['MFCW', 'Cake W'],
+    ['MFCS', 'Cake S'],               // por último entre os MFCS*
+];
+
+// Ordem de exibição das categorias no documento
+const ORDEM_CATEGORIAS_PRODUTOS = [
+    'Single Shot 0.8"',
+    'Single Shot 1.2"',
+    'Cake S',
+    'Cake X',
+    'Cake W',
+    'Smoke Mine',
+    'Smoke Cake Waterfall',
+    'Smoke Cake Hydra',
+    'Display Shell 3"',
+    'Display Shell 4"',
+    'Display Shell 5"',
+    'Display Shell 6"',
+];
+
+function categoriaDeSku(sku) {
+    if (!sku) return 'Outros';
+    // Remove sufixo _U para comparar o prefixo base
+    const skuBase = sku.toUpperCase().replace(/_U$/, '');
+    // Itera na ordem definida — mais específico/longo primeiro
+    for (const [prefixo, cat] of SKU_CATEGORIAS) {
+        if (skuBase.startsWith(prefixo.toUpperCase())) return cat;
+    }
+    return 'Outros';
+}
+
+// Remove [CAIXA], [UNIDADE], [ CAIXA ], [ UNIDADE ] e variações do nome
+function limparNomeProduto(nome) {
+    if (!nome) return '';
+    return nome
+        .replace(/\[\s*(caixa|unidade|cx|un)\s*\]/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+// Detecta se SKU é variante de unidade avulsa
+function isSkuUnidade(sku) {
+    return sku ? sku.toUpperCase().endsWith('_U') : false;
+}
+
+async function renderInventarioProdutos(catalogoBruto, config) {
+    const template = await carregarTemplateInvProd();
     const container = document.getElementById('recibo');
     container.innerHTML = template;
 
     const emp = config.empresa || {};
 
-    // 1. Cabeçalho
-    setText('invEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
-    setText('invEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
-    setText('invEmpresaEnd', 'Brasília - DF');
-    setText('invDocData', new Date().toLocaleDateString('pt-BR'));
+    // 1. Cabeçalho empresa
+    setText('invProdEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
+    setText('invProdEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
+    setText('invProdEmpresaEnd', 'Brasília - DF');
+    setText('invProdDocData', new Date().toLocaleDateString('pt-BR'));
 
-    // 2. Totais gerais
-    const categorias = Object.keys(catalogo).sort();
-    let totalItens = 0;
-    let totalUnidades = 0;
+    // 2. Achata catálogo bruto (agrupado por cat do Tiny) e reclassifica por SKU
+    const agrupado = {};
 
-    categorias.forEach(cat => {
-        catalogo[cat].forEach(p => {
-            totalItens++;
-            totalUnidades += (p.quantidade || 0);
+    Object.values(catalogoBruto).forEach(lista => {
+        lista.forEach(p => {
+            // Suprime _U com estoque zerado
+            if (isSkuUnidade(p.sku) && (p.quantidade || 0) === 0) return;
+
+            const cat = categoriaDeSku(p.sku);
+            if (!agrupado[cat]) agrupado[cat] = [];
+
+            agrupado[cat].push({
+                ...p,
+                nome: limparNomeProduto(p.nome || p.descricao || ''),
+                isUnidade: isSkuUnidade(p.sku),
+            });
         });
     });
 
-    setText('invTotalItens', totalItens.toString());
-    setText('invTotalUnidades', totalUnidades.toString());
-    setText('invTotalManut', '-');          // Produtos Tiny não têm manutenção
-    setText('invTotalCategorias', categorias.length.toString());
+    // Ordena itens dentro de cada categoria por SKU
+    Object.values(agrupado).forEach(lista =>
+        lista.sort((a, b) => (a.sku || '').localeCompare(b.sku || ''))
+    );
 
-    // Ajusta label do resumo para contexto de produtos
-    const resumoManutEl = document.getElementById('invTotalManut');
-    if (resumoManutEl) {
-        // Substitui o texto "em manutenção" pelo valor total em R$
-        const totalValor = categorias.reduce((s, cat) =>
-            s + catalogo[cat].reduce((ss, p) => ss + (p.quantidade || 0) * (p.preco || 0), 0), 0
-        );
-        resumoManutEl.closest('td').innerHTML = resumoManutEl.closest('td').innerHTML
-            .replace(/\d+ em manutenção/, `R$ ${fmtMoney(totalValor)} em estoque`);
-    }
+    // 3. Ordena categorias: primeiro as conhecidas na ordem definida, depois o resto
+    const categoriasOrdenadas = [
+        ...ORDEM_CATEGORIAS_PRODUTOS.filter(c => agrupado[c]),
+        ...Object.keys(agrupado).filter(c => !ORDEM_CATEGORIAS_PRODUTOS.includes(c)).sort(),
+    ];
 
-    // 3. Tabelas por categoria
-    const catContainer = document.getElementById('invCategoriasContainer');
+    // 4. Totais gerais
+    let totalItens = 0;
+    let totalUnidades = 0;
+    let totalValor = 0;
+
+    categoriasOrdenadas.forEach(cat => {
+        agrupado[cat].forEach(p => {
+            totalItens++;
+            totalUnidades += (p.quantidade || 0);
+            totalValor += (p.quantidade || 0) * (p.preco || 0);
+        });
+    });
+
+    setText('invProdTotalItens', totalItens.toString());
+    setText('invProdTotalUnidades', totalUnidades.toString());
+    setText('invProdTotalCategorias', categoriasOrdenadas.length.toString());
+    setText('invProdValorTotal', fmtMoney(totalValor));
+
+    // 5. Gerar tabelas por categoria
+    const catContainer = document.getElementById('invProdCategoriasContainer');
     let html = '';
 
-    categorias.forEach(cat => {
-        const itens = catalogo[cat];
+    categoriasOrdenadas.forEach(cat => {
+        const itens = agrupado[cat];
         const catQtd = itens.reduce((s, p) => s + (p.quantidade || 0), 0);
         const catValor = itens.reduce((s, p) => s + (p.quantidade || 0) * (p.preco || 0), 0);
 
         html += `
-    <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
-      <tr>
-        <td class="bg-black-title" style="text-align: left; padding: 8px 14px;">
-          ${esc(cat.toUpperCase())}
-        </td>
-        <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
-          ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.
-          ${catValor > 0 ? ' &nbsp;•&nbsp; R$ ' + fmtMoney(catValor) : ''}
-        </td>
-      </tr>
-    </table>
-    <table class="r-table" style="margin-bottom: 15px;">
-      <thead>
-        <tr>
-          <th class="c-item">Nº</th>
-          <th class="c-sku">CÓDIGO</th>
-          <th class="c-desc">DESCRIÇÃO</th>
-          <th class="c-un" style="width:40px;">UN</th>
-          <th class="c-qtd">QTD</th>
-          <th class="c-preco">PREÇO</th>
-          <th class="c-total">TOTAL</th>
-        </tr>
-      </thead>
-      <tbody>`;
+        <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
+            <tr>
+                <td class="bg-black-title" style="text-align: left; padding: 8px 14px;">
+                    ${esc(cat.toUpperCase())}
+                </td>
+                <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
+                    ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.
+                    ${catValor > 0 ? ' &nbsp;•&nbsp; R$ ' + fmtMoney(catValor) : ''}
+                </td>
+            </tr>
+        </table>
+        <table class="r-table" style="margin-bottom: 15px;">
+            <thead>
+                <tr>
+                    <th class="c-item">Nº</th>
+                    <th class="c-sku">CÓDIGO</th>
+                    <th class="c-desc">DESCRIÇÃO</th>
+                    <th class="c-un" style="width: 44px; text-align: center;">UN</th>
+                    <th class="c-qtd">QTD</th>
+                    <th class="c-preco">PREÇO</th>
+                    <th class="c-total">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>`;
 
         itens.forEach((p, i) => {
-            const total = (p.quantidade || 0) * (p.preco || 0);
-            const qtdStyle = (p.quantidade || 0) === 0 ? 'color: #c0392b; font-weight: 700;' : 'font-weight: 700;';
+            const qtd = p.quantidade || 0;
+            const total = qtd * (p.preco || 0);
+            const qtdStyle = qtd === 0 ? 'color: #c0392b; font-weight: 700;' : 'font-weight: 700;';
+
+            // Badge laranja "UN" para variantes de unidade avulsa com estoque
+            const skuDisplay = p.isUnidade
+                ? `${esc(p.sku)} <span style="background:#e67e22;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;">UN</span>`
+                : esc(p.sku || '-');
+
             html += `
-        <tr>
-          <td class="c-item">${i + 1}</td>
-          <td class="c-sku">${esc(p.sku || '-')}</td>
-          <td class="c-desc">${esc(p.nome || '-')}</td>
-          <td class="c-un" style="text-align:center;">${esc(p.unidade || 'UN')}</td>
-          <td class="c-qtd" style="${qtdStyle}">${formatQtd(p.quantidade || 0)}</td>
-          <td class="c-preco">${p.preco > 0 ? fmtMoney(p.preco) : '-'}</td>
-          <td class="c-total">${total > 0 ? fmtMoney(total) : '-'}</td>
-        </tr>`;
+                <tr>
+                    <td class="c-item">${i + 1}</td>
+                    <td class="c-sku">${skuDisplay}</td>
+                    <td class="c-desc">${esc(p.nome || '-')}</td>
+                    <td class="c-un" style="text-align: center;">${esc(p.unidade || 'UN')}</td>
+                    <td class="c-qtd" style="${qtdStyle}">${formatQtd(qtd)}</td>
+                    <td class="c-preco">${(p.preco || 0) > 0 ? fmtMoney(p.preco) : '-'}</td>
+                    <td class="c-total">${total > 0 ? fmtMoney(total) : '-'}</td>
+                </tr>`;
         });
 
         html += '</tbody></table>';

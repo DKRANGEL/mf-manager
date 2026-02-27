@@ -34,10 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadUploadedImages();
     carregarConfigEquipamentos();
 
-    // Se abriu com ?inventario=1, gera automaticamente
+    // Se abriu com ?inventario=1, gera automaticamente o inventário de equipamentos
     const params = new URLSearchParams(window.location.search);
     if (params.get('inventario') === '1') {
-        // Muda pra modo equipamento e gera
         const btnEquip = document.querySelector('.toggle[data-mode="equipamento"]');
         if (btnEquip) setModo(btnEquip);
         setTimeout(() => gerarInventario(), 300);
@@ -179,7 +178,8 @@ async function carregarConfigEquipamentos() {
             popularDatalist('listaRespEntrega', osConfigEquip.responsaveis_entrega || []);
             popularDatalist('listaRespEquip', osConfigEquip.responsaveis_equipamento || []);
         }
-    } catch { }
+    } catch {
+    }
 }
 
 function popularDatalist(id, valores) {
@@ -203,15 +203,20 @@ function novaOrdem() {
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('reciboWrapper').style.display = 'none';
     document.getElementById('exportActions').style.display = 'none';
-    hideError(); hideSuccess();
+    hideError();
+    hideSuccess();
     document.getElementById('osEvento').focus();
 }
 
 // Buscar OS existente por número
 async function buscarOS() {
     let input = document.getElementById('osBusca').value.trim();
-    if (!input) { showError('Digite o número da OS'); return; }
-    hideError(); hideSuccess();
+    if (!input) {
+        showError('Digite o número da OS');
+        return;
+    }
+    hideError();
+    hideSuccess();
 
     // Se digitou só número (1, 2, 15...), monta o código completo
     if (/^\d+$/.test(input)) {
@@ -330,10 +335,17 @@ function renderOsItensLista() {
 async function gerarOrdemEquipamento() {
     const evento = document.getElementById('osEvento').value.trim();
     const local = document.getElementById('osLocal').value.trim();
-    if (!evento) { showError('Preencha o nome do evento'); return; }
-    if (osItens.length === 0) { showError('Adicione pelo menos um equipamento'); return; }
+    if (!evento) {
+        showError('Preencha o nome do evento');
+        return;
+    }
+    if (osItens.length === 0) {
+        showError('Adicione pelo menos um equipamento');
+        return;
+    }
 
-    hideError(); hideSuccess();
+    hideError();
+    hideSuccess();
 
     const ordem = {
         evento,
@@ -369,10 +381,11 @@ async function gerarOrdemEquipamento() {
     }
 }
 
-// ===================== INVENTÁRIO GERAL =====================
+// ===================== INVENTÁRIO DE EQUIPAMENTOS =====================
 
 async function gerarInventario() {
-    hideError(); hideSuccess();
+    hideError();
+    hideSuccess();
 
     try {
         const res = await fetch('/api/equipamentos/catalogo');
@@ -390,11 +403,14 @@ async function gerarInventario() {
     }
 }
 
+// ===================== INVENTÁRIO DE PRODUTOS (TINY) =====================
+
 async function gerarInventarioProdutos() {
-    hideError(); hideSuccess();
+    hideError();
+    hideSuccess();
+    showSuccess('Carregando produtos do Tiny...');
 
     try {
-        showSuccess('Carregando produtos do Tiny...');
         const res = await fetch('/api/produtos/estoque');
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
@@ -404,14 +420,17 @@ async function gerarInventarioProdutos() {
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
         document.getElementById('exportActions').style.display = 'flex';
-        showSuccess(`Estoque gerado — ${json.total} produtos em ${Object.keys(json.data).length} categorias`);
+
+        const totalCats = Object.keys(json.data).length;
+        showSuccess(`Inventário gerado — ${json.total} produtos em ${totalCats} categorias`);
     } catch (err) {
         showError(err.message);
     }
 }
 
 // ---- Testar conexão ----
-async function testarConexao() { /* ... */ }
+async function testarConexao() { /* ... */
+}
 
 // ---- UI helpers ----
 function showError(m) {
