@@ -1,6 +1,4 @@
 // ===================== APP (INTERFACE / CONTROLES) =====================
-// Este arquivo controla SOMENTE a interface: sidebar, modais, busca, upload, export.
-// A renderização do documento fica em documento.js.
 
 let config = {};
 let tipoBusca = 'numero';
@@ -9,6 +7,10 @@ let ultimoPedido = null;
 let osItens = [];
 let osConfigEquip = {};
 const imgCache = {};
+
+// Logs acumulados
+let syncLogs = [];
+let sseSource = null;
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', async () => {
@@ -36,23 +38,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadUploadedImages();
     carregarConfigEquipamentos();
 
-    // Fechar modais com Escape
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             fecharModalOS();
             fecharModalBuscarOS();
+            fecharModalLogs();
         }
     });
 
-    // Fechar clicando no backdrop
     document.getElementById('modalOS').addEventListener('click', e => {
         if (e.target === e.currentTarget) fecharModalOS();
     });
     document.getElementById('modalBuscarOS').addEventListener('click', e => {
         if (e.target === e.currentTarget) fecharModalBuscarOS();
     });
+    document.getElementById('modalLogs').addEventListener('click', e => {
+        if (e.target === e.currentTarget) fecharModalLogs();
+    });
 
-    // Se abriu com ?inventario=1, gera automaticamente
     const params = new URLSearchParams(window.location.search);
     if (params.get('inventario') === '1') {
         const btnEquip = document.querySelector('.toggle[data-mode="equipamento"]');
@@ -60,7 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(() => gerarInventario(), 300);
     }
 
-    // Drag & drop
     const dz = document.getElementById('dropzone');
     dz.addEventListener('dragover', e => {
         e.preventDefault();
@@ -89,7 +91,6 @@ function setModo(el) {
     document.getElementById('modoPedido').style.display = modoAtual === 'pedido' ? 'block' : 'none';
     document.getElementById('modoEquipamento').style.display = modoAtual === 'equipamento' ? 'block' : 'none';
 
-    // Reset preview
     document.getElementById('emptyState').style.display = 'block';
     document.getElementById('reciboWrapper').style.display = 'none';
     document.getElementById('exportActions').style.display = 'none';
@@ -127,12 +128,11 @@ async function gerarRecibo() {
     }
 }
 
-// ---- Exportar PDF ----
 function exportarPDF() {
     window.print();
 }
 
-// ---- Imagens de produtos ----
+// ---- Imagens ----
 async function getProductImage(sku) {
     if (!sku) return null;
     if (imgCache[sku] !== undefined) return imgCache[sku];
@@ -178,10 +178,169 @@ async function loadUploadedImages() {
     }
 }
 
+// ===================== PROGRESSO SSE =====================
+
+function iniciarSSE() {
+    if (sseSource) {
+        sseSource.close();
+        sseSource = null;
+    }
+
+    sseSource = new EventSource('/api/produtos/estoque/progresso');
+
+    sseSource.onmessage = (e) => {
+        try {
+            const evt = JSON.parse(e.data);
+            processarEventoSSE(evt);
+        } catch {
+        }
+    };
+
+    sseSource.onerror = () => {
+        // Conexão encerrada normalmente ao terminar — não é erro real
+    };
+}
+
+function pararSSE() {
+    if (sseSource) {
+        sseSource.close();
+        sseSource = null;
+    }
+}
+
+function processarEventoSSE(evt) {
+    const {tipo, msg, current, total, sku, saldo} = evt;
+
+    // Adiciona ao log
+    const agora = new Date().toLocaleTimeString('pt-BR');
+    syncLogs.push({time: agora, tipo, msg});
+    renderLogs();
+
+    // Atualiza barra de progresso
+    if (tipo === 'cached') {
+        setProgressBar(100, 0, 0, 'Cache (5 min)', 'done');
+        return;
+    }
+
+    if (tipo === 'info') {
+        setProgressBar(0, current || 0, total || 0, msg, 'info');
+        return;
+    }
+
+    if (tipo === 'done') {
+        setProgressBar(100, total, total, msg, 'done');
+        setTimeout(() => ocultarProgressBar(), 3000);
+        pararSSE();
+        return;
+    }
+
+    if (tipo === 'ok' || tipo === 'error' || tipo === 'ratelimit') {
+        const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+        const label = sku ? `${sku}${saldo !== undefined ? ` → ${saldo} un.` : ''}` : msg;
+        setProgressBar(pct, current, total, label, tipo);
+    }
+}
+
+function setProgressBar(pct, current, total, label, tipo) {
+    const box = document.getElementById('progressBox');
+    const fill = document.getElementById('progressFill');
+    const counter = document.getElementById('progressCounter');
+    const skuEl = document.getElementById('progressSku');
+
+    box.classList.add('active');
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill' + (tipo === 'done' ? ' done' : '');
+    counter.textContent = total > 0 ? `${current} / ${total}` : '';
+    skuEl.textContent = label || '';
+    skuEl.className = 'progress-sku' + (tipo === 'ratelimit' ? ' ratelimit' : tipo === 'error' ? ' error' : '');
+}
+
+function ocultarProgressBar() {
+    document.getElementById('progressBox').classList.remove('active');
+}
+
+// ===================== MODAL DE LOGS =====================
+
+function abrirModalLogs() {
+    document.getElementById('modalLogs').classList.add('active');
+}
+
+function fecharModalLogs() {
+    document.getElementById('modalLogs').classList.remove('active');
+}
+
+function limparLogs() {
+    syncLogs = [];
+    renderLogs();
+}
+
+function renderLogs() {
+    const body = document.getElementById('logsBody');
+    const footer = document.getElementById('logsFooter');
+
+    if (syncLogs.length === 0) {
+        body.innerHTML = '';
+        footer.textContent = 'Nenhum log ainda.';
+        return;
+    }
+
+    body.innerHTML = syncLogs.map(l => `
+        <div class="log-line">
+            <span class="log-time">${l.time}</span>
+            <span class="log-msg ${l.tipo}">${escHtml(l.msg)}</span>
+        </div>
+    `).join('');
+
+    const erros = syncLogs.filter(l => l.tipo === 'error').length;
+    const ratelimits = syncLogs.filter(l => l.tipo === 'ratelimit').length;
+    footer.textContent = `${syncLogs.length} linhas • ${erros} erros • ${ratelimits} rate limits`;
+
+    // Auto-scroll
+    body.scrollTop = body.scrollHeight;
+}
+
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// ===================== INVENTÁRIO DE PRODUTOS (COM PROGRESSO) =====================
+
+async function gerarInventarioProdutos() {
+    hideError();
+    hideSuccess();
+
+    // Mostra barra de progresso imediatamente
+    setProgressBar(0, 0, 0, 'Conectando...', 'info');
+
+    // Inicia SSE para receber progresso
+    iniciarSSE();
+
+    showSuccess('Carregando produtos do Tiny...');
+
+    try {
+        const res = await fetch('/api/produtos/estoque');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+
+        await renderInventarioProdutos(json.data, config);
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('reciboWrapper').style.display = 'block';
+        document.getElementById('exportActions').style.display = 'flex';
+
+        const totalCats = Object.keys(json.data).length;
+        showSuccess(`Inventário gerado — ${json.total} produtos em ${totalCats} categorias`);
+    } catch (err) {
+        showError(err.message);
+        pararSSE();
+        ocultarProgressBar();
+    }
+}
+
 // ===================== MODAIS DE OS =====================
 
 function abrirModalNovaOS() {
-    // Limpa formulário
     osItens = [];
     renderOsItensLista();
     document.getElementById('osEvento').value = '';
@@ -242,7 +401,6 @@ async function buscarOS() {
         return;
     }
 
-    // Aceita só número e expande para código completo
     if (/^\d+$/.test(input)) {
         const ano = new Date().getFullYear();
         input = `OS-${ano}-${input.padStart(3, '0')}`;
@@ -258,8 +416,6 @@ async function buscarOS() {
         if (!json.success) throw new Error(json.error);
 
         const ordem = json.data;
-
-        // Popula modal com dados da OS
         document.getElementById('osEvento').value = ordem.evento || '';
         document.getElementById('osLocal').value = ordem.local || '';
         document.getElementById('osDataSaida').value = ordem.data_saida || '';
@@ -272,7 +428,6 @@ async function buscarOS() {
         document.getElementById('modalOSTitulo').textContent = `OS ${ordem.numero}`;
         document.getElementById('modalOS').classList.add('active');
 
-        // Renderiza documento no preview
         await renderOrdemEquipamento(ordem, config);
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
@@ -422,29 +577,8 @@ async function gerarInventario() {
     }
 }
 
-async function gerarInventarioProdutos() {
-    hideError();
-    hideSuccess();
-    showSuccess('Carregando produtos do Tiny...');
-    try {
-        const res = await fetch('/api/produtos/estoque');
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error);
-
-        await renderInventarioProdutos(json.data, config);
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('reciboWrapper').style.display = 'block';
-        document.getElementById('exportActions').style.display = 'flex';
-
-        const totalCats = Object.keys(json.data).length;
-        showSuccess(`Inventário gerado — ${json.total} produtos em ${totalCats} categorias`);
-    } catch (err) {
-        showError(err.message);
-    }
-}
-
 // ---- Testar conexão ----
-async function testarConexao() { /* ... */
+async function testarConexao() {
 }
 
 // ---- UI helpers ----

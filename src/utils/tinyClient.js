@@ -35,7 +35,6 @@ class TinyClient {
         return data.retorno;
     }
 
-    // Retorna JSON cru da API (para debug/teste de conexão)
     async _requestRaw(endpoint, params = {}) {
         const body = new URLSearchParams({
             token: this.token,
@@ -56,7 +55,6 @@ class TinyClient {
         return await response.json();
     }
 
-    // Testa se o token é válido
     async testarConexao() {
         const data = await this._requestRaw('pedidos.pesquisa.php', {
             dataInicial: '01/01/2026',
@@ -80,41 +78,30 @@ class TinyClient {
         return retorno.pedidos || [];
     }
 
-    // Busca pedido pelo NÚMERO visível na interface (não pelo ID interno da API)
-    // Fluxo: pesquisa por número → pega ID interno → obtém dados completos
     async obterPedidoPorNumero(numero) {
-        const retorno = await this._request('pedidos.pesquisa.php', {
-            numero,
-        });
-
+        const retorno = await this._request('pedidos.pesquisa.php', {numero});
         const pedidos = retorno.pedidos || [];
 
         if (pedidos.length === 0) {
             throw new Error(`Nenhum pedido encontrado com número "${numero}"`);
         }
 
-        // Pesquisa retorna dados resumidos — pega o ID interno
         const pedidoResumo = pedidos[0].pedido;
         const idInterno = pedidoResumo.id;
 
         console.log(`[Tiny] Número "${numero}" → ID interno: ${idInterno}`);
 
-        // Busca dados completos pelo ID interno
         const pedidoCompleto = await this.obterPedido(idInterno);
         return pedidoCompleto;
     }
 
-    // Busca dados de um produto pelo ID (inclui URL da imagem)
     async obterProduto(id) {
         const retorno = await this._request('produto.obter.php', {id});
         return retorno.produto;
     }
 
-    // Busca produto por SKU (código)
     async pesquisarProdutoPorSKU(sku) {
-        const retorno = await this._request('produtos.pesquisa.php', {
-            pesquisa: sku,
-        });
+        const retorno = await this._request('produtos.pesquisa.php', {pesquisa: sku});
         const produtos = retorno.produtos || [];
         if (produtos.length === 0) return null;
 
@@ -127,23 +114,88 @@ class TinyClient {
         let pagina = 1;
 
         while (true) {
-            const retorno = await this._request('produtos.pesquisa.php', {
-                pesquisa,
-                pagina,
-            });
-
+            const retorno = await this._request('produtos.pesquisa.php', {pesquisa, pagina});
             const produtos = retorno.produtos || [];
             if (produtos.length === 0) break;
-
             todos.push(...produtos.map(p => p.produto));
-
-            // Se retornou menos de 100, acabou
             if (produtos.length < 100) break;
             pagina++;
         }
 
         return todos;
     }
+
+    // Busca lista de produtos + estoque real via produto.obter.estoque.php
+    // SEQUENCIAL com delay — Promise.all estoura o rate limit da API Tiny
+    // onProgress(current, total, sku, saldo, logLine) — callback opcional para SSE
+    async pesquisarProdutosComEstoque(pesquisa = '', onProgress = null) {
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const emit = (current, total, sku, saldo, tipo, msg) => {
+            if (onProgress) onProgress({current, total, sku, saldo, tipo, msg});
+        };
+
+        // 1. Busca lista de produtos
+        const todos = [];
+        let pagina = 1;
+
+        emit(0, 0, '', 0, 'info', 'Buscando lista de produtos...');
+        while (true) {
+            const retorno = await this._request('produtos.pesquisa.php', {pesquisa, pagina});
+            const produtos = retorno.produtos || [];
+            if (produtos.length === 0) break;
+            todos.push(...produtos.map(p => p.produto));
+            if (produtos.length < 100) break;
+            pagina++;
+        }
+
+        if (todos.length === 0) return [];
+
+        emit(0, todos.length, '', 0, 'info', `${todos.length} produtos encontrados. Buscando estoques...`);
+
+        // 2. Busca estoque UM POR VEZ com delay entre cada chamada
+        const DELAY_MS = 400;
+        const RETRY_DELAY_MS = 20000;
+        const MAX_RETRIES = 3;
+        const resultado = [];
+
+        for (let i = 0; i < todos.length; i++) {
+            const produto = todos[i];
+            let saldo = 0;
+
+            for (let tentativa = 1; tentativa <= MAX_RETRIES; tentativa++) {
+                try {
+                    const r = await this._request('produto.obter.estoque.php', {id: produto.id});
+                    saldo = parseFloat(r.produto?.saldo || 0);
+                    break;
+                } catch (err) {
+                    const isRateLimit = err.message.includes('Bloqueada') || err.message.includes('Excedido');
+                    if (isRateLimit && tentativa < MAX_RETRIES) {
+                        const msg = `Rate limit em ${produto.codigo}, aguardando ${RETRY_DELAY_MS / 1000}s (tentativa ${tentativa}/${MAX_RETRIES})`;
+                        console.log(`[Estoque] ${msg}`);
+                        emit(i + 1, todos.length, produto.codigo, 0, 'ratelimit', msg);
+                        await sleep(RETRY_DELAY_MS);
+                    } else {
+                        const msg = `ERRO ${produto.codigo}: ${err.message}`;
+                        console.log(`[Estoque] ${msg}`);
+                        emit(i + 1, todos.length, produto.codigo, 0, 'error', msg);
+                        saldo = 0;
+                        break;
+                    }
+                }
+            }
+
+            resultado.push({...produto, saldo_real: saldo});
+            emit(i + 1, todos.length, produto.codigo, saldo, 'ok', `${produto.codigo} → ${saldo} un.`);
+
+            if (i < todos.length - 1) {
+                await sleep(DELAY_MS);
+            }
+        }
+
+        emit(todos.length, todos.length, '', 0, 'done', `Concluído: ${resultado.length} produtos processados`);
+        return resultado;
+    }
 }
 
 module.exports = TinyClient;
+module.exports.default = TinyClient;

@@ -62,7 +62,7 @@ app.use('/api/produtos', apiRoutes);
 
 // Rotas de equipamentos
 app.use('/api/equipamentos', equipamentosRoutes);
-
+''
 // Serve frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

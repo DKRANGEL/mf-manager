@@ -9,6 +9,239 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
+    <style>
+        /* === BARRA DE PROGRESSO === */
+        .progress-box {
+            background: #1a1a1e;
+            border: 1px solid var(--sb-border);
+            border-radius: var(--sb-radius);
+            padding: 12px 14px;
+            display: none;
+        }
+
+        .progress-box.active {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--sb-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-counter {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--sb-accent);
+        }
+
+        .progress-track {
+            height: 6px;
+            background: #29292e;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--sb-accent);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-fill.done {
+            background: #2ecc71;
+        }
+
+        .progress-sku {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .progress-sku.ratelimit {
+            color: #e67e22;
+        }
+
+        .progress-sku.error {
+            color: var(--sb-accent);
+        }
+
+        .btn-logs {
+            width: 100%;
+            margin-top: 8px;
+            background: transparent;
+            border: 1px solid #29292e;
+            color: #555;
+            padding: 6px;
+            border-radius: var(--sb-radius);
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.15s;
+            text-align: center;
+        }
+
+        .btn-logs:hover {
+            color: #aaa;
+            border-color: #444;
+        }
+
+        /* === MODAL DE LOGS === */
+        .modal-logs-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-logs-overlay.active {
+            display: flex;
+        }
+
+        .modal-logs {
+            background: #121214;
+            border: 1px solid var(--sb-border);
+            border-radius: 10px;
+            width: 700px;
+            max-width: 95vw;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sb-border);
+        }
+
+        .modal-logs-header h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .modal-logs-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-clear-logs {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .btn-clear-logs:hover {
+            color: #aaa;
+            border-color: #555;
+        }
+
+        .modal-logs-close {
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 6px;
+            transition: 0.15s;
+        }
+
+        .modal-logs-close:hover {
+            color: #fff;
+        }
+
+        .modal-logs-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px;
+            font-family: var(--mono);
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .modal-logs-body::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .modal-logs-body::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .log-line {
+            display: flex;
+            gap: 10px;
+        }
+
+        .log-time {
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .log-msg {
+            color: #888;
+        }
+
+        .log-msg.ok {
+            color: #2ecc71;
+        }
+
+        .log-msg.ratelimit {
+            color: #e67e22;
+        }
+
+        .log-msg.error {
+            color: var(--sb-accent);
+        }
+
+        .log-msg.info {
+            color: #3498db;
+        }
+
+        .log-msg.done {
+            color: #2ecc71;
+            font-weight: 700;
+        }
+
+        .log-msg.cached {
+            color: #9b59b6;
+        }
+
+        .modal-logs-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--sb-border);
+            font-size: 10px;
+            color: #444;
+            font-family: var(--mono);
+        }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -55,6 +288,19 @@
                     </button>
                 </div>
 
+                <!-- Progresso do inventário de produtos -->
+                <div class="progress-box" id="progressBox">
+                    <div class="progress-header">
+                        <span class="progress-label">Carregando Estoque</span>
+                        <span class="progress-counter" id="progressCounter">0 / 0</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-sku" id="progressSku">Aguardando...</div>
+                    <button class="btn-logs" onclick="abrirModalLogs()">📋 Ver Logs Detalhados</button>
+                </div>
+
                 <div class="sidebar-section">
                     <span class="section-label">Fotos dos Produtos</span>
                     <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
@@ -68,7 +314,6 @@
 
             <!-- ===== MODO: ORDEM DE EQUIPAMENTO ===== -->
             <div id="modoEquipamento" style="display:none;">
-
                 <div class="sidebar-section">
                     <span class="section-label">Ordens de Serviço</span>
                     <button class="btn-menu btn-menu-accent" onclick="abrirModalNovaOS()">
@@ -78,21 +323,18 @@
                         <span class="btn-menu-icon">🔍</span>Buscar OS Existente
                     </button>
                 </div>
-
                 <div class="sidebar-section">
                     <span class="section-label">Cadastro</span>
                     <a href="/equipamentos" class="btn-menu">
                         <span class="btn-menu-icon">📦</span>Gerenciar Equipamentos
                     </a>
                 </div>
-
                 <div class="sidebar-section">
                     <span class="section-label">Relatórios</span>
                     <button class="btn-menu" onclick="gerarInventario()">
                         <span class="btn-menu-icon">📋</span>Inventário de Equipamentos
                     </button>
                 </div>
-
             </div>
 
             <!-- ===== COMUNS ===== -->
@@ -137,8 +379,6 @@
         </div>
         <div class="modal-body">
             <div class="modal-cols">
-
-                <!-- Col esquerda: dados do evento -->
                 <div class="modal-col">
                     <div class="modal-field">
                         <label>Nome do Evento</label>
@@ -180,8 +420,6 @@
                                   rows="3"></textarea>
                     </div>
                 </div>
-
-                <!-- Col direita: equipamentos -->
                 <div class="modal-col">
                     <div class="modal-field">
                         <label>Adicionar Equipamentos</label>
@@ -194,7 +432,6 @@
                     </div>
                     <div id="osItensLista" class="os-itens-lista"></div>
                 </div>
-
             </div>
         </div>
         <div class="modal-footer">
@@ -223,6 +460,21 @@
                     (ex: OS-2026-005)</p>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: LOGS ===== -->
+<div class="modal-logs-overlay" id="modalLogs">
+    <div class="modal-logs">
+        <div class="modal-logs-header">
+            <h2>📋 Logs de Sincronização</h2>
+            <div class="modal-logs-actions">
+                <button class="btn-clear-logs" onclick="limparLogs()">Limpar</button>
+                <button class="modal-logs-close" onclick="fecharModalLogs()">✕</button>
+            </div>
+        </div>
+        <div class="modal-logs-body" id="logsBody"></div>
+        <div class="modal-logs-footer" id="logsFooter">Nenhum log ainda.</div>
     </div>
 </div>
 
