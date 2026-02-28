@@ -24,6 +24,7 @@
         </div>
 
         <div class="sidebar-content">
+
             <!-- ===== TOGGLE DE MODO ===== -->
             <div class="input-group">
                 <label>Tipo de Documento</label>
@@ -41,109 +42,57 @@
                         <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
                         <button id="btnGerar" onclick="gerarRecibo()">GERAR</button>
                     </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Critério de Busca</label>
-                    <div class="toggle-group">
-                        <button class="toggle active" data-type="numero" onclick="setTipo(this)">Número Pedido</button>
+                    <div class="toggle-group" style="margin-top: 8px;">
+                        <button class="toggle active" data-type="numero" onclick="setTipo(this)">Nº Pedido</button>
                         <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label>Relatórios</label>
-                    <button class="btn-export" onclick="gerarInventarioProdutos()"
-                            style="background: #323238; color: #e1e1e6;">
-                        📦 Inventário de Produtos (PDF)
+                <div class="sidebar-section">
+                    <span class="section-label">Relatórios</span>
+                    <button class="btn-menu" onclick="gerarInventarioProdutos()">
+                        <span class="btn-menu-icon">📦</span>Inventário de Produtos
                     </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <span class="section-label">Fotos dos Produtos</span>
+                    <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                        <p class="upload-hint">Arraste ou clique para adicionar</p>
+                        <button class="btn-upload">Selecionar Imagens</button>
+                        <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
+                               style="display:none;">
+                    </div>
                 </div>
             </div>
 
             <!-- ===== MODO: ORDEM DE EQUIPAMENTO ===== -->
             <div id="modoEquipamento" style="display:none;">
-                <!-- Ações principais -->
-                <div class="input-group">
-                    <label>Ações</label>
-                    <button class="btn-export" onclick="novaOrdem()" style="background: var(--sb-accent); color: #fff;">
-                        ＋ Nova Ordem de Equipamento
+
+                <div class="sidebar-section">
+                    <span class="section-label">Ordens de Serviço</span>
+                    <button class="btn-menu btn-menu-accent" onclick="abrirModalNovaOS()">
+                        <span class="btn-menu-icon">＋</span>Nova Ordem de Equipamento
                     </button>
-                    <div class="input-row" style="margin-top: 8px;">
-                        <input type="text" id="osBusca" placeholder="Nº da OS (ex: 1, 2, 3...)" autocomplete="off">
-                        <button id="btnGerarOS" onclick="buscarOS()">IR</button>
-                    </div>
-                </div>
-
-                <!-- Link pra cadastro -->
-                <a href="/equipamentos" class="btn-link-equip" target="_blank">
-                    📦 Gerenciar Cadastro de Equipamentos
-                </a>
-
-                <!-- Inventário PDF -->
-                <button class="btn-export" onclick="gerarInventario()"
-                        style="background: #323238; color: #e1e1e6; margin-bottom: 16px;">
-                    📋 Gerar Inventário Geral (PDF)
-                </button>
-
-                <div id="osFormulario" style="display:none;">
-                    <div class="input-group">
-                        <label for="osEvento">Nome do Evento</label>
-                        <input type="text" id="osEvento" class="sidebar-input" placeholder="Ex: Show Henrique & Juliano"
-                               list="listaEventos">
-                        <datalist id="listaEventos"></datalist>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="osLocal">Local</label>
-                        <input type="text" id="osLocal" class="sidebar-input" placeholder="Ex: Arena BRB Mané Garrincha"
-                               list="listaLocais">
-                        <datalist id="listaLocais"></datalist>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Datas</label>
-                        <div class="input-row">
-                            <input type="date" id="osDataSaida" class="sidebar-input" title="Data de Saída">
-                            <input type="date" id="osDataRetorno" class="sidebar-input" title="Data de Retorno">
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="osRespEntrega">Responsável pela Entrega</label>
-                        <input type="text" id="osRespEntrega" class="sidebar-input" placeholder="Nome do responsável"
-                               list="listaRespEntrega">
-                        <datalist id="listaRespEntrega"></datalist>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="osRespEquip">Responsável pelo Equipamento</label>
-                        <input type="text" id="osRespEquip" class="sidebar-input" placeholder="Nome do responsável"
-                               list="listaRespEquip">
-                        <datalist id="listaRespEquip"></datalist>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Adicionar Equipamentos</label>
-                        <div class="input-row">
-                            <input type="text" id="osBuscaProduto" class="sidebar-input"
-                                   placeholder="Buscar por nome ou código...">
-                            <button class="btn-accent-sm" onclick="buscarProdutos()">🔍</button>
-                        </div>
-                        <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
-                    </div>
-
-                    <div id="osItensLista" class="os-itens-lista"></div>
-
-                    <div class="input-group">
-                        <label for="osObs">Observações</label>
-                        <textarea id="osObs" class="sidebar-textarea" placeholder="Observações opcionais..."
-                                  rows="2"></textarea>
-                    </div>
-
-                    <button class="btn-export" onclick="gerarOrdemEquipamento()" style="margin-top: 10px;">
-                        📋 Gerar Ordem de Equipamento
+                    <button class="btn-menu" onclick="abrirModalBuscarOS()">
+                        <span class="btn-menu-icon">🔍</span>Buscar OS Existente
                     </button>
                 </div>
+
+                <div class="sidebar-section">
+                    <span class="section-label">Cadastro</span>
+                    <a href="/equipamentos" class="btn-menu">
+                        <span class="btn-menu-icon">📦</span>Gerenciar Equipamentos
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <span class="section-label">Relatórios</span>
+                    <button class="btn-menu" onclick="gerarInventario()">
+                        <span class="btn-menu-icon">📋</span>Inventário de Equipamentos
+                    </button>
+                </div>
+
             </div>
 
             <!-- ===== COMUNS ===== -->
@@ -151,25 +100,15 @@
             <div id="successBox" class="success-box" style="display:none;"></div>
 
             <div id="exportActions" class="export-actions" style="display:none;">
-                <h3>Finalizar</h3>
                 <button class="btn-export" onclick="exportarPDF()">
                     📄 Salvar PDF / Imprimir
                 </button>
             </div>
 
-            <div class="upload-section" id="uploadSection">
-                <h3>Fotos dos Produtos</h3>
-                <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-                    <p class="upload-hint">Arraste ou clique para adicionar</p>
-                    <button class="btn-upload">Selecionar Imagens</button>
-                    <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
-                           style="display:none;">
-                </div>
-            </div>
-
             <div class="connection-test">
                 <button class="btn-test" onclick="testarConexao()">🔌 Verificar Conexão API</button>
             </div>
+
         </div>
 
         <div class="sidebar-footer">
@@ -183,12 +122,110 @@
             <h2>Pronto para gerar</h2>
             <p>Escolha o tipo de documento e preencha os dados</p>
         </div>
-
         <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
             <div id="recibo" class="recibo"></div>
         </div>
     </main>
 </div>
+
+<!-- ===== MODAL: NOVA / EDITAR OS ===== -->
+<div class="modal-overlay" id="modalOS">
+    <div class="modal-os">
+        <div class="modal-header">
+            <h2 id="modalOSTitulo">Nova Ordem de Equipamento</h2>
+            <button class="modal-close" onclick="fecharModalOS()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-cols">
+
+                <!-- Col esquerda: dados do evento -->
+                <div class="modal-col">
+                    <div class="modal-field">
+                        <label>Nome do Evento</label>
+                        <input type="text" id="osEvento" class="modal-input" placeholder="Ex: Show Henrique & Juliano"
+                               list="listaEventos">
+                        <datalist id="listaEventos"></datalist>
+                    </div>
+                    <div class="modal-field">
+                        <label>Local</label>
+                        <input type="text" id="osLocal" class="modal-input" placeholder="Ex: Arena BRB Mané Garrincha"
+                               list="listaLocais">
+                        <datalist id="listaLocais"></datalist>
+                    </div>
+                    <div class="modal-field-row">
+                        <div class="modal-field">
+                            <label>Data de Saída</label>
+                            <input type="date" id="osDataSaida" class="modal-input">
+                        </div>
+                        <div class="modal-field">
+                            <label>Data de Retorno</label>
+                            <input type="date" id="osDataRetorno" class="modal-input">
+                        </div>
+                    </div>
+                    <div class="modal-field">
+                        <label>Responsável pela Entrega</label>
+                        <input type="text" id="osRespEntrega" class="modal-input" placeholder="Nome do responsável"
+                               list="listaRespEntrega">
+                        <datalist id="listaRespEntrega"></datalist>
+                    </div>
+                    <div class="modal-field">
+                        <label>Responsável pelo Equipamento</label>
+                        <input type="text" id="osRespEquip" class="modal-input" placeholder="Nome do responsável"
+                               list="listaRespEquip">
+                        <datalist id="listaRespEquip"></datalist>
+                    </div>
+                    <div class="modal-field">
+                        <label>Observações</label>
+                        <textarea id="osObs" class="modal-input modal-textarea" placeholder="Observações opcionais..."
+                                  rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Col direita: equipamentos -->
+                <div class="modal-col">
+                    <div class="modal-field">
+                        <label>Adicionar Equipamentos</label>
+                        <div class="modal-search-row">
+                            <input type="text" id="osBuscaProduto" class="modal-input"
+                                   placeholder="Buscar por nome ou código...">
+                            <button class="btn-modal-search" onclick="buscarProdutos()">🔍</button>
+                        </div>
+                        <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
+                    </div>
+                    <div id="osItensLista" class="os-itens-lista"></div>
+                </div>
+
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="fecharModalOS()">Cancelar</button>
+            <button class="btn-modal-gerar" onclick="gerarOrdemEquipamento()">📋 Gerar Ordem de Equipamento</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: BUSCAR OS ===== -->
+<div class="modal-overlay" id="modalBuscarOS">
+    <div class="modal-sm">
+        <div class="modal-header">
+            <h2>Buscar Ordem de Equipamento</h2>
+            <button class="modal-close" onclick="fecharModalBuscarOS()">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+            <div class="modal-field">
+                <label>Número da OS</label>
+                <div class="modal-search-row">
+                    <input type="text" id="osBusca" class="modal-input" placeholder="Ex: 1, 2, 15..."
+                           autocomplete="off">
+                    <button class="btn-modal-search" onclick="buscarOS()">IR</button>
+                </div>
+                <p style="font-size:11px;color:#555;margin-top:8px;">Digite apenas o número (ex: 5) ou o código completo
+                    (ex: OS-2026-005)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/public/js/documento.js"></script>
 <script src="/public/js/app.js"></script>
 </body>

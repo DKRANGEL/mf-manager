@@ -1,13 +1,13 @@
 // ===================== APP (INTERFACE / CONTROLES) =====================
-// Este arquivo controla SOMENTE a interface: sidebar, busca, upload, export.
+// Este arquivo controla SOMENTE a interface: sidebar, modais, busca, upload, export.
 // A renderização do documento fica em documento.js.
 
 let config = {};
 let tipoBusca = 'numero';
 let modoAtual = 'pedido';
 let ultimoPedido = null;
-let osItens = []; // Itens da ordem de equipamento em edição
-let osConfigEquip = {}; // Config de responsáveis/locais
+let osItens = [];
+let osConfigEquip = {};
 const imgCache = {};
 
 // ---- Init ----
@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             recibo: {mensagemRodape: 'Magic Fireworks - Qualidade e Segurança'}
         };
     }
+
     document.getElementById('pedidoId').addEventListener('keydown', e => {
         if (e.key === 'Enter') gerarRecibo();
     });
@@ -30,11 +31,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('osBuscaProduto').addEventListener('keydown', e => {
         if (e.key === 'Enter') buscarProdutos();
     });
+
     document.getElementById('pedidoId').focus();
     loadUploadedImages();
     carregarConfigEquipamentos();
 
-    // Se abriu com ?inventario=1, gera automaticamente o inventário de equipamentos
+    // Fechar modais com Escape
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            fecharModalOS();
+            fecharModalBuscarOS();
+        }
+    });
+
+    // Fechar clicando no backdrop
+    document.getElementById('modalOS').addEventListener('click', e => {
+        if (e.target === e.currentTarget) fecharModalOS();
+    });
+    document.getElementById('modalBuscarOS').addEventListener('click', e => {
+        if (e.target === e.currentTarget) fecharModalBuscarOS();
+    });
+
+    // Se abriu com ?inventario=1, gera automaticamente
     const params = new URLSearchParams(window.location.search);
     if (params.get('inventario') === '1') {
         const btnEquip = document.querySelector('.toggle[data-mode="equipamento"]');
@@ -58,12 +76,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ---- Controles da sidebar ----
 function setTipo(el) {
-    document.querySelectorAll('.toggle[data-type="numero"],.toggle[data-type="id"]').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.toggle[data-type]').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
     tipoBusca = el.dataset.type;
 }
 
-// ---- Alternar modo: Pedido vs Equipamento ----
 function setModo(el) {
     document.querySelectorAll('.toggle[data-mode]').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
@@ -71,7 +88,6 @@ function setModo(el) {
 
     document.getElementById('modoPedido').style.display = modoAtual === 'pedido' ? 'block' : 'none';
     document.getElementById('modoEquipamento').style.display = modoAtual === 'equipamento' ? 'block' : 'none';
-    document.getElementById('uploadSection').style.display = modoAtual === 'pedido' ? 'block' : 'none';
 
     // Reset preview
     document.getElementById('emptyState').style.display = 'block';
@@ -99,8 +115,6 @@ async function gerarRecibo() {
         if (!json.success) throw new Error(json.error || 'Erro ao buscar pedido');
 
         ultimoPedido = json.data;
-
-        // Chama o documento.js pra renderizar
         await renderDocumento(json.data, config);
 
         document.getElementById('emptyState').style.display = 'none';
@@ -125,7 +139,7 @@ async function getProductImage(sku) {
     try {
         const res = await fetch(`/api/produto/imagem/${encodeURIComponent(sku)}`);
         const json = await res.json();
-        return (json.success ? json.url : null);
+        return json.success ? json.url : null;
     } catch {
         return null;
     }
@@ -164,9 +178,42 @@ async function loadUploadedImages() {
     }
 }
 
+// ===================== MODAIS DE OS =====================
+
+function abrirModalNovaOS() {
+    // Limpa formulário
+    osItens = [];
+    renderOsItensLista();
+    document.getElementById('osEvento').value = '';
+    document.getElementById('osLocal').value = '';
+    document.getElementById('osDataSaida').value = '';
+    document.getElementById('osDataRetorno').value = '';
+    document.getElementById('osRespEntrega').value = '';
+    document.getElementById('osRespEquip').value = '';
+    document.getElementById('osObs').value = '';
+    document.getElementById('osBuscaProduto').value = '';
+    document.getElementById('resultadosProdutos').style.display = 'none';
+    document.getElementById('modalOSTitulo').textContent = 'Nova Ordem de Equipamento';
+    document.getElementById('modalOS').classList.add('active');
+    setTimeout(() => document.getElementById('osEvento').focus(), 80);
+}
+
+function fecharModalOS() {
+    document.getElementById('modalOS').classList.remove('active');
+}
+
+function abrirModalBuscarOS() {
+    document.getElementById('osBusca').value = '';
+    document.getElementById('modalBuscarOS').classList.add('active');
+    setTimeout(() => document.getElementById('osBusca').focus(), 80);
+}
+
+function fecharModalBuscarOS() {
+    document.getElementById('modalBuscarOS').classList.remove('active');
+}
+
 // ===================== ORDEM DE EQUIPAMENTO =====================
 
-// Carregar config (responsáveis, locais, eventos) pra popular datalists
 async function carregarConfigEquipamentos() {
     try {
         const res = await fetch('/api/equipamentos/config');
@@ -188,41 +235,22 @@ function popularDatalist(id, valores) {
     dl.innerHTML = valores.map(v => `<option value="${v}">`).join('');
 }
 
-// Nova ordem — abre formulário limpo
-function novaOrdem() {
-    osItens = [];
-    renderOsItensLista();
-    document.getElementById('osFormulario').style.display = 'block';
-    document.getElementById('osEvento').value = '';
-    document.getElementById('osLocal').value = '';
-    document.getElementById('osDataSaida').value = '';
-    document.getElementById('osDataRetorno').value = '';
-    document.getElementById('osRespEntrega').value = '';
-    document.getElementById('osRespEquip').value = '';
-    document.getElementById('osObs').value = '';
-    document.getElementById('emptyState').style.display = 'none';
-    document.getElementById('reciboWrapper').style.display = 'none';
-    document.getElementById('exportActions').style.display = 'none';
-    hideError();
-    hideSuccess();
-    document.getElementById('osEvento').focus();
-}
-
-// Buscar OS existente por número
 async function buscarOS() {
     let input = document.getElementById('osBusca').value.trim();
     if (!input) {
         showError('Digite o número da OS');
         return;
     }
-    hideError();
-    hideSuccess();
 
-    // Se digitou só número (1, 2, 15...), monta o código completo
+    // Aceita só número e expande para código completo
     if (/^\d+$/.test(input)) {
         const ano = new Date().getFullYear();
         input = `OS-${ano}-${input.padStart(3, '0')}`;
     }
+
+    fecharModalBuscarOS();
+    hideError();
+    hideSuccess();
 
     try {
         const res = await fetch(`/api/equipamentos/ordens/${encodeURIComponent(input)}`);
@@ -230,7 +258,8 @@ async function buscarOS() {
         if (!json.success) throw new Error(json.error);
 
         const ordem = json.data;
-        document.getElementById('osFormulario').style.display = 'block';
+
+        // Popula modal com dados da OS
         document.getElementById('osEvento').value = ordem.evento || '';
         document.getElementById('osLocal').value = ordem.local || '';
         document.getElementById('osDataSaida').value = ordem.data_saida || '';
@@ -240,7 +269,10 @@ async function buscarOS() {
         document.getElementById('osObs').value = ordem.observacoes || '';
         osItens = ordem.itens || [];
         renderOsItensLista();
+        document.getElementById('modalOSTitulo').textContent = `OS ${ordem.numero}`;
+        document.getElementById('modalOS').classList.add('active');
 
+        // Renderiza documento no preview
         await renderOrdemEquipamento(ordem, config);
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
@@ -251,7 +283,6 @@ async function buscarOS() {
     }
 }
 
-// Buscar produtos no Tiny pra adicionar à OS
 async function buscarProdutos() {
     const q = document.getElementById('osBuscaProduto').value.trim();
     if (!q) return;
@@ -284,9 +315,7 @@ async function buscarProdutos() {
     }
 }
 
-// Adicionar equipamento à lista da OS
 function adicionarEquipamento(sku, descricao) {
-    // Verifica se já existe
     const existe = osItens.find(i => i.sku === sku);
     if (existe) {
         existe.qtd_saida++;
@@ -298,22 +327,19 @@ function adicionarEquipamento(sku, descricao) {
     document.getElementById('osBuscaProduto').value = '';
 }
 
-// Remover item da lista
 function removerEquipamento(index) {
     osItens.splice(index, 1);
     renderOsItensLista();
 }
 
-// Atualizar quantidade
 function atualizarQtd(index, campo, valor) {
     osItens[index][campo] = Math.max(0, parseInt(valor) || 0);
 }
 
-// Renderizar lista de itens na sidebar
 function renderOsItensLista() {
     const container = document.getElementById('osItensLista');
     if (osItens.length === 0) {
-        container.innerHTML = '<div style="color:#555;font-size:11px;padding:8px 0;">Nenhum equipamento adicionado</div>';
+        container.innerHTML = '<div style="color:#3a3a3f;font-size:11px;padding:6px 0;">Nenhum equipamento adicionado</div>';
         return;
     }
     container.innerHTML = osItens.map((item, i) => `
@@ -331,25 +357,22 @@ function renderOsItensLista() {
     `).join('');
 }
 
-// Gerar ordem de equipamento (salvar + renderizar)
 async function gerarOrdemEquipamento() {
     const evento = document.getElementById('osEvento').value.trim();
-    const local = document.getElementById('osLocal').value.trim();
     if (!evento) {
-        showError('Preencha o nome do evento');
+        document.getElementById('osEvento').focus();
+        document.getElementById('osEvento').style.borderColor = 'var(--sb-accent)';
+        setTimeout(() => document.getElementById('osEvento').style.borderColor = '', 2000);
         return;
     }
     if (osItens.length === 0) {
-        showError('Adicione pelo menos um equipamento');
+        document.getElementById('osBuscaProduto').focus();
         return;
     }
 
-    hideError();
-    hideSuccess();
-
     const ordem = {
         evento,
-        local,
+        local: document.getElementById('osLocal').value.trim(),
         data_saida: document.getElementById('osDataSaida').value,
         data_retorno: document.getElementById('osDataRetorno').value,
         responsavel_entrega: document.getElementById('osRespEntrega').value.trim(),
@@ -367,33 +390,29 @@ async function gerarOrdemEquipamento() {
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
 
-        // Renderiza documento
+        fecharModalOS();
         await renderOrdemEquipamento(json.data, config);
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
         document.getElementById('exportActions').style.display = 'flex';
         showSuccess(`Ordem ${json.data.numero} criada`);
-
-        // Atualiza datalists com novos valores
         carregarConfigEquipamentos();
     } catch (err) {
         showError(err.message);
     }
 }
 
-// ===================== INVENTÁRIO DE EQUIPAMENTOS =====================
+// ===================== INVENTÁRIOS =====================
 
 async function gerarInventario() {
     hideError();
     hideSuccess();
-
     try {
         const res = await fetch('/api/equipamentos/catalogo');
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
 
         await renderInventario(json.data, config);
-
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
         document.getElementById('exportActions').style.display = 'flex';
@@ -403,20 +422,16 @@ async function gerarInventario() {
     }
 }
 
-// ===================== INVENTÁRIO DE PRODUTOS (TINY) =====================
-
 async function gerarInventarioProdutos() {
     hideError();
     hideSuccess();
     showSuccess('Carregando produtos do Tiny...');
-
     try {
         const res = await fetch('/api/produtos/estoque');
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
 
         await renderInventarioProdutos(json.data, config);
-
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('reciboWrapper').style.display = 'block';
         document.getElementById('exportActions').style.display = 'flex';
