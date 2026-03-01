@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiny Recibo Pro - Magic Fireworks</title>
+    <title>MF Manager — Magic Fireworks</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <style>
-        /* === BARRA DE PROGRESSO === */
         .progress-box {
-            background: #1a1a1e;
+            background: #111113;
             border: 1px solid var(--sb-border);
             border-radius: var(--sb-radius);
             padding: 12px 14px;
@@ -31,43 +31,43 @@
         }
 
         .progress-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--sb-text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
         }
 
         .progress-counter {
             font-family: var(--mono);
             font-size: 11px;
-            color: var(--sb-accent);
+            color: #fff;
         }
 
         .progress-track {
-            height: 6px;
-            background: #29292e;
-            border-radius: 3px;
+            height: 3px;
+            background: #1e1e22;
+            border-radius: 2px;
             overflow: hidden;
             margin-bottom: 8px;
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--sb-accent);
-            border-radius: 3px;
+            background: #fff;
+            border-radius: 2px;
             transition: width 0.3s ease;
             width: 0%;
         }
 
         .progress-fill.done {
-            background: #2ecc71;
+            background: #4cd964;
         }
 
         .progress-sku {
             font-family: var(--mono);
             font-size: 10px;
-            color: #555;
+            color: #3a3a3f;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -78,21 +78,22 @@
         }
 
         .progress-sku.error {
-            color: var(--sb-accent);
+            color: #ff5555;
         }
 
         .btn-logs {
             width: 100%;
             margin-top: 8px;
             background: transparent;
-            border: 1px solid #29292e;
-            color: #555;
+            border: 1px solid var(--sb-border);
+            color: #444;
             padding: 6px;
             border-radius: var(--sb-radius);
             font-size: 11px;
             cursor: pointer;
             transition: 0.15s;
             text-align: center;
+            font-family: var(--font);
         }
 
         .btn-logs:hover {
@@ -100,15 +101,15 @@
             border-color: #444;
         }
 
-        /* === MODAL DE LOGS === */
         .modal-logs-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 2000;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(3px);
         }
 
         .modal-logs-overlay.active {
@@ -116,14 +117,15 @@
         }
 
         .modal-logs {
-            background: #121214;
+            background: #0a0a0c;
             border: 1px solid var(--sb-border);
-            border-radius: 10px;
+            border-radius: 12px;
             width: 700px;
             max-width: 95vw;
             max-height: 80vh;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
         }
 
         .modal-logs-header {
@@ -148,24 +150,25 @@
 
         .btn-clear-logs {
             background: transparent;
-            border: 1px solid #333;
-            color: #666;
+            border: 1px solid #222;
+            color: #555;
             padding: 4px 10px;
             border-radius: 4px;
             font-size: 11px;
             cursor: pointer;
             transition: 0.15s;
+            font-family: var(--font);
         }
 
         .btn-clear-logs:hover {
             color: #aaa;
-            border-color: #555;
+            border-color: #444;
         }
 
         .modal-logs-close {
             background: transparent;
             border: none;
-            color: #666;
+            color: #555;
             font-size: 18px;
             cursor: pointer;
             line-height: 1;
@@ -187,11 +190,11 @@
         }
 
         .modal-logs-body::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
 
         .modal-logs-body::-webkit-scrollbar-thumb {
-            background: #333;
+            background: #222;
             border-radius: 3px;
         }
 
@@ -201,16 +204,16 @@
         }
 
         .log-time {
-            color: #444;
+            color: #333;
             flex-shrink: 0;
         }
 
         .log-msg {
-            color: #888;
+            color: #555;
         }
 
         .log-msg.ok {
-            color: #2ecc71;
+            color: #4cd964;
         }
 
         .log-msg.ratelimit {
@@ -218,15 +221,15 @@
         }
 
         .log-msg.error {
-            color: var(--sb-accent);
+            color: #ff5555;
         }
 
         .log-msg.info {
-            color: #3498db;
+            color: #5599ff;
         }
 
         .log-msg.done {
-            color: #2ecc71;
+            color: #4cd964;
             font-weight: 700;
         }
 
@@ -238,7 +241,7 @@
             padding: 12px 20px;
             border-top: 1px solid var(--sb-border);
             font-size: 10px;
-            color: #444;
+            color: #333;
             font-family: var(--mono);
         }
     </style>
@@ -248,9 +251,11 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand">
-                <div class="brand-icon">🧾</div>
+                <div class="brand-logo">
+                    <img src="/public/MagicFireworksLogo.jpeg" alt="Magic Fireworks">
+                </div>
                 <div>
-                    <h1>TINY RECIBO</h1>
+                    <h1>MF MANAGER</h1>
                     <span class="brand-sub">Magic Fireworks</span>
                 </div>
             </div>
@@ -258,7 +263,6 @@
 
         <div class="sidebar-content">
 
-            <!-- ===== TOGGLE DE MODO ===== -->
             <div class="input-group">
                 <label>Tipo de Documento</label>
                 <div class="toggle-group">
@@ -267,7 +271,7 @@
                 </div>
             </div>
 
-            <!-- ===== MODO: PEDIDO DE VENDA ===== -->
+            <!-- MODO: PEDIDO DE VENDA -->
             <div id="modoPedido">
                 <div class="input-group">
                     <label for="pedidoId">Buscar Pedido</label>
@@ -288,7 +292,6 @@
                     </button>
                 </div>
 
-                <!-- Progresso do inventário de produtos -->
                 <div class="progress-box" id="progressBox">
                     <div class="progress-header">
                         <span class="progress-label">Carregando Estoque</span>
@@ -298,7 +301,7 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <div class="progress-sku" id="progressSku">Aguardando...</div>
-                    <button class="btn-logs" onclick="abrirModalLogs()">📋 Ver Logs Detalhados</button>
+                    <button class="btn-logs" onclick="abrirModalLogs()">Ver Logs Detalhados</button>
                 </div>
 
                 <div class="sidebar-section">
@@ -312,7 +315,7 @@
                 </div>
             </div>
 
-            <!-- ===== MODO: ORDEM DE EQUIPAMENTO ===== -->
+            <!-- MODO: ORDEM DE EQUIPAMENTO -->
             <div id="modoEquipamento" style="display:none;">
                 <div class="sidebar-section">
                     <span class="section-label">Ordens de Serviço</span>
@@ -337,7 +340,6 @@
                 </div>
             </div>
 
-            <!-- ===== COMUNS ===== -->
             <div id="errorBox" class="error-box" style="display:none;"></div>
             <div id="successBox" class="success-box" style="display:none;"></div>
 
@@ -347,14 +349,10 @@
                 </button>
             </div>
 
-            <div class="connection-test">
-                <button class="btn-test" onclick="testarConexao()">🔌 Verificar Conexão API</button>
-            </div>
-
         </div>
 
         <div class="sidebar-footer">
-            <span>Sistema v4.0 • Magic Fireworks</span>
+            <span>MF Manager v4.0 • Magic Fireworks</span>
         </div>
     </aside>
 
@@ -370,7 +368,7 @@
     </main>
 </div>
 
-<!-- ===== MODAL: NOVA / EDITAR OS ===== -->
+<!-- MODAL: NOVA / EDITAR OS -->
 <div class="modal-overlay" id="modalOS">
     <div class="modal-os">
         <div class="modal-header">
@@ -441,7 +439,7 @@
     </div>
 </div>
 
-<!-- ===== MODAL: BUSCAR OS ===== -->
+<!-- MODAL: BUSCAR OS -->
 <div class="modal-overlay" id="modalBuscarOS">
     <div class="modal-sm">
         <div class="modal-header">
@@ -456,18 +454,18 @@
                            autocomplete="off">
                     <button class="btn-modal-search" onclick="buscarOS()">IR</button>
                 </div>
-                <p style="font-size:11px;color:#555;margin-top:8px;">Digite apenas o número (ex: 5) ou o código completo
+                <p style="font-size:11px;color:#444;margin-top:8px;">Digite apenas o número (ex: 5) ou o código completo
                     (ex: OS-2026-005)</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== MODAL: LOGS ===== -->
+<!-- MODAL: LOGS -->
 <div class="modal-logs-overlay" id="modalLogs">
     <div class="modal-logs">
         <div class="modal-logs-header">
-            <h2>📋 Logs de Sincronização</h2>
+            <h2>Logs de Sincronização</h2>
             <div class="modal-logs-actions">
                 <button class="btn-clear-logs" onclick="limparLogs()">Limpar</button>
                 <button class="modal-logs-close" onclick="fecharModalLogs()">✕</button>

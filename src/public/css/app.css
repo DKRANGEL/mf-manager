@@ -1,15 +1,15 @@
-/* ===================== APP INTERFACE (SIDEBAR / CONTROLES) ===================== */
+/* ===================== MF MANAGER — APP INTERFACE ===================== */
 
 /* --- VARIÁVEIS GERAIS --- */
 :root {
-    --sb-bg: #121214;
-    --sb-input-bg: #202024;
-    --sb-border: #29292e;
-    --sb-text: #e1e1e6;
-    --sb-text-dim: #a8a8b3;
-    --sb-accent: #e94560;
-    --sb-accent-hover: #d13650;
-    --sb-radius: 6px;
+    --sb-bg: #0a0a0a;
+    --sb-input-bg: #161618;
+    --sb-border: #242428;
+    --sb-text: #e8e8e8;
+    --sb-text-dim: #666672;
+    --sb-accent: #ffffff;
+    --sb-accent-hover: #e0e0e0;
+    --sb-radius: 7px;
     --font: 'DM Sans', sans-serif;
     --mono: 'JetBrains Mono', monospace;
 }
@@ -22,7 +22,7 @@
 
 body {
     font-family: var(--font);
-    background: #09090a;
+    background: #050505;
     color: var(--sb-text);
     overflow: hidden;
     height: 100vh;
@@ -36,18 +36,18 @@ body {
 /* ===================== SIDEBAR ===================== */
 
 .sidebar {
-    width: 280px;
-    min-width: 280px;
+    width: 290px;
+    min-width: 290px;
     background: var(--sb-bg);
     border-right: 1px solid var(--sb-border);
     display: flex;
     flex-direction: column;
     z-index: 100;
-    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
 }
 
 .sidebar-header {
-    padding: 24px 20px;
+    padding: 20px 22px;
     border-bottom: 1px solid var(--sb-border);
     flex-shrink: 0;
 }
@@ -58,50 +58,58 @@ body {
     gap: 12px;
 }
 
-.brand-icon {
-    font-size: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    width: 40px;
-    height: 40px;
+.brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #111;
+    border: 1px solid var(--sb-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    border: 1px solid var(--sb-border);
-    flex-shrink: 0;
+}
+
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .brand h1 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #fff;
-    letter-spacing: -0.5px;
+    letter-spacing: 0.5px;
     line-height: 1.2;
 }
 
 .brand-sub {
     font-size: 10px;
-    color: var(--sb-accent);
-    font-weight: 600;
+    color: var(--sb-text-dim);
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
+    margin-top: 2px;
+    display: block;
 }
 
 .sidebar-content {
     flex: 1;
-    padding: 20px;
+    padding: 22px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     overflow-y: auto;
 }
 
 .sidebar-content::-webkit-scrollbar {
-    width: 4px;
+    width: 3px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb {
-    background: #2a2a2e;
+    background: #222;
     border-radius: 4px;
 }
 
@@ -112,8 +120,8 @@ body {
     font-weight: 700;
     color: var(--sb-text-dim);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
     display: block;
 }
 
@@ -126,7 +134,7 @@ body {
 .sidebar-section {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 /* --- Busca de pedido --- */
@@ -138,11 +146,11 @@ body {
 .input-row input {
     flex: 1;
     min-width: 0;
-    height: 40px;
+    height: 42px;
     background: var(--sb-input-bg);
     border: 1px solid var(--sb-border);
     border-radius: var(--sb-radius);
-    padding: 0 10px;
+    padding: 0 12px;
     color: #fff;
     font-family: var(--mono);
     font-size: 13px;
@@ -151,33 +159,34 @@ body {
 }
 
 .input-row input:focus {
-    border-color: var(--sb-accent);
-    background: #27272c;
-    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.15);
+    border-color: #444;
+    background: #1c1c1e;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }
 
 #btnGerar {
-    height: 40px;
-    padding: 0 14px;
-    background: var(--sb-accent);
+    height: 42px;
+    padding: 0 16px;
+    background: #fff;
     border: none;
     border-radius: var(--sb-radius);
-    color: #fff;
+    color: #000;
     font-weight: 700;
     font-size: 12px;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
+    font-family: var(--font);
 }
 
 #btnGerar:hover {
-    background: var(--sb-accent-hover);
+    background: #e0e0e0;
 }
 
 #btnGerar:disabled {
-    opacity: 0.6;
+    opacity: 0.4;
     cursor: not-allowed;
 }
 
@@ -201,14 +210,14 @@ body {
     font-weight: 600;
     font-family: var(--font);
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 5px;
     transition: 0.15s;
 }
 
 .toggle.active {
-    background: #323238;
-    color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: #fff;
+    color: #000;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* --- Botões de menu (sidebar) --- */
@@ -217,8 +226,8 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 11px 13px;
+    background: transparent;
     border: 1px solid var(--sb-border);
     border-radius: var(--sb-radius);
     color: var(--sb-text-dim);
@@ -233,21 +242,22 @@ body {
 }
 
 .btn-menu:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: #3a3a40;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #383840;
     color: #fff;
 }
 
 .btn-menu-accent {
-    background: rgba(233, 69, 96, 0.1);
-    border-color: rgba(233, 69, 96, 0.25);
-    color: #ff8fa3;
+    background: #fff;
+    border-color: #fff;
+    color: #000;
+    font-weight: 700;
 }
 
 .btn-menu-accent:hover {
-    background: rgba(233, 69, 96, 0.18);
-    border-color: rgba(233, 69, 96, 0.5);
-    color: #fff;
+    background: #e8e8e8;
+    border-color: #e8e8e8;
+    color: #000;
 }
 
 .btn-menu-icon {
@@ -259,33 +269,33 @@ body {
 
 /* --- Upload (modo pedido) --- */
 .upload-dropzone {
-    border: 1px dashed var(--sb-border);
+    border: 1px dashed #222;
     border-radius: var(--sb-radius);
-    padding: 16px;
+    padding: 18px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .upload-dropzone:hover,
 .upload-dropzone.dragover {
-    border-color: #555;
-    background: rgba(255, 255, 255, 0.04);
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .upload-hint {
-    color: #555;
+    color: #444;
     font-size: 11px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     display: block;
 }
 
 .btn-upload {
     background: transparent;
-    border: 1px solid #383838;
-    color: #888;
-    padding: 5px 10px;
+    border: 1px solid #2a2a2a;
+    color: #666;
+    padding: 5px 12px;
     border-radius: 4px;
     font-size: 11px;
     pointer-events: none;
@@ -305,7 +315,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #e1e1e6;
+    background: #fff;
     color: #000;
     border: none;
     border-radius: var(--sb-radius);
@@ -313,18 +323,19 @@ body {
     font-weight: 700;
     font-family: var(--font);
     cursor: pointer;
-    transition: 0.2s;
+    transition: 0.15s;
+    letter-spacing: 0.3px;
 }
 
 .btn-export:hover {
-    background: #fff;
+    background: #e8e8e8;
     transform: translateY(-1px);
 }
 
 .error-box {
-    background: rgba(233, 69, 96, 0.1);
-    border: 1px solid rgba(233, 69, 96, 0.3);
-    color: #ff8fa3;
+    background: rgba(255, 80, 80, 0.07);
+    border: 1px solid rgba(255, 80, 80, 0.2);
+    color: #ff7070;
     padding: 10px 12px;
     border-radius: var(--sb-radius);
     font-size: 12px;
@@ -332,44 +343,21 @@ body {
 }
 
 .success-box {
-    background: rgba(46, 204, 113, 0.1);
-    border: 1px solid rgba(46, 204, 113, 0.3);
-    color: #2ecc71;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
     padding: 10px 12px;
     border-radius: var(--sb-radius);
     font-size: 12px;
     line-height: 1.4;
 }
 
-.connection-test {
-    margin-top: auto;
-    padding-top: 12px;
-}
-
-.btn-test {
-    width: 100%;
-    background: transparent;
-    border: 1px dashed #252528;
-    color: #3a3a3f;
-    padding: 9px;
-    font-size: 11px;
-    font-family: var(--font);
-    border-radius: var(--sb-radius);
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn-test:hover {
-    color: #666;
-    border-color: #3a3a3f;
-}
-
 .sidebar-footer {
-    padding: 14px 20px;
+    padding: 14px 22px;
     text-align: center;
     border-top: 1px solid var(--sb-border);
     font-size: 10px;
-    color: #2e2e32;
+    color: #252528;
     text-transform: uppercase;
     letter-spacing: 1px;
     flex-shrink: 0;
@@ -383,7 +371,7 @@ body {
     justify-content: center;
     padding: 40px;
     overflow-y: auto;
-    background: #18181b;
+    background: #111113;
 }
 
 .empty-state {
@@ -393,69 +381,67 @@ body {
 }
 
 .empty-icon {
-    font-size: 56px;
+    font-size: 52px;
     margin-bottom: 16px;
-    opacity: .25;
+    opacity: .2;
 }
 
 .empty-state h2 {
-    font-size: 18px;
-    color: #3a3a3f;
+    font-size: 17px;
+    color: #333;
     margin-bottom: 8px;
     font-weight: 600;
 }
 
 .empty-state p {
     font-size: 13px;
-    color: #2e2e32;
+    color: #2a2a2e;
 }
 
-/* ===================== MODAL DE OS ===================== */
+/* ===================== MODAIS ===================== */
 
 .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.8);
     z-index: 500;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(3px);
 }
 
 .modal-overlay.active {
     display: flex;
 }
 
-/* Modal grande: Nova / Editar OS */
 .modal-os {
-    background: #16161a;
+    background: #0e0e10;
     border: 1px solid var(--sb-border);
-    border-radius: 10px;
+    border-radius: 12px;
     width: 100%;
     max-width: 860px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
 }
 
-/* Modal pequeno: Buscar OS */
 .modal-sm {
-    background: #16161a;
+    background: #0e0e10;
     border: 1px solid var(--sb-border);
-    border-radius: 10px;
+    border-radius: 12px;
     width: 100%;
     max-width: 420px;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
 }
 
 .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 22px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--sb-border);
     flex-shrink: 0;
 }
@@ -467,9 +453,9 @@ body {
 }
 
 .modal-close {
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
     border: 1px solid var(--sb-border);
-    color: #666;
+    color: #555;
     width: 30px;
     height: 30px;
     border-radius: 6px;
@@ -483,43 +469,41 @@ body {
 }
 
 .modal-close:hover {
-    background: rgba(255, 255, 255, 0.1);
+    border-color: #555;
     color: #fff;
 }
 
 .modal-body {
     flex: 1;
     overflow-y: auto;
-    padding: 22px;
+    padding: 24px;
 }
 
 .modal-body::-webkit-scrollbar {
-    width: 5px;
+    width: 4px;
 }
 
 .modal-body::-webkit-scrollbar-thumb {
-    background: #2a2a2e;
+    background: #222;
     border-radius: 4px;
 }
 
-/* Layout 2 colunas dentro do modal */
 .modal-cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 22px;
+    gap: 24px;
 }
 
 .modal-col {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
-/* Campos do modal */
 .modal-field {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .modal-field label {
@@ -551,9 +535,9 @@ body {
 }
 
 .modal-input:focus {
-    border-color: var(--sb-accent);
-    background: #27272c;
-    box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.12);
+    border-color: #444;
+    background: #1c1c1e;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
 }
 
 .modal-textarea {
@@ -576,10 +560,10 @@ body {
     height: 40px;
     width: 40px;
     min-width: 40px;
-    background: var(--sb-accent);
+    background: #fff;
     border: none;
     border-radius: var(--sb-radius);
-    color: #fff;
+    color: #000;
     font-size: 15px;
     cursor: pointer;
     transition: 0.15s;
@@ -590,21 +574,20 @@ body {
 }
 
 .btn-modal-search:hover {
-    background: var(--sb-accent-hover);
+    background: #e0e0e0;
 }
 
-/* Resultados de busca */
 .search-results {
     max-height: 160px;
     overflow-y: auto;
-    background: #111113;
+    background: #0a0a0c;
     border: 1px solid var(--sb-border);
     border-radius: var(--sb-radius);
     margin-top: 4px;
 }
 
 .search-result-item {
-    padding: 8px 12px;
+    padding: 9px 12px;
     font-size: 12px;
     color: var(--sb-text);
     cursor: pointer;
@@ -617,12 +600,12 @@ body {
 }
 
 .search-result-item:hover {
-    background: rgba(233, 69, 96, 0.08);
+    background: rgba(255, 255, 255, 0.04);
     color: #fff;
 }
 
 .search-result-item strong {
-    color: var(--sb-accent);
+    color: #fff;
     font-family: var(--mono);
     font-size: 11px;
 }
@@ -638,11 +621,11 @@ body {
 }
 
 .os-itens-lista::-webkit-scrollbar {
-    width: 4px;
+    width: 3px;
 }
 
 .os-itens-lista::-webkit-scrollbar-thumb {
-    background: #2a2a2e;
+    background: #222;
     border-radius: 4px;
 }
 
@@ -664,13 +647,13 @@ body {
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 700;
-    color: var(--sb-accent);
+    color: #fff;
 }
 
 .os-item-remove {
     background: none;
     border: none;
-    color: #444;
+    color: #333;
     font-size: 13px;
     cursor: pointer;
     padding: 2px 5px;
@@ -681,7 +664,7 @@ body {
 
 .os-item-remove:hover {
     color: #ff6b6b;
-    background: rgba(255, 107, 107, 0.1);
+    background: rgba(255, 107, 107, 0.08);
 }
 
 .os-item-desc {
@@ -698,7 +681,7 @@ body {
 
 .os-item-qtds label {
     font-size: 10px;
-    color: #555;
+    color: #444;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     display: flex;
@@ -709,7 +692,7 @@ body {
 .os-item-qtds input {
     width: 48px;
     height: 26px;
-    background: #0e0e10;
+    background: #080809;
     border: 1px solid var(--sb-border);
     border-radius: 4px;
     color: #fff;
@@ -720,15 +703,14 @@ body {
 }
 
 .os-item-qtds input:focus {
-    border-color: var(--sb-accent);
+    border-color: #555;
 }
 
-/* Footer do modal */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    padding: 14px 22px;
+    padding: 16px 24px;
     border-top: 1px solid var(--sb-border);
     flex-shrink: 0;
 }
@@ -739,7 +721,7 @@ body {
     background: transparent;
     border: 1px solid var(--sb-border);
     border-radius: var(--sb-radius);
-    color: #666;
+    color: #555;
     font-size: 13px;
     font-family: var(--font);
     cursor: pointer;
@@ -754,10 +736,10 @@ body {
 .btn-modal-gerar {
     height: 40px;
     padding: 0 22px;
-    background: var(--sb-accent);
+    background: #fff;
     border: none;
     border-radius: var(--sb-radius);
-    color: #fff;
+    color: #000;
     font-size: 13px;
     font-weight: 700;
     font-family: var(--font);
@@ -766,7 +748,7 @@ body {
 }
 
 .btn-modal-gerar:hover {
-    background: var(--sb-accent-hover);
+    background: #e0e0e0;
 }
 
 /* ===================== PRINT ===================== */
@@ -776,7 +758,6 @@ body {
     .modal-overlay,
     .export-actions,
     .empty-state,
-    .connection-test,
     ::-webkit-scrollbar {
         display: none !important;
     }
