@@ -44,31 +44,26 @@ async function renderDocumento(pedido, config) {
     const rc = config.recibo || {};
     const cli = pedido.cliente || {};
 
-    // 1. Dados da Empresa
     setText('rEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
     setText('rEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
     setText('rEmpresaEnd', 'Brasília - DF');
 
-    // 2. Cabeçalho do Pedido
     setText('rDocTitulo', 'PEDIDO DE VENDA');
     setText('rDocNum', pedido.numero || pedido.id || '000');
     setText('rData', formatDate(pedido.data_pedido || pedido.data_criacao));
 
-    // 3. Dados do Cliente — estilo catálogo (barra preta + linhas horizontais)
     const nomeCliente = cli.nome_fantasia || cli.nome || 'Consumidor Final';
     const vendedor = (pedido.nome_vendedor || pedido.vendedor || '-').toUpperCase();
     const numPedido = pedido.numero || pedido.id || '-';
 
     const enderecoCompleto = [
-        cli.endereco,
-        cli.numero,
-        cli.bairro,
+        cli.endereco, cli.numero, cli.bairro,
         cli.cidade ? `${cli.cidade}/${cli.uf}` : ''
     ].filter(Boolean).join(', ');
 
     const contato = [cli.fone, cli.celular, cli.email].filter(Boolean).join(' / ') || '-';
 
-    const dadosClienteHTML = `
+    document.getElementById('rDadosClienteContainer').innerHTML = `
     <table class="client-data-table-title">
         <tr>
             <td class="bg-black-title">VENDEDOR</td>
@@ -94,12 +89,8 @@ async function renderDocumento(pedido, config) {
             <td class="bg-gray-title">CONTATO</td>
             <td class="data-cell" colspan="3">${esc(contato.toUpperCase())}</td>
         </tr>
-    </table>
-    `;
+    </table>`;
 
-    document.getElementById('rDadosClienteContainer').innerHTML = dadosClienteHTML;
-
-    // 4. Itens da Tabela
     const tbody = document.getElementById('rItens');
     tbody.innerHTML = '';
     const itens = pedido.itens || [];
@@ -120,9 +111,7 @@ async function renderDocumento(pedido, config) {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="c-img">
-                ${imgUrl ? `<img src="${imgUrl}" class="prod-thumb">` : ''}
-            </td>
+            <td class="c-img">${imgUrl ? `<img src="${imgUrl}" class="prod-thumb">` : ''}</td>
             <td class="c-item">${itemIndex++}</td>
             <td class="c-sku">${esc(sku)}</td>
             <td class="c-desc">${esc(desc)}</td>
@@ -134,7 +123,6 @@ async function renderDocumento(pedido, config) {
         tbody.appendChild(tr);
     }
 
-    // 5. Totais
     const desconto = parseFloat(pedido.desconto) || 0;
     const totalPedido = parseFloat(pedido.totalPedido || pedido.valor) || (subtotal - desconto);
 
@@ -148,7 +136,6 @@ async function renderDocumento(pedido, config) {
         hide('rDescontoRow');
     }
 
-    // 6. Parcelas
     const parcelasBody = document.getElementById('rParcelas');
     parcelasBody.innerHTML = '';
     const parcelas = pedido.parcelas || [];
@@ -175,7 +162,6 @@ async function renderDocumento(pedido, config) {
         }
     }
 
-    // 7. Rodapé e Obs
     const obs = pedido.obs || pedido.observacoes || pedido.observacao || '';
     if (obs) {
         setText('rObs', obs);
@@ -195,19 +181,16 @@ async function renderOrdemEquipamento(ordem, config) {
 
     const emp = config.empresa || {};
 
-    // 1. Dados da Empresa
     setText('oeEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
     setText('oeEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
     setText('oeEmpresaEnd', 'Brasília - DF');
 
-    // 2. Cabeçalho — número curto (ex: "001" extraído de "OS-2026-001")
     const numCurto = (ordem.numero || '000').replace(/^OS-\d{4}-/, '');
     setText('oeDocTitulo', 'ORDEM DE EQUIPAMENTO');
     setText('oeDocNum', numCurto);
     setText('oeDocData', formatDate(ordem.data_criacao));
 
-    // 3. Dados do Evento — mesma estrutura visual das tabelas de cliente
-    const dadosEventoHTML = `
+    document.getElementById('oeDadosEventoContainer').innerHTML = `
     <table class="client-data-table-title">
         <tr>
             <td class="bg-black-title">EVENTO</td>
@@ -233,11 +216,8 @@ async function renderOrdemEquipamento(ordem, config) {
             <td class="bg-gray-title">RESP. EQUIP.</td>
             <td class="data-cell" colspan="3">${esc((ordem.responsavel_equipamento || '-').toUpperCase())}</td>
         </tr>
-    </table>
-    `;
-    document.getElementById('oeDadosEventoContainer').innerHTML = dadosEventoHTML;
+    </table>`;
 
-    // 4. Itens
     const tbody = document.getElementById('oeItens');
     tbody.innerHTML = '';
     const itens = ordem.itens || [];
@@ -273,15 +253,11 @@ async function renderOrdemEquipamento(ordem, config) {
         tbody.appendChild(tr);
     });
 
-    // 5. Totais
     setText('oeTotalItens', totalItens.toString());
     setText('oePendentes', pendentes.toString());
-
-    // 6. Assinaturas
     setText('oeAssinaEntrega', `RESP. ENTREGA: ${(ordem.responsavel_entrega || '').toUpperCase()}`);
     setText('oeAssinaEquip', `RESP. EQUIPAMENTO: ${(ordem.responsavel_equipamento || '').toUpperCase()}`);
 
-    // 7. Observações
     if (ordem.observacoes) {
         setText('oeObs', ordem.observacoes);
         show('oeObsSection');
@@ -299,17 +275,13 @@ async function renderInventario(catalogo, config) {
 
     const emp = config.empresa || {};
 
-    // 1. Dados da Empresa
     setText('invEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
     setText('invEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
     setText('invEmpresaEnd', 'Brasília - DF');
     setText('invDocData', new Date().toLocaleDateString('pt-BR'));
 
-    // 2. Calcular totais gerais
     const categorias = Object.keys(catalogo).sort();
-    let totalItens = 0;
-    let totalUnidades = 0;
-    let totalManut = 0;
+    let totalItens = 0, totalUnidades = 0, totalManut = 0;
 
     categorias.forEach(cat => {
         catalogo[cat].forEach(e => {
@@ -324,7 +296,6 @@ async function renderInventario(catalogo, config) {
     setText('invTotalManut', totalManut.toString());
     setText('invTotalCategorias', categorias.length.toString());
 
-    // 3. Gerar tabelas por categoria
     const catContainer = document.getElementById('invCategoriasContainer');
     let html = '';
 
@@ -336,27 +307,21 @@ async function renderInventario(catalogo, config) {
         html += `
         <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
             <tr>
-                <td class="bg-black-title" style="width: auto; text-align: left; padding: 8px 14px;">
-                    ${esc(cat.toUpperCase())}
-                </td>
+                <td class="bg-black-title" style="width: auto; text-align: left; padding: 8px 14px;">${esc(cat.toUpperCase())}</td>
                 <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
                     ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.${catManut > 0 ? ' &nbsp;•&nbsp; ' + catManut + ' em manut.' : ''}
                 </td>
             </tr>
-        </table>`;
-
-        html += `
+        </table>
         <table class="r-table" style="margin-bottom: 15px;">
-            <thead>
-                <tr>
-                    <th class="c-item">Nº</th>
-                    <th class="c-sku">CÓDIGO</th>
-                    <th class="c-desc">DESCRIÇÃO</th>
-                    <th class="c-qtd">QTD</th>
-                    <th class="c-qtd">MANUT.</th>
-                    <th style="text-align: left; width: 180px;">OBS</th>
-                </tr>
-            </thead>
+            <thead><tr>
+                <th class="c-item">Nº</th>
+                <th class="c-sku">CÓDIGO</th>
+                <th class="c-desc">DESCRIÇÃO</th>
+                <th class="c-qtd">QTD</th>
+                <th class="c-qtd">MANUT.</th>
+                <th style="text-align: left; width: 180px;">OBS</th>
+            </tr></thead>
             <tbody>`;
 
         itens.forEach((e, i) => {
@@ -381,26 +346,22 @@ async function renderInventario(catalogo, config) {
 
 // ===================== INVENTÁRIO DE PRODUTOS TINY (RENDER) =====================
 
-// Mapeamento prefixo SKU → categoria legível.
-// IMPORTANTE: prefixos mais longos devem vir primeiro para evitar match prematuro.
-// Ex: MFCSM deve casar antes de MFCS, senão "MFCSM-001" seria classificado como Cake S.
 const SKU_CATEGORIAS = [
-    ['MFCSM', 'Smoke Mine'],           // antes de MFCS
-    ['MFSCW', 'Smoke Cake Waterfall'], // antes de MFSC*
+    ['MFCSM', 'Smoke Mine'],
+    ['MFSCW', 'Smoke Cake Waterfall'],
     ['MFSCH', 'Smoke Cake Hydra'],
-    ['MFSCM', 'Smoke Mine'],           // alias alternativo (sem o extra C)
+    ['MFSCM', 'Smoke Mine'],
     ['MFSSS', 'Single Shot 0.8"'],
-    ['MFSS1', 'Single Shot 1.2"'],     // MFSS1.2 — ponto pode aparecer no SKU
+    ['MFSS1', 'Single Shot 1.2"'],
     ['MFS3I', 'Display Shell 3"'],
     ['MFS4I', 'Display Shell 4"'],
     ['MFS5I', 'Display Shell 5"'],
     ['MFS6I', 'Display Shell 6"'],
-    ['MFCX', 'Cake X'],               // antes de MFC genérico
+    ['MFCX', 'Cake X'],
     ['MFCW', 'Cake W'],
-    ['MFCS', 'Cake S'],               // por último entre os MFCS*
+    ['MFCS', 'Cake S'],
 ];
 
-// Ordem de exibição das categorias no documento
 const ORDEM_CATEGORIAS_PRODUTOS = [
     'Single Shot 0.8"',
     'Single Shot 1.2"',
@@ -418,25 +379,18 @@ const ORDEM_CATEGORIAS_PRODUTOS = [
 
 function categoriaDeSku(sku) {
     if (!sku) return 'Outros';
-    // Remove sufixo _U para comparar o prefixo base
     const skuBase = sku.toUpperCase().replace(/_U$/, '');
-    // Itera na ordem definida — mais específico/longo primeiro
     for (const [prefixo, cat] of SKU_CATEGORIAS) {
         if (skuBase.startsWith(prefixo.toUpperCase())) return cat;
     }
     return 'Outros';
 }
 
-// Remove [CAIXA], [UNIDADE], [ CAIXA ], [ UNIDADE ] e variações do nome
 function limparNomeProduto(nome) {
     if (!nome) return '';
-    return nome
-        .replace(/\[\s*(caixa|unidade|cx|un)\s*\]/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
+    return nome.replace(/\[\s*(caixa|unidade|cx|un)\s*\]/gi, '').replace(/\s{2,}/g, ' ').trim();
 }
 
-// Detecta se SKU é variante de unidade avulsa
 function isSkuUnidade(sku) {
     return sku ? sku.toUpperCase().endsWith('_U') : false;
 }
@@ -448,23 +402,19 @@ async function renderInventarioProdutos(catalogoBruto, config) {
 
     const emp = config.empresa || {};
 
-    // 1. Cabeçalho empresa
     setText('invProdEmpresaNome', emp.nome || 'MAGIC FIREWORKS');
     setText('invProdEmpresaCnpj', `CNPJ: ${formatCNPJ(emp.cnpj)}`);
     setText('invProdEmpresaEnd', 'Brasília - DF');
     setText('invProdDocData', new Date().toLocaleDateString('pt-BR'));
 
-    // 2. Achata catálogo bruto (agrupado por cat do Tiny) e reclassifica por SKU
+    // Achata e reclassifica por SKU
     const agrupado = {};
 
     Object.values(catalogoBruto).forEach(lista => {
         lista.forEach(p => {
-            // Suprime _U com estoque zerado
             if (isSkuUnidade(p.sku) && (p.quantidade || 0) === 0) return;
-
             const cat = categoriaDeSku(p.sku);
             if (!agrupado[cat]) agrupado[cat] = [];
-
             agrupado[cat].push({
                 ...p,
                 nome: limparNomeProduto(p.nome || p.descricao || ''),
@@ -473,22 +423,16 @@ async function renderInventarioProdutos(catalogoBruto, config) {
         });
     });
 
-    // Ordena itens dentro de cada categoria por SKU
     Object.values(agrupado).forEach(lista =>
         lista.sort((a, b) => (a.sku || '').localeCompare(b.sku || ''))
     );
 
-    // 3. Ordena categorias: primeiro as conhecidas na ordem definida, depois o resto
     const categoriasOrdenadas = [
         ...ORDEM_CATEGORIAS_PRODUTOS.filter(c => agrupado[c]),
         ...Object.keys(agrupado).filter(c => !ORDEM_CATEGORIAS_PRODUTOS.includes(c)).sort(),
     ];
 
-    // 4. Totais gerais
-    let totalItens = 0;
-    let totalUnidades = 0;
-    let totalValor = 0;
-
+    let totalItens = 0, totalUnidades = 0, totalValor = 0;
     categoriasOrdenadas.forEach(cat => {
         agrupado[cat].forEach(p => {
             totalItens++;
@@ -502,11 +446,11 @@ async function renderInventarioProdutos(catalogoBruto, config) {
     setText('invProdTotalCategorias', categoriasOrdenadas.length.toString());
     setText('invProdValorTotal', fmtMoney(totalValor));
 
-    // 5. Gerar tabelas por categoria
+    // Gerar tabelas por categoria — com imagem
     const catContainer = document.getElementById('invProdCategoriasContainer');
     let html = '';
 
-    categoriasOrdenadas.forEach(cat => {
+    for (const cat of categoriasOrdenadas) {
         const itens = agrupado[cat];
         const catQtd = itens.reduce((s, p) => s + (p.quantidade || 0), 0);
         const catValor = itens.reduce((s, p) => s + (p.quantidade || 0) * (p.preco || 0), 0);
@@ -514,9 +458,7 @@ async function renderInventarioProdutos(catalogoBruto, config) {
         html += `
         <table class="client-data-table-title" style="margin-top: 20px; margin-bottom: 0;">
             <tr>
-                <td class="bg-black-title" style="text-align: left; padding: 8px 14px;">
-                    ${esc(cat.toUpperCase())}
-                </td>
+                <td class="bg-black-title" style="text-align: left; padding: 8px 14px;">${esc(cat.toUpperCase())}</td>
                 <td class="data-cell" style="text-align: right; font-size: 11px; color: #888;">
                     ${itens.length} itens &nbsp;•&nbsp; ${catQtd} un.
                     ${catValor > 0 ? ' &nbsp;•&nbsp; R$ ' + fmtMoney(catValor) : ''}
@@ -524,32 +466,33 @@ async function renderInventarioProdutos(catalogoBruto, config) {
             </tr>
         </table>
         <table class="r-table" style="margin-bottom: 15px;">
-            <thead>
-                <tr>
-                    <th class="c-item">Nº</th>
-                    <th class="c-sku">CÓDIGO</th>
-                    <th class="c-desc">DESCRIÇÃO</th>
-                    <th class="c-un" style="width: 44px; text-align: center;">UN</th>
-                    <th class="c-qtd">QTD</th>
-                    <th class="c-preco">PREÇO</th>
-                    <th class="c-total">TOTAL</th>
-                </tr>
-            </thead>
+            <thead><tr>
+                <th class="c-img">FOTO</th>
+                <th class="c-sku">CÓDIGO</th>
+                <th class="c-desc">DESCRIÇÃO</th>
+                <th class="c-un" style="width: 44px; text-align: center;">UN</th>
+                <th class="c-qtd">QTD</th>
+                <th class="c-preco">PREÇO</th>
+                <th class="c-total">TOTAL</th>
+            </tr></thead>
             <tbody>`;
 
-        itens.forEach((p, i) => {
+        for (let i = 0; i < itens.length; i++) {
+            const p = itens[i];
             const qtd = p.quantidade || 0;
             const total = qtd * (p.preco || 0);
             const qtdStyle = qtd === 0 ? 'color: #c0392b; font-weight: 700;' : 'font-weight: 700;';
 
-            // Badge laranja "UN" para variantes de unidade avulsa com estoque
             const skuDisplay = p.isUnidade
                 ? `${esc(p.sku)} <span style="background:#e67e22;color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;">UN</span>`
                 : esc(p.sku || '-');
 
+            // Busca imagem local pelo SKU — placeholder se não encontrar
+            const imgUrl = await getProductImage(p.sku) || '/public/placeholder-produto.svg';
+
             html += `
                 <tr>
-                    <td class="c-item">${i + 1}</td>
+                    <td class="c-img"><img src="${imgUrl}" class="prod-thumb"></td>
                     <td class="c-sku">${skuDisplay}</td>
                     <td class="c-desc">${esc(p.nome || '-')}</td>
                     <td class="c-un" style="text-align: center;">${esc(p.unidade || 'UN')}</td>
@@ -557,10 +500,10 @@ async function renderInventarioProdutos(catalogoBruto, config) {
                     <td class="c-preco">${(p.preco || 0) > 0 ? fmtMoney(p.preco) : '-'}</td>
                     <td class="c-total">${total > 0 ? fmtMoney(total) : '-'}</td>
                 </tr>`;
-        });
+        }
 
         html += '</tbody></table>';
-    });
+    }
 
     catContainer.innerHTML = html;
 }
@@ -577,11 +520,8 @@ function formatQtd(v) {
 
 function formatDate(d) {
     if (!d) return new Date().toLocaleDateString('pt-BR');
-    // Já formatada (DD/MM/YYYY)
     if (d.includes('/')) return d;
-    // ISO datetime (2026-02-20T12:13:06.967Z) — pega só a parte da data
     if (d.includes('T')) d = d.split('T')[0];
-    // YYYY-MM-DD
     const p = d.split('-');
     return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
 }

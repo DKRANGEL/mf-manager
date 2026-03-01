@@ -141,7 +141,7 @@ function getImageMatch(imgDir, sku) {
     return result;
 }
 
-router.get('/produto/imagem/:sku', async (req, res) => {
+router.get('/produto/imagem/:sku', (req, res) => {
     const sku = req.params.sku;
     const imgDir = path.join(__dirname, '..', 'public', 'produtos');
 
@@ -156,24 +156,7 @@ router.get('/produto/imagem/:sku', async (req, res) => {
         });
     }
 
-    try {
-        const client = getTinyClient();
-        const produto = await client.pesquisarProdutoPorSKU(sku);
-        if (produto) {
-            const imagemUrl =
-                produto.imagemURL ||
-                produto.imagem_url ||
-                produto.url_imagem ||
-                (produto.anexos && produto.anexos.length > 0 ? produto.anexos[0].anexo?.url : null) ||
-                (produto.imagens_externas && produto.imagens_externas.length > 0 ? produto.imagens_externas[0].url : null);
-            if (imagemUrl) {
-                return res.json({success: true, source: 'api', url: imagemUrl});
-            }
-        }
-    } catch (err) {
-        console.log(`[Imagem] API falhou para SKU ${sku}: ${err.message}`);
-    }
-
+    // Sem imagem local — retorna null, o frontend usa o placeholder
     res.json({success: true, source: 'none', url: null});
 });
 
