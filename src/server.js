@@ -4,9 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
+const { initData } = require('./utils/initData');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
+
+initData();
 
 // Ensure products image directory exists
 const produtosDir = path.join(__dirname, 'public', 'produtos');
