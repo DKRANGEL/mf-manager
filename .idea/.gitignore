@@ -8,3 +8,5 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+# Cache do catálogo de produtos (gerado em runtime, persiste no volume Fly.io)
+src/data/catalogo-cache.json
