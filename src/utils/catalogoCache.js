@@ -22,7 +22,7 @@ function salvarCacheEmDisco(produtos) {
     }
 }
 
-function carregarCacheDoisco() {
+function carregarCacheDoDisco() {
     try {
         if (!fs.existsSync(CACHE_FILE)) return false;
         const raw = fs.readFileSync(CACHE_FILE, 'utf8');
@@ -93,7 +93,7 @@ async function getCatalogoBot() {
 function aquecerCache() {
     console.log('[CatálogoCache] Inicializando cache...');
 
-    const carregouDoDisco = carregarCacheDoisco();
+    const carregouDoDisco = carregarCacheDoDisco();
 
     if (carregouDoDisco) {
         const idade = Date.now() - _lastUpdate;
