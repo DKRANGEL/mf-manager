@@ -24,3 +24,7 @@ cpus = 1
 [mounts]
 source = "mf_data"
 destination = "/app/src/data"
+
+[env]
+PORT = "8080"
+NODE_ENV = "production"
