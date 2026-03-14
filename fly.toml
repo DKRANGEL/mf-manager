@@ -3,8 +3,6 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-auto_stop_machines = 'stop'
-min_machines_running = 1
 app = 'tiny-recibo-pro'
 primary_region = 'gru'
 
@@ -15,7 +13,7 @@ primary_region = 'gru'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
 [[vm]]
