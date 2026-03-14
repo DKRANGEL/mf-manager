@@ -6,11 +6,13 @@ const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
 const { initData } = require('./utils/initData');
 const botRoutes = require('./routes/bot');
+const { aquecerCache } = require('./utils/catalogoCache');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
 
 initData();
+aquecerCache();
 
 app.use('/bot', botRoutes);
 
