@@ -32,9 +32,11 @@ async function getCatalogoBot() {
 
 function aquecerCache() {
     console.log('[CatálogoCache] Aquecendo cache em background...');
-    getCatalogoBot()
-        .then(c => console.log(`[CatálogoCache] Cache aquecido — ${c.length} produtos`))
-        .catch(err => console.error('[CatálogoCache] Falha ao aquecer cache:', err.message));
+    setTimeout(() => {
+        getCatalogoBot()
+            .then(c => console.log(`[CatálogoCache] Cache aquecido — ${c.length} produtos`))
+            .catch(err => console.error('[CatálogoCache] Falha ao aquecer cache:', err.message));
+    }, 5000); // aguarda 5s após o servidor subir
 }
 
-module.exports = { getCatalogoBot, aquecerCache };
+module.exports = {getCatalogoBot, aquecerCache};

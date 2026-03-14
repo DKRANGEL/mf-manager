@@ -10,6 +10,6 @@ aquecerCache();
 const app = createApp();
 const PORT = process.env.PORT || 3003;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🧾 Tiny Recibo Pro rodando em http://localhost:${PORT}\n`);
 });
