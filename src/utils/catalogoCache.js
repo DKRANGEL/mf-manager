@@ -53,9 +53,9 @@ async function buscarDoTiny() {
     const produtos = await client.pesquisarProdutosComEstoque();
 
     const catalogo = produtos.map(p => ({
-        codigo: p.sku,
+        codigo: p.codigo || p.sku || '',
         nome: p.nome,
-        categoria: p.categoria,
+        categoria: p.categoria || 'Sem categoria',
         disponivel: (p.saldo_real || 0) > 0,
         quantidade: p.saldo_real || 0,
         unidade: p.unidade || 'UN'
