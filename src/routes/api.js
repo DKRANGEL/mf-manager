@@ -25,54 +25,6 @@ router.get('/testar', async (req, res) => {
     }
 });
 
-// ★ PRINCIPAL: Buscar pedido pelo NÚMERO visível na interface do Tiny
-router.get('/pedido/numero/:numero', async (req, res) => {
-    try {
-        const client = getTinyClient();
-        const pedido = await client.obterPedidoPorNumero(req.params.numero);
-        res.json({success: true, data: pedido});
-    } catch (error) {
-        console.error('Erro ao buscar por número:', error.message);
-        res.status(400).json({success: false, error: error.message});
-    }
-});
-
-// Obter pedido de venda por ID interno da API
-router.get('/pedido/:id', async (req, res) => {
-    try {
-        const client = getTinyClient();
-        const pedido = await client.obterPedido(req.params.id);
-        res.json({success: true, data: pedido});
-    } catch (error) {
-        console.error('Erro ao obter pedido:', error.message);
-        res.status(error.message.includes('API Tiny') ? 400 : 500).json({success: false, error: error.message});
-    }
-});
-
-// Obter pedido do PDV por ID interno
-router.get('/pdv/pedido/:id', async (req, res) => {
-    try {
-        const client = getTinyClient();
-        const pedido = await client.obterPedidoPDV(req.params.id);
-        res.json({success: true, data: pedido});
-    } catch (error) {
-        console.error('Erro ao obter pedido PDV:', error.message);
-        res.status(error.message.includes('API Tiny') ? 400 : 500).json({success: false, error: error.message});
-    }
-});
-
-// Pesquisar pedidos por filtros
-router.get('/pedidos', async (req, res) => {
-    try {
-        const client = getTinyClient();
-        const pedidos = await client.pesquisarPedidos(req.query);
-        res.json({success: true, data: pedidos});
-    } catch (error) {
-        console.error('Erro ao pesquisar pedidos:', error.message);
-        res.status(500).json({success: false, error: error.message});
-    }
-});
-
 // ====================================================================
 // MATCH DE IMAGEM POR SKU
 // ====================================================================
