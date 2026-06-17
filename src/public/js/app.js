@@ -1,9 +1,7 @@
 // ===================== APP (INTERFACE / CONTROLES) =====================
 
 let config = {};
-let tipoBusca = 'numero';
 let modoAtual = 'pedido';
-let ultimoPedido = null;
 let osItens = [];
 let osConfigEquip = {};
 const imgCache = {};
@@ -24,9 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    document.getElementById('pedidoId').addEventListener('keydown', e => {
-        if (e.key === 'Enter') gerarRecibo();
-    });
     document.getElementById('osBusca').addEventListener('keydown', e => {
         if (e.key === 'Enter') buscarOS();
     });
@@ -34,7 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.key === 'Enter') buscarProdutos();
     });
 
-    document.getElementById('pedidoId').focus();
     loadUploadedImages();
     carregarConfigEquipamentos();
 
@@ -76,13 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// ---- Controles da sidebar ----
-function setTipo(el) {
-    document.querySelectorAll('.toggle[data-type]').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    tipoBusca = el.dataset.type;
-}
-
 function setModo(el) {
     document.querySelectorAll('.toggle[data-mode]').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
@@ -96,36 +83,6 @@ function setModo(el) {
     document.getElementById('exportActions').style.display = 'none';
     hideError();
     hideSuccess();
-}
-
-// ---- Gerar pedido ----
-async function gerarRecibo() {
-    const id = document.getElementById('pedidoId').value.trim();
-    if (!id) {
-        showError('Digite o número do pedido.');
-        return;
-    }
-    hideError();
-    hideSuccess();
-    setLoading(true);
-
-    try {
-        const endpoint = tipoBusca === 'numero' ? `/api/pedido/numero/${id}` : `/api/pedido/${id}`;
-        const res = await fetch(endpoint);
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || 'Erro ao buscar pedido');
-
-        ultimoPedido = json.data;
-        await renderDocumento(json.data, config);
-
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('reciboWrapper').style.display = 'block';
-        document.getElementById('exportActions').style.display = 'flex';
-    } catch (err) {
-        showError(err.message);
-    } finally {
-        setLoading(false);
-    }
 }
 
 function exportarPDF() {
@@ -602,10 +559,4 @@ function showSuccess(m) {
 
 function hideSuccess() {
     document.getElementById('successBox').style.display = 'none';
-}
-
-function setLoading(l) {
-    const b = document.getElementById('btnGerar');
-    b.disabled = l;
-    b.innerText = l ? '...' : 'GERAR';
 }
