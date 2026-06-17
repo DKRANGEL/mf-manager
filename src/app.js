@@ -6,6 +6,7 @@ const fs = require('fs');
 const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
 const botRoutes = require('./routes/bot');
+const catalogoRoutes = require('./routes/catalogo');
 
 function createApp() {
     const app = express();
@@ -54,6 +55,7 @@ function createApp() {
     // ─── Rotas API ───────────────────────────────────────────────────────────────
     app.use('/api/equipamentos', equipamentosRoutes);
     app.use('/api', apiRoutes);
+    app.use('/api/catalogo', catalogoRoutes);
 
     // ─── Rotas Bot (protegidas) ──────────────────────────────────────────────────
     app.use('/bot', botRoutes);
@@ -65,6 +67,10 @@ function createApp() {
 
     app.get('/equipamentos', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'equipamentos.html'));
+    });
+
+    app.get('/produtos', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
     });
 
     return app;
