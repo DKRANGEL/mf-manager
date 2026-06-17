@@ -273,46 +273,7 @@
 
             <!-- MODO: PEDIDO DE VENDA -->
             <div id="modoPedido">
-                <div class="input-group">
-                    <label for="pedidoId">Buscar Pedido</label>
-                    <div class="input-row">
-                        <input type="text" id="pedidoId" placeholder="Nº do Pedido..." autocomplete="off">
-                        <button id="btnGerar" onclick="gerarRecibo()">GERAR</button>
-                    </div>
-                    <div class="toggle-group" style="margin-top: 8px;">
-                        <button class="toggle active" data-type="numero" onclick="setTipo(this)">Nº Pedido</button>
-                        <button class="toggle" data-type="id" onclick="setTipo(this)">ID Interno</button>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <span class="section-label">Relatórios</span>
-                    <button class="btn-menu" onclick="gerarInventarioProdutos()">
-                        <span class="btn-menu-icon">📦</span>Inventário de Produtos
-                    </button>
-                </div>
-
-                <div class="progress-box" id="progressBox">
-                    <div class="progress-header">
-                        <span class="progress-label">Carregando Estoque</span>
-                        <span class="progress-counter" id="progressCounter">0 / 0</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-sku" id="progressSku">Aguardando...</div>
-                    <button class="btn-logs" onclick="abrirModalLogs()">Ver Logs Detalhados</button>
-                </div>
-
-                <div class="sidebar-section">
-                    <span class="section-label">Fotos dos Produtos</span>
-                    <div class="upload-dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-                        <p class="upload-hint">Arraste ou clique para adicionar</p>
-                        <button class="btn-upload">Selecionar Imagens</button>
-                        <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)"
-                               style="display:none;">
-                    </div>
-                </div>
+                <!-- Repropositado na issue 6 (Tela de pedido) -->
             </div>
 
             <!-- MODO: ORDEM DE EQUIPAMENTO -->
