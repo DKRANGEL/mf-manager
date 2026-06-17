@@ -56,43 +56,8 @@ class TinyClient {
     }
 
     async testarConexao() {
-        const data = await this._requestRaw('pedidos.pesquisa.php', {
-            dataInicial: '01/01/2026',
-            dataFinal: '31/12/2026',
-        });
+        const data = await this._requestRaw('produtos.pesquisa.php', { pesquisa: '' });
         return data;
-    }
-
-    async obterPedido(id) {
-        const retorno = await this._request('pedido.obter.php', {id});
-        return retorno.pedido;
-    }
-
-    async obterPedidoPDV(id) {
-        const retorno = await this._request('pdv.pedido.obter.php', {id});
-        return retorno.pedido;
-    }
-
-    async pesquisarPedidos(filters = {}) {
-        const retorno = await this._request('pedidos.pesquisa.php', filters);
-        return retorno.pedidos || [];
-    }
-
-    async obterPedidoPorNumero(numero) {
-        const retorno = await this._request('pedidos.pesquisa.php', {numero});
-        const pedidos = retorno.pedidos || [];
-
-        if (pedidos.length === 0) {
-            throw new Error(`Nenhum pedido encontrado com número "${numero}"`);
-        }
-
-        const pedidoResumo = pedidos[0].pedido;
-        const idInterno = pedidoResumo.id;
-
-        console.log(`[Tiny] Número "${numero}" → ID interno: ${idInterno}`);
-
-        const pedidoCompleto = await this.obterPedido(idInterno);
-        return pedidoCompleto;
     }
 
     async obterProduto(id) {
