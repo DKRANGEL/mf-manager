@@ -17,6 +17,12 @@ const CACHE_FILE = path.join(DATA_DIR, 'catalogo-cache.json');
 
 // ---- Helpers ----
 
+function categoriaDoCodigo(codigo) {
+    if (!codigo) return 'Sem categoria';
+    const match = codigo.split(/[-_]/)[0];
+    return match || 'Sem categoria';
+}
+
 function lerProdutos() {
     return readJSON(PRODUTOS_FILE, {proximo_id: 1, produtos: []});
 }
@@ -62,7 +68,7 @@ router.post('/item', (req, res) => {
             id: db.proximo_id++,
             codigo,
             nome: (req.body.nome || '').trim(),
-            categoria: (req.body.categoria || 'Sem categoria').trim(),
+            categoria: categoriaDoCodigo(codigo),
             preco: parseFloat(req.body.preco) || 0,
             unidade: (req.body.unidade || 'UN').trim(),
             observacoes: (req.body.observacoes || '').trim(),
@@ -97,7 +103,7 @@ router.put('/item/:id', (req, res) => {
             ...atual,
             codigo: novoCodigo,
             nome: req.body.nome !== undefined ? req.body.nome.trim() : atual.nome,
-            categoria: req.body.categoria !== undefined ? req.body.categoria.trim() : atual.categoria,
+            categoria: categoriaDoCodigo(novoCodigo),
             preco: req.body.preco !== undefined ? (parseFloat(req.body.preco) || 0) : atual.preco,
             unidade: req.body.unidade !== undefined ? req.body.unidade.trim() : atual.unidade,
             observacoes: req.body.observacoes !== undefined ? req.body.observacoes.trim() : atual.observacoes
@@ -154,7 +160,7 @@ router.post('/importar-tiny', (req, res) => {
             if (porCodigo.has(codigo)) {
                 const p = porCodigo.get(codigo);
                 p.nome = t.nome || p.nome;
-                p.categoria = t.categoria || p.categoria;
+                p.categoria = categoriaDoCodigo(codigo);
                 p.unidade = t.unidade || p.unidade;
                 atualizados++;
             } else {
@@ -162,7 +168,7 @@ router.post('/importar-tiny', (req, res) => {
                     id: db.proximo_id++,
                     codigo,
                     nome: t.nome || '',
-                    categoria: t.categoria || 'Sem categoria',
+                    categoria: categoriaDoCodigo(codigo),
                     preco: 0,
                     unidade: t.unidade || 'UN',
                     observacoes: '',
