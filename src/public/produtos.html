@@ -9,331 +9,63 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <style>
-        body {
-            overflow: auto;
-        }
+        body { overflow: auto; }
+        .page-container { max-width: 1200px; margin: 0 auto; padding: 40px 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #fff; }
+        .page-header .brand-sub { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
 
-        .page-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 30px;
-        }
+        /* Botões */
+        .btn-primary { background: #fff; border: none; color: #000; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #d4d4d4; }
+        .btn-back { background: transparent; border: 1px solid #333; color: #888; padding: 10px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; text-decoration: none; transition: 0.2s; }
+        .btn-back:hover { border-color: #555; color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; border: none; transition: 0.15s; }
+        .btn-edit { background: rgba(255,255,255,0.08); color: #999; }
+        .btn-edit:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-delete { background: rgba(255,255,255,0.04); color: #666; }
+        .btn-delete:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+        .btn-cancel { background: rgba(255,255,255,0.05); color: #888; padding: 10px 20px; font-size: 13px; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #ccc; }
 
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+        /* Toolbar */
+        .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 200px; height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; }
+        .search-box:focus { border-color: #666; }
+        .filter-select { height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; min-width: 180px; }
+        .stats { font-size: 12px; color: #666; margin-left: auto; }
 
-        .page-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-        }
+        /* Tabela */
+        .equip-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .equip-table thead th { background: #1a1a1e; color: #666; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left; border-bottom: 2px solid #29292e; position: sticky; top: 0; z-index: 10; }
+        .equip-table tbody td { padding: 10px 14px; border-bottom: 1px solid #29292e; vertical-align: middle; }
+        .equip-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .td-sku { font-family: var(--mono); font-weight: 700; color: #fff; font-size: 12px; white-space: nowrap; }
+        .td-nome { color: #ccc; font-weight: 500; }
+        .td-preco { font-family: var(--mono); font-weight: 600; text-align: right; color: #ccc; }
+        .td-un { font-family: var(--mono); text-align: center; color: #666; }
+        .td-obs { color: #555; font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .td-actions { text-align: right; white-space: nowrap; display: flex; gap: 6px; justify-content: flex-end; }
 
-        .page-header .brand-sub {
-            font-size: 11px;
-            color: var(--sb-accent);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
+        /* Categoria */
+        .cat-row td { background: rgba(255,255,255,0.04); font-weight: 700; font-size: 12px; color: #999; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 14px; border-bottom: 1px solid #29292e; }
+        .cat-count { font-weight: 400; color: #555; font-size: 11px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
 
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #121214; border: 1px solid #29292e; border-radius: 10px; padding: 30px; width: 500px; max-width: 90vw; }
+        .modal h2 { font-size: 18px; color: #fff; margin-bottom: 20px; }
+        .modal-field { margin-bottom: 16px; }
+        .modal-field label { display: block; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .modal-input { width: 100%; height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; }
+        .modal-input:focus { border-color: #666; }
+        .modal-row { display: flex; gap: 12px; }
+        .modal-row .modal-field { flex: 1; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
 
-        .btn-back {
-            background: transparent;
-            border: 1px solid var(--sb-border);
-            color: var(--sb-text-dim);
-            padding: 10px 16px;
-            border-radius: var(--sb-radius);
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.2s;
-        }
-
-        .btn-back:hover {
-            border-color: #555;
-            color: #fff;
-        }
-
-        .btn-primary {
-            background: var(--sb-accent);
-            border: none;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: var(--sb-radius);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: var(--sb-accent-hover);
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 11px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: none;
-            transition: 0.15s;
-        }
-
-        .btn-edit {
-            background: rgba(255, 255, 255, 0.08);
-            color: #ccc;
-        }
-
-        .btn-edit:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-        }
-
-        .btn-delete {
-            background: rgba(233, 69, 96, 0.1);
-            color: #e94560;
-        }
-
-        .btn-delete:hover {
-            background: rgba(233, 69, 96, 0.2);
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 200px;
-            height: 42px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 14px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .search-box:focus {
-            border-color: var(--sb-accent);
-        }
-
-        .filter-select {
-            height: 42px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 14px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            min-width: 180px;
-        }
-
-        .stats {
-            font-size: 12px;
-            color: var(--sb-text-dim);
-            margin-left: auto;
-        }
-
-        .equip-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 13px;
-        }
-
-        .equip-table thead th {
-            background: #1a1a1e;
-            color: var(--sb-text-dim);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 12px 14px;
-            text-align: left;
-            border-bottom: 2px solid var(--sb-border);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .equip-table tbody td {
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--sb-border);
-            vertical-align: middle;
-        }
-
-        .equip-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .td-sku {
-            font-family: var(--mono);
-            font-weight: 700;
-            color: var(--sb-accent);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .td-nome {
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .td-preco {
-            font-family: var(--mono);
-            font-weight: 600;
-            text-align: right;
-        }
-
-        .td-un {
-            font-family: var(--mono);
-            text-align: center;
-            color: var(--sb-text-dim);
-        }
-
-        .td-obs {
-            color: #888;
-            font-size: 11px;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .td-actions {
-            text-align: right;
-            white-space: nowrap;
-            display: flex;
-            gap: 6px;
-            justify-content: flex-end;
-        }
-
-        .cat-row td {
-            background: rgba(233, 69, 96, 0.06);
-            font-weight: 700;
-            font-size: 12px;
-            color: var(--sb-accent);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--sb-border);
-        }
-
-        .cat-count {
-            font-weight: 400;
-            color: var(--sb-text-dim);
-            font-size: 11px;
-            text-transform: none;
-            letter-spacing: 0;
-            margin-left: 8px;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: var(--sb-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: 10px;
-            padding: 30px;
-            width: 500px;
-            max-width: 90vw;
-        }
-
-        .modal h2 {
-            font-size: 18px;
-            color: #fff;
-            margin-bottom: 20px;
-        }
-
-        .modal-field {
-            margin-bottom: 16px;
-        }
-
-        .modal-field label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--sb-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .modal-input {
-            width: 100%;
-            height: 42px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 14px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .modal-input:focus {
-            border-color: var(--sb-accent);
-        }
-
-        .modal-row {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-row .modal-field {
-            flex: 1;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        .btn-cancel {
-            background: rgba(255, 255, 255, 0.05);
-            color: #888;
-        }
-
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #ccc;
-        }
-
-        .empty-msg {
-            text-align: center;
-            padding: 60px 20px;
-            color: #555;
-        }
+        .empty-msg { text-align: center; padding: 60px 20px; color: #555; }
     </style>
 </head>
 <body>
@@ -344,8 +76,8 @@
             <span class="brand-sub">Magic Fireworks — Catálogo</span>
         </div>
         <div class="header-actions">
-            <button class="btn-back" onclick="importarTiny()"
-                    style="border-color: var(--sb-accent); color: var(--sb-accent);">⬇ Importar do Tiny
+            <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;">⬇ Importar do
+                Tiny
             </button>
             <a href="/" class="btn-back">← Voltar ao Recibo</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
@@ -368,18 +100,11 @@
         <div class="modal">
             <h2 id="modalTitulo">Novo Produto</h2>
             <input type="hidden" id="modalEditId" value="">
-            <div class="modal-row">
-                <div class="modal-field">
-                    <label>Código</label>
-                    <input type="text" class="modal-input" id="modalCodigo" placeholder="Ex: MFSS-006"
-                           style="font-family: var(--mono);">
-                </div>
-                <div class="modal-field">
-                    <label>Categoria</label>
-                    <input type="text" class="modal-input" id="modalCategoria" placeholder="Ex: Monotiros 0.8"
-                           list="modalCatList">
-                    <datalist id="modalCatList"></datalist>
-                </div>
+            <div class="modal-field">
+                <label>Código</label>
+                <input type="text" class="modal-input" id="modalCodigo" placeholder="Ex: MFSS-006"
+                       style="font-family: var(--mono);">
+                <span style="font-size:10px; color:#555; margin-top:4px; display:block;">A categoria é derivada automaticamente do prefixo do código</span>
             </div>
             <div class="modal-field">
                 <label>Nome</label>
@@ -431,7 +156,6 @@
             const sel = document.getElementById('filterCategoria');
             sel.innerHTML = '<option value="">Todas as categorias</option>' +
                 categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-            document.getElementById('modalCatList').innerHTML = categorias.map(c => `<option value="${esc(c)}">`).join('');
 
             filtrar();
         } catch (err) {
@@ -519,7 +243,6 @@
         document.getElementById('modalEditId').value = '';
         document.getElementById('modalCodigo').value = '';
         document.getElementById('modalNome').value = '';
-        document.getElementById('modalCategoria').value = '';
         document.getElementById('modalPreco').value = '0';
         document.getElementById('modalUnidade').value = 'UN';
         document.getElementById('modalObs').value = '';
@@ -534,7 +257,6 @@
         document.getElementById('modalEditId').value = id;
         document.getElementById('modalCodigo').value = p.codigo || '';
         document.getElementById('modalNome').value = p.nome || '';
-        document.getElementById('modalCategoria').value = p.categoria || '';
         document.getElementById('modalPreco').value = p.preco || 0;
         document.getElementById('modalUnidade').value = p.unidade || 'UN';
         document.getElementById('modalObs').value = p.observacoes || '';
@@ -551,7 +273,6 @@
         const dados = {
             codigo: document.getElementById('modalCodigo').value.trim(),
             nome: document.getElementById('modalNome').value.trim(),
-            categoria: document.getElementById('modalCategoria').value.trim(),
             preco: document.getElementById('modalPreco').value,
             unidade: document.getElementById('modalUnidade').value.trim() || 'UN',
             observacoes: document.getElementById('modalObs').value.trim()
