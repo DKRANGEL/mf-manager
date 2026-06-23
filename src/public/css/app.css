@@ -4,11 +4,11 @@
 :root {
     --sb-bg: #0a0a0a;
     --sb-input-bg: #161618;
-    --sb-border: #242428;
+    --sb-border: #ededff;
     --sb-text: #e8e8e8;
-    --sb-text-dim: #666672;
+    --sb-text-dim: #2b2b2f;
     --sb-accent: #ffffff;
-    --sb-accent-hover: #e0e0e0;
+    --sb-accent-hover: #545353;
     --sb-radius: 7px;
     --font: 'DM Sans', sans-serif;
     --mono: 'JetBrains Mono', monospace;

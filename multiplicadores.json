@@ -1,0 +1,8 @@
+﻿{
+  "_doc": "Unidades por caixa, por classe (prefixo do código). Lookup por prefixo mais longo: MFSS1.2 casa antes de MFSS. Quem não está aqui = 1 (vendido em UN direto).",
+  "classes": {
+    "MFSSS":   { "descricao": "Micro mine SSS (calibre 0.8)", "por_caixa": 400 },
+    "MFSS1.2": { "descricao": "Monotiro 1.2 (caixa 100)", "por_caixa": 100 }
+  },
+  "overrides": {}
+}

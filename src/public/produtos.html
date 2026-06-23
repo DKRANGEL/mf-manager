@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos - Magic Fireworks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <style>
+        body { overflow: auto; }
+        .page-container { max-width: 1200px; margin: 0 auto; padding: 40px 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #fff; }
+        .page-header .brand-sub { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* Botões */
+        .btn-primary { background: #fff; border: none; color: #000; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #d4d4d4; }
+        .btn-back { background: transparent; border: 1px solid #333; color: #888; padding: 10px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; text-decoration: none; transition: 0.2s; }
+        .btn-back:hover { border-color: #555; color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer; border: none; transition: 0.15s; }
+        .btn-edit { background: rgba(255,255,255,0.08); color: #999; }
+        .btn-edit:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-delete { background: rgba(255,255,255,0.04); color: #666; }
+        .btn-delete:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+        .btn-cancel { background: rgba(255,255,255,0.05); color: #888; padding: 10px 20px; font-size: 13px; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+
+        /* Toolbar */
+        .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 200px; height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; }
+        .search-box:focus { border-color: #666; }
+        .filter-select { height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; min-width: 180px; }
+        .stats { font-size: 12px; color: #666; margin-left: auto; }
+
+        /* Tabela */
+        .equip-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .equip-table thead th { background: #1a1a1e; color: #666; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px; text-align: left; border-bottom: 2px solid #29292e; position: sticky; top: 0; z-index: 10; }
+        .equip-table tbody td { padding: 10px 14px; border-bottom: 1px solid #29292e; vertical-align: middle; }
+        .equip-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .td-sku { font-family: var(--mono); font-weight: 700; color: #fff; font-size: 12px; white-space: nowrap; }
+        .td-nome { color: #ccc; font-weight: 500; }
+        .td-preco { font-family: var(--mono); font-weight: 600; text-align: right; color: #ccc; }
+        .td-un { font-family: var(--mono); text-align: center; color: #666; }
+        .td-obs { color: #555; font-size: 11px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .td-actions { text-align: right; white-space: nowrap; display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* Categoria */
+        .cat-row td { background: rgba(255,255,255,0.04); font-weight: 700; font-size: 12px; color: #999; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 14px; border-bottom: 1px solid #29292e; }
+        .cat-count { font-weight: 400; color: #555; font-size: 11px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #121214; border: 1px solid #29292e; border-radius: 10px; padding: 30px; width: 500px; max-width: 90vw; }
+        .modal h2 { font-size: 18px; color: #fff; margin-bottom: 20px; }
+        .modal-field { margin-bottom: 16px; }
+        .modal-field label { display: block; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .modal-input { width: 100%; height: 42px; background: #1a1a1e; border: 1px solid #333; border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px; outline: none; }
+        .modal-input:focus { border-color: #666; }
+        .modal-row { display: flex; gap: 12px; }
+        .modal-row .modal-field { flex: 1; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        .empty-msg { text-align: center; padding: 60px 20px; color: #555; }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>📦 Cadastro de Produtos</h1>
+            <span class="brand-sub">Magic Fireworks — Catálogo</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;">⬇ Importar do
+                Tiny
+            </button>
+            <a href="/" class="btn-back">← Voltar ao Recibo</a>
+            <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <input type="text" class="search-box" id="searchBox" placeholder="Buscar por nome, código ou categoria..."
+               oninput="filtrar()">
+        <select class="filter-select" id="filterCategoria" onchange="filtrar()">
+            <option value="">Todas as categorias</option>
+        </select>
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <div id="tabelaContainer"></div>
+
+    <!-- Modal: Novo/Editar Produto -->
+    <div class="modal-overlay" id="modalNovo">
+        <div class="modal">
+            <h2 id="modalTitulo">Novo Produto</h2>
+            <input type="hidden" id="modalEditId" value="">
+            <div class="modal-field">
+                <label>Código</label>
+                <input type="text" class="modal-input" id="modalCodigo" placeholder="Ex: MFSS-006"
+                       style="font-family: var(--mono);">
+                <span style="font-size:10px; color:#555; margin-top:4px; display:block;">A categoria é derivada automaticamente do prefixo do código</span>
+            </div>
+            <div class="modal-field">
+                <label>Nome</label>
+                <input type="text" class="modal-input" id="modalNome" placeholder="Ex: Monotiro Dourado">
+            </div>
+            <div class="modal-row">
+                <div class="modal-field">
+                    <label>Preço (R$)</label>
+                    <input type="number" class="modal-input" id="modalPreco" value="0" min="0" step="0.01">
+                </div>
+                <div class="modal-field">
+                    <label>Unidade</label>
+                    <input type="text" class="modal-input" id="modalUnidade" value="UN">
+                </div>
+            </div>
+            <div class="modal-field">
+                <label>Observações</label>
+                <input type="text" class="modal-input" id="modalObs" placeholder="Opcional...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-sm btn-cancel" onclick="fecharModal()" style="padding: 10px 20px; font-size: 13px;">
+                    Cancelar
+                </button>
+                <button class="btn-primary" onclick="salvarProduto()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let todosProdutos = [];
+    let categorias = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarDados();
+        document.getElementById('searchBox').focus();
+    });
+
+    async function carregarDados() {
+        try {
+            const res = await fetch('/api/catalogo/catalogo');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+
+            todosProdutos = [];
+            categorias = Object.keys(json.data).sort();
+            categorias.forEach(cat => json.data[cat].forEach(p => todosProdutos.push(p)));
+
+            const sel = document.getElementById('filterCategoria');
+            sel.innerHTML = '<option value="">Todas as categorias</option>' +
+                categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+            filtrar();
+        } catch (err) {
+            document.getElementById('tabelaContainer').innerHTML = `<div class="empty-msg">Erro: ${err.message}</div>`;
+        }
+    }
+
+    function filtrar() {
+        const q = document.getElementById('searchBox').value.toLowerCase().trim();
+        const cat = document.getElementById('filterCategoria').value;
+        let lista = todosProdutos;
+        if (q) {
+            lista = lista.filter(p =>
+                (p.nome || '').toLowerCase().includes(q) ||
+                (p.codigo || '').toLowerCase().includes(q) ||
+                (p.categoria || '').toLowerCase().includes(q));
+        }
+        if (cat) lista = lista.filter(p => p.categoria === cat);
+        renderTabela(lista);
+    }
+
+    function renderTabela(lista) {
+        const container = document.getElementById('tabelaContainer');
+        document.getElementById('stats').textContent = `${lista.length} produtos • ${categorias.length} categorias`;
+
+        if (lista.length === 0) {
+            container.innerHTML = '<div class="empty-msg">Nenhum produto encontrado. Use "Importar do Tiny" ou "+ Novo Produto".</div>';
+            return;
+        }
+
+        const agrupado = {};
+        lista.forEach(p => {
+            const cat = p.categoria || 'Sem categoria';
+            if (!agrupado[cat]) agrupado[cat] = [];
+            agrupado[cat].push(p);
+        });
+
+        let html = `<table class="equip-table"><thead><tr>
+        <th style="width:110px;">CÓDIGO</th>
+        <th>NOME</th>
+        <th style="width:100px;text-align:right;">PREÇO</th>
+        <th style="width:50px;text-align:center;">UN</th>
+        <th style="width:180px;">OBS</th>
+        <th style="width:90px;text-align:right;">AÇÕES</th>
+    </tr></thead><tbody>`;
+
+        Object.keys(agrupado).sort().forEach(cat => {
+            const itens = agrupado[cat];
+            html += `<tr class="cat-row"><td colspan="6">${esc(cat)}<span class="cat-count">${itens.length} produtos</span></td></tr>`;
+            itens.forEach(p => {
+                html += `<tr>
+                <td class="td-sku">${esc(p.codigo)}</td>
+                <td class="td-nome">${esc(p.nome)}</td>
+                <td class="td-preco">${fmtPreco(p.preco)}</td>
+                <td class="td-un">${esc(p.unidade || 'UN')}</td>
+                <td class="td-obs" title="${esc(p.observacoes || '')}">${esc(p.observacoes || '-')}</td>
+                <td class="td-actions">
+                    <button class="btn-sm btn-edit" onclick="editarProduto(${p.id})">✏️</button>
+                    <button class="btn-sm btn-delete" onclick="deletarProduto(${p.id}, '${esc(p.nome).replace(/'/g, "\\'")}')">🗑️</button>
+                </td>
+            </tr>`;
+            });
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function fmtPreco(v) {
+        return 'R$ ' + (parseFloat(v) || 0).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    // ---- Modal ----
+    function abrirModalNovo() {
+        document.getElementById('modalTitulo').textContent = 'Novo Produto';
+        document.getElementById('modalEditId').value = '';
+        document.getElementById('modalCodigo').value = '';
+        document.getElementById('modalNome').value = '';
+        document.getElementById('modalPreco').value = '0';
+        document.getElementById('modalUnidade').value = 'UN';
+        document.getElementById('modalObs').value = '';
+        document.getElementById('modalNovo').classList.add('active');
+        document.getElementById('modalCodigo').focus();
+    }
+
+    function editarProduto(id) {
+        const p = todosProdutos.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('modalTitulo').textContent = 'Editar Produto';
+        document.getElementById('modalEditId').value = id;
+        document.getElementById('modalCodigo').value = p.codigo || '';
+        document.getElementById('modalNome').value = p.nome || '';
+        document.getElementById('modalPreco').value = p.preco || 0;
+        document.getElementById('modalUnidade').value = p.unidade || 'UN';
+        document.getElementById('modalObs').value = p.observacoes || '';
+        document.getElementById('modalNovo').classList.add('active');
+        document.getElementById('modalNome').focus();
+    }
+
+    function fecharModal() {
+        document.getElementById('modalNovo').classList.remove('active');
+    }
+
+    async function salvarProduto() {
+        const editId = document.getElementById('modalEditId').value;
+        const dados = {
+            codigo: document.getElementById('modalCodigo').value.trim(),
+            nome: document.getElementById('modalNome').value.trim(),
+            preco: document.getElementById('modalPreco').value,
+            unidade: document.getElementById('modalUnidade').value.trim() || 'UN',
+            observacoes: document.getElementById('modalObs').value.trim()
+        };
+        if (!dados.nome) {
+            alert('Preencha o nome');
+            return;
+        }
+        if (!dados.codigo) {
+            alert('Preencha o código');
+            return;
+        }
+
+        try {
+            const url = editId ? `/api/catalogo/item/${editId}` : '/api/catalogo/item';
+            const res = await fetch(url, {
+                method: editId ? 'PUT' : 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(dados)
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            fecharModal();
+            carregarDados();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function deletarProduto(id, nome) {
+        if (!confirm(`Remover "${nome}" do catálogo?`)) return;
+        try {
+            const res = await fetch(`/api/catalogo/item/${id}`, {method: 'DELETE'});
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            carregarDados();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    async function importarTiny() {
+        if (!confirm('Importar produtos do cache do Tiny? Atualiza nome/categoria/unidade dos existentes e adiciona os que faltam (preço e estoque não vêm do Tiny).')) return;
+        try {
+            const res = await fetch('/api/catalogo/importar-tiny', {method: 'POST'});
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            alert(`Importação concluída: ${json.novos} novos, ${json.atualizados} atualizados (total ${json.total}).`);
+            carregarDados();
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') fecharModal();
+    });
+</script>
+</body>
+</html>
