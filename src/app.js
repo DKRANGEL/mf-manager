@@ -7,6 +7,7 @@ const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
 const botRoutes = require('./routes/bot');
 const catalogoRoutes = require('./routes/catalogo');
+const pedidosRoutes = require('./routes/pedidos');
 
 function createApp() {
     const app = express();
@@ -54,6 +55,7 @@ function createApp() {
 
     // ─── Rotas API ───────────────────────────────────────────────────────────────
     app.use('/api/equipamentos', equipamentosRoutes);
+    app.use('/api/pedidos', pedidosRoutes);
     app.use('/api', apiRoutes);
     app.use('/api/catalogo', catalogoRoutes);
 
