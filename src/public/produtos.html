@@ -186,9 +186,10 @@
         }
 
         .equip-table tbody td {
-            padding: 10px 14px;
+            padding: 8px 14px;
             border-bottom: 1px solid #29292e;
             vertical-align: middle;
+            height: 52px;
         }
 
         .equip-table tbody tr:hover {
@@ -496,7 +497,7 @@
                 <td class="td-obs" title="${esc(p.observacoes || '')}">${esc(p.observacoes || '-')}</td>
                 <td class="td-actions">
                     <button class="btn-sm btn-edit" data-id="${p.id}" onclick="editarProduto(this.dataset.id)">✏️</button>
-                    <button class="btn-sm btn-delete" data-id="${p.id}" data-nome="${esc(p.nome)}" onclick="deletarProduto(this.dataset.id, this.dataset.nome)">🗑️</button>
+                    <button class="btn-sm btn-delete" data-id="${p.id}" onclick="deletarProduto(this.dataset.id, this.closest('tr').querySelector('.td-nome').textContent)">🗑️</button>
                     ${p.imagem ? `<button class="btn-sm btn-delete" data-id="${p.id}" onclick="removerImagem(this.dataset.id)" title="Remover imagem">🖼️</button>` : ''}
                 </td>
             </tr>`;
