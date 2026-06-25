@@ -108,7 +108,18 @@ function validarItens(itensParsed) {
         amarelos: resultados.filter(r => r.status === 'amarelo').length,
         vermelhos: resultados.filter(r => r.status === 'vermelho').length
     };
-    return {itens: resultados, resumo};
+
+    return {
+        secoes: [{titulo: '', itens: resultados}],
+        blocos: {
+            cliente: {nome: '', campos: []},
+            nf: {ativo: false, percent: 18},
+            desconto: {ativo: false, label: 'DESCONTO', valor: 0},
+            parcelas: {ativo: false, lista: []},
+            observacoes: ''
+        },
+        resumo
+    };
 }
 
 module.exports = {validarItens};

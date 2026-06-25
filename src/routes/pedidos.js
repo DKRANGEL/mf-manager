@@ -57,22 +57,40 @@ router.post('/parse', (req, res) => {
 // POST /api/pedidos — salva rascunho
 router.post('/', (req, res) => {
     try {
-        const {cliente, itens, observacoes} = req.body;
-        if (!itens || !Array.isArray(itens) || itens.length === 0) {
+        const {cliente, secoes, blocos, observacoes} = req.body;
+
+        // Valida que tem pelo menos uma seção com itens
+        const todasSecoes = secoes || [];
+        const totalItens = todasSecoes.reduce((s, sec) => s + (sec.itens || []).length, 0);
+        if (totalItens === 0) {
             return res.status(400).json({success: false, error: 'Pedido precisa de pelo menos um item'});
         }
+
+        // Calcula preco_total por item em cada seção
+        const secoesComTotal = todasSecoes.map(sec => ({
+            titulo: sec.titulo || '',
+            itens: (sec.itens || []).map(item => ({
+                ...item,
+                preco_total: (item.qtd_entrada || 0) * (item.preco_unit || 0)
+            }))
+        }));
 
         const numero = proximoNumero();
         const pedido = {
             numero,
-            cliente: (cliente || '').trim(),
             tipo: 'pedido',
             status: 'rascunho',
             data_emissao: new Date().toISOString(),
             data_atualizacao: new Date().toISOString(),
-            itens,
-            movimentos: [],
-            observacoes: (observacoes || '').trim()
+            blocos: blocos || {
+                cliente: {nome: cliente || '', campos: []},
+                nf: {ativo: false, percent: 18},
+                desconto: {ativo: false, label: 'DESCONTO', valor: 0},
+                parcelas: {ativo: false, lista: []},
+                observacoes: observacoes || ''
+            },
+            secoes: secoesComTotal,
+            movimentos: []
         };
 
         writeJSONAtomic(pedidoPath(numero), pedido);
@@ -117,6 +135,19 @@ router.get('/:numero', (req, res) => {
     try {
         const pedido = readJSON(pedidoPath(req.params.numero), null);
         if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+
+        // Normaliza pedidos antigos (lista plana → secoes)
+        if (!pedido.secoes && pedido.itens) {
+            pedido.secoes = [{titulo: '', itens: pedido.itens}];
+            pedido.blocos = pedido.blocos || {
+                cliente: {nome: pedido.cliente || '', campos: []},
+                nf: {ativo: false, percent: 18},
+                desconto: {ativo: false, label: 'DESCONTO', valor: 0},
+                parcelas: {ativo: false, lista: []},
+                observacoes: pedido.observacoes || ''
+            };
+        }
+
         res.json({success: true, data: pedido});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
@@ -131,14 +162,23 @@ router.put('/:numero', (req, res) => {
         if (pedido.status !== 'rascunho') {
             return res.status(400).json({
                 success: false,
-                error: `Pedido com status "${pedido.status}" não pode ser editado — reverta primeiro`
+                error: `Pedido com status "${pedido.status}" não pode ser editado`
             });
         }
 
-        const {cliente, itens, observacoes} = req.body;
-        if (cliente !== undefined) pedido.cliente = cliente.trim();
-        if (itens !== undefined) pedido.itens = itens;
-        if (observacoes !== undefined) pedido.observacoes = observacoes.trim();
+        const {secoes, blocos} = req.body;
+
+        if (secoes !== undefined) {
+            pedido.secoes = secoes.map(sec => ({
+                titulo: sec.titulo || '',
+                itens: (sec.itens || []).map(item => ({
+                    ...item,
+                    preco_total: (item.qtd_entrada || 0) * (item.preco_unit || 0)
+                }))
+            }));
+        }
+
+        if (blocos !== undefined) pedido.blocos = blocos;
         pedido.data_atualizacao = new Date().toISOString();
 
         writeJSONAtomic(pedidoPath(req.params.numero), pedido);
