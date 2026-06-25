@@ -7,6 +7,8 @@
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+
 const {readJSON, writeJSONAtomic} = require('../utils/storage');
 
 const router = express.Router();
@@ -182,6 +184,78 @@ router.post('/importar-tiny', (req, res) => {
 
         salvarProdutos(db);
         res.json({success: true, novos, atualizados, total: db.produtos.length});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+const multer = require('multer');
+const PRODUTOS_IMG_DIR = path.join(__dirname, '..', 'data', 'produtos');
+
+const upload = multer({
+    dest: PRODUTOS_IMG_DIR,
+    limits: {fileSize: 5 * 1024 * 1024}, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+            return cb(new Error('Apenas imagens são aceitas'));
+        }
+        cb(null, true);
+    }
+});
+
+// PUT /api/catalogo/item/:id/imagem
+router.put('/item/:id/imagem', upload.single('imagem'), (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({success: false, error: 'Nenhum arquivo enviado'});
+
+        const db = lerProdutos();
+        const id = parseInt(req.params.id);
+        const idx = db.produtos.findIndex(p => p.id === id);
+        if (idx === -1) {
+            fs.unlinkSync(req.file.path); // limpa o arquivo se produto não existir
+            return res.status(404).json({success: false, error: 'Produto não encontrado'});
+        }
+
+        // Renomeia pro nome final: CODIGO.ext (ex: MFSSS-001.jpg)
+        const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const nomeArquivo = `${db.produtos[idx].codigo.replace(/[^a-zA-Z0-9_\-.]/g, '_')}${ext}`;
+        const destFinal = path.join(PRODUTOS_IMG_DIR, nomeArquivo);
+
+        // Remove imagem anterior se existir e for diferente
+        const imagemAnterior = db.produtos[idx].imagem;
+        if (imagemAnterior && imagemAnterior !== nomeArquivo) {
+            const pathAnterior = path.join(PRODUTOS_IMG_DIR, imagemAnterior);
+            if (fs.existsSync(pathAnterior)) fs.unlinkSync(pathAnterior);
+        }
+
+        fs.renameSync(req.file.path, destFinal);
+        db.produtos[idx].imagem = nomeArquivo;
+        salvarProdutos(db);
+
+        res.json({success: true, data: {imagem: nomeArquivo, url: `/public/produtos/${nomeArquivo}`}});
+    } catch (err) {
+        if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// DELETE /api/catalogo/item/:id/imagem
+router.delete('/item/:id/imagem', (req, res) => {
+    try {
+        const db = lerProdutos();
+        const id = parseInt(req.params.id);
+        const idx = db.produtos.findIndex(p => p.id === id);
+        if (idx === -1) return res.status(404).json({success: false, error: 'Produto não encontrado'});
+
+        const nomeArquivo = db.produtos[idx].imagem;
+        if (nomeArquivo) {
+            const filePath = path.join(PRODUTOS_IMG_DIR, nomeArquivo);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            db.produtos[idx].imagem = null;
+            salvarProdutos(db);
+        }
+
+        res.json({success: true});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
