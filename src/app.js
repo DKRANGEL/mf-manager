@@ -76,6 +76,10 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
     });
 
+    app.get('/emitir', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'emitir.html'));
+    });
+
     return app;
 }
 

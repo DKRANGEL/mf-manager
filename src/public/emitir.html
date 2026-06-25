@@ -1,0 +1,1157 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Pedido - MF Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <style>
+        body {
+            overflow: auto;
+            background: #09090a;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px 80px;
+        }
+
+        /* ── HEADER ── */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .page-header .sub {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ── BOTÕES ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: .15s;
+            font-family: inherit;
+        }
+
+        .btn-white {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-white:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            text-decoration: none;
+        }
+
+        .btn-ghost:hover {
+            border-color: #555;
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: rgba(220, 38, 38, .12);
+            color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background: rgba(220, 38, 38, .2);
+        }
+
+        /* ── GRID PRINCIPAL ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* ── CARDS / SEÇÕES ── */
+        .card {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        /* ── CLIENTE ── */
+        .campo-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .campo {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .campo label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 5px;
+        }
+
+        .campo input {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .campo input:focus {
+            border-color: #555;
+        }
+
+        .campos-cliente-disponiveis {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tag-campo {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #333;
+            background: transparent;
+            color: #666;
+            font-family: inherit;
+            transition: .15s;
+        }
+
+        .tag-campo.ativo {
+            background: #222;
+            border-color: #555;
+            color: #ccc;
+        }
+
+        .tag-campo:hover {
+            border-color: #555;
+            color: #ccc;
+        }
+
+        /* ── TABELA DE ITENS (desktop) ── */
+        .itens-header {
+            display: grid;
+            grid-template-columns: 52px 1fr 80px 70px 100px 90px 36px;
+            gap: 8px;
+            padding: 0 4px 8px;
+            border-bottom: 1px solid #29292e;
+            margin-bottom: 4px;
+        }
+
+        .itens-header span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .itens-header span:nth-child(3), .itens-header span:nth-child(4), .itens-header span:nth-child(5), .itens-header span:nth-child(6) {
+            text-align: center;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 52px 1fr 80px 70px 100px 90px 36px;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 4px;
+            border-bottom: 1px solid #1e1e22;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            object-fit: contain;
+            background: #1a1a1e;
+            border: 1px solid #29292e;
+        }
+
+        .item-img-placeholder {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            background: #1a1a1e;
+            border: 1px solid #29292e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .item-desc {
+            min-width: 0;
+        }
+
+        .item-cod {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .item-nome {
+            font-size: 12px;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-input {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 5px;
+            padding: 6px 8px;
+            color: #fff;
+            font-size: 12px;
+            font-family: var(--mono);
+            text-align: center;
+            outline: none;
+        }
+
+        .item-input:focus {
+            border-color: #555;
+        }
+
+        .item-total {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: #ccc;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .item-remove {
+            background: none;
+            border: none;
+            color: #444;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: .15s;
+            line-height: 1;
+        }
+
+        .item-remove:hover {
+            color: #f87171;
+            background: rgba(220, 38, 38, .1);
+        }
+
+        /* ── AUTOCOMPLETE ── */
+        .busca-wrap {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .busca-input {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .busca-input:focus {
+            border-color: #555;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #1a1a1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            z-index: 100;
+            max-height: 280px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+        }
+
+        .ac-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #222;
+            transition: .1s;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+        .ac-item:hover {
+            background: #222;
+        }
+
+        .ac-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            object-fit: contain;
+            background: #111;
+            border: 1px solid #29292e;
+            flex-shrink: 0;
+        }
+
+        .ac-img-ph {
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            background: #111;
+            border: 1px solid #29292e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .ac-info {
+            min-width: 0;
+        }
+
+        .ac-cod {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: #666;
+        }
+
+        .ac-nome {
+            font-size: 12px;
+            color: #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ac-preco {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: #555;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .ac-vazio {
+            padding: 16px;
+            text-align: center;
+            color: #555;
+            font-size: 12px;
+        }
+
+        /* ── SIDEBAR DE BLOCOS ── */
+        .bloco {
+            margin-bottom: 12px;
+        }
+
+        .bloco-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: #1a1a1e;
+            border: 1px solid #29292e;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .bloco-header.ativo {
+            border-color: #444;
+            background: #202024;
+        }
+
+        .bloco-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+        }
+
+        .bloco-header.ativo .bloco-label {
+            color: #ccc;
+        }
+
+        .bloco-toggle {
+            width: 32px;
+            height: 18px;
+            background: #333;
+            border-radius: 9px;
+            position: relative;
+            transition: .2s;
+        }
+
+        .bloco-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: #666;
+            border-radius: 50%;
+            transition: .2s;
+        }
+
+        .bloco-header.ativo .bloco-toggle {
+            background: #fff;
+        }
+
+        .bloco-header.ativo .bloco-toggle::after {
+            left: 16px;
+            background: #000;
+        }
+
+        .bloco-body {
+            padding: 12px 14px;
+            background: #111;
+            border: 1px solid #29292e;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            display: none;
+        }
+
+        .bloco-body.aberto {
+            display: block;
+        }
+
+        .bloco-input {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 5px;
+            padding: 7px 10px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+
+        .bloco-input:last-child {
+            margin-bottom: 0;
+        }
+
+        .bloco-input:focus {
+            border-color: #555;
+        }
+
+        .bloco-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .bloco-row .bloco-input {
+            flex: 1;
+        }
+
+        /* Parcelas */
+        .parcela-item {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+
+        .parcela-item input {
+            flex: 1;
+        }
+
+        .parcela-remove {
+            background: none;
+            border: none;
+            color: #444;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+        }
+
+        .parcela-remove:hover {
+            color: #f87171;
+        }
+
+        .btn-add-parcela {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px dashed #333;
+            color: #555;
+            border-radius: 5px;
+            padding: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .15s;
+        }
+
+        .btn-add-parcela:hover {
+            border-color: #555;
+            color: #888;
+        }
+
+        /* ── TOTAIS ── */
+        .totais-card {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 10px;
+            padding: 16px 20px;
+        }
+
+        .totais-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #888;
+            border-bottom: 1px solid #1e1e22;
+        }
+
+        .totais-linha:last-child {
+            border-bottom: none;
+        }
+
+        .totais-linha.destaque {
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            padding-top: 10px;
+            margin-top: 4px;
+        }
+
+        .totais-valor {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .totais-linha.destaque .totais-valor {
+            color: #fff;
+            font-size: 16px;
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 768px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .itens-header {
+                display: none;
+            }
+
+            .item-row {
+                grid-template-columns: 44px 1fr 36px;
+                grid-template-rows: auto auto;
+                gap: 6px;
+                padding: 10px 4px;
+            }
+
+            .item-desc {
+                grid-column: 2;
+            }
+
+            .item-remove {
+                grid-column: 3;
+                grid-row: 1;
+            }
+
+            .item-qtds-mobile {
+                grid-column: 1 / -1;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .item-input {
+                max-width: 70px;
+            }
+
+            /* esconde colunas que viram mobile */
+            .item-row > .item-input:not(.item-qtd-mobile),
+            .item-row > .item-total {
+                display: none;
+            }
+        }
+
+        /* ── STATUS BALDE ── */
+        .balde-verde {
+            color: #4ade80;
+            font-size: 10px;
+        }
+
+        .balde-amarelo {
+            color: #fbbf24;
+            font-size: 10px;
+        }
+
+        .balde-vermelho {
+            color: #f87171;
+            font-size: 10px;
+        }
+
+        /* ── EMPTY STATE ── */
+        .itens-vazio {
+            text-align: center;
+            padding: 32px 0;
+            color: #444;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Novo Pedido</h1>
+            <div class="sub">MF Manager · Magic Fireworks</div>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn btn-ghost">← Voltar</a>
+            <button class="btn btn-white" onclick="salvarRascunho()">Salvar rascunho</button>
+        </div>
+    </div>
+
+    <div class="layout">
+        <!-- ── COLUNA PRINCIPAL ── -->
+        <div>
+            <!-- Cliente -->
+            <div class="card">
+                <div class="card-title">Cliente</div>
+                <div class="campo-row" id="camposCliente">
+                    <div class="campo">
+                        <label>Nome / Escritório</label>
+                        <input type="text" id="clienteNome" placeholder="Ex: AGF, Soares, SAM...">
+                    </div>
+                </div>
+                <div class="campos-cliente-disponiveis">
+                    <span style="font-size:10px;color:#444;align-self:center;">+ campo:</span>
+                    <button class="tag-campo" data-campo="artista" onclick="toggleCampoCliente(this)">Artista / Show
+                    </button>
+                    <button class="tag-campo" data-campo="cidade" onclick="toggleCampoCliente(this)">Cidade</button>
+                    <button class="tag-campo" data-campo="data_show" onclick="toggleCampoCliente(this)">Data do Show
+                    </button>
+                    <button class="tag-campo" data-campo="cnpj" onclick="toggleCampoCliente(this)">CNPJ</button>
+                    <button class="tag-campo" data-campo="semana" onclick="toggleCampoCliente(this)">Semana</button>
+                </div>
+            </div>
+
+            <!-- Itens -->
+            <div class="card">
+                <div class="card-title">Produtos</div>
+                <div class="busca-wrap">
+                    <input type="text" class="busca-input" id="buscaProduto"
+                           placeholder="Buscar por nome ou código..."
+                           oninput="buscarProduto(this.value)"
+                           autocomplete="off">
+                    <div class="autocomplete-list" id="autocompleteList" style="display:none;"></div>
+                </div>
+
+                <div class="itens-header">
+                    <span>IMG</span>
+                    <span>Produto</span>
+                    <span style="text-align:center;">QTD</span>
+                    <span style="text-align:center;">UN</span>
+                    <span style="text-align:center;">Preço unit.</span>
+                    <span style="text-align:right;">Total</span>
+                    <span></span>
+                </div>
+                <div id="itensList">
+                    <div class="itens-vazio" id="itensVazio">Nenhum produto adicionado. Use a busca acima.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SIDEBAR ── -->
+        <div>
+            <!-- Totais -->
+            <div class="totais-card" style="margin-bottom:16px;">
+                <div class="card-title" style="margin-bottom:12px;">Resumo</div>
+                <div class="totais-linha">
+                    <span>Subtotal</span>
+                    <span class="totais-valor" id="totalSubtotal">R$ 0,00</span>
+                </div>
+                <div class="totais-linha" id="linhaDesconto" style="display:none;">
+                    <span id="labelDesconto">Desconto</span>
+                    <span class="totais-valor" id="totalDesconto">- R$ 0,00</span>
+                </div>
+                <div class="totais-linha" id="linhaNF" style="display:none;">
+                    <span id="labelNF">NF (18%)</span>
+                    <span class="totais-valor" id="totalNF">+ R$ 0,00</span>
+                </div>
+                <div class="totais-linha destaque">
+                    <span>Total</span>
+                    <span class="totais-valor" id="totalGeral">R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- Blocos -->
+            <div class="card-title" style="padding: 0 4px; margin-bottom: 8px;">Opções do documento</div>
+
+            <!-- Desconto -->
+            <div class="bloco">
+                <div class="bloco-header" onclick="toggleBloco(this, 'blocoDescontoBody')">
+                    <span class="bloco-label">Desconto</span>
+                    <div class="bloco-toggle"></div>
+                </div>
+                <div class="bloco-body" id="blocoDescontoBody">
+                    <input type="text" class="bloco-input" id="descontoLabel" placeholder="Label (ex: Valor já pago)"
+                           value="DESCONTO">
+                    <input type="text" class="bloco-input" id="descontoValor"
+                           inputmode="decimal" placeholder="R$ 0,00"
+                           oninput="mascaraDinheiro(this); recalcularTotais()">
+                </div>
+            </div>
+
+            <!-- NF -->
+            <div class="bloco">
+                <div class="bloco-header" onclick="toggleBloco(this, 'blocoNFBody')">
+                    <span class="bloco-label">NF Fiscal</span>
+                    <div class="bloco-toggle"></div>
+                </div>
+                <div class="bloco-body" id="blocoNFBody">
+                    <input type="number" class="bloco-input" id="nfPercent" value="18" min="0" max="100"
+                           oninput="recalcularTotais()">
+                    <span style="font-size:10px;color:#555;">% sobre o subtotal</span>
+                </div>
+            </div>
+
+            <!-- Parcelas -->
+            <div class="bloco">
+                <div class="bloco-header" onclick="toggleBloco(this, 'blocoParcBody')">
+                    <span class="bloco-label">Parcelas</span>
+                    <div class="bloco-toggle"></div>
+                </div>
+                <div class="bloco-body" id="blocoParcBody">
+                    <div id="parcelasList"></div>
+                    <button class="btn-add-parcela" onclick="adicionarParcela()">+ Adicionar parcela</button>
+                </div>
+            </div>
+
+            <!-- Observações -->
+            <div class="bloco">
+                <div class="bloco-header" onclick="toggleBloco(this, 'blocoObsBody')">
+                    <span class="bloco-label">Observações</span>
+                    <div class="bloco-toggle"></div>
+                </div>
+                <div class="bloco-body" id="blocoObsBody">
+                    <textarea class="bloco-input" id="obsTexto" rows="3" placeholder="Observações do pedido..."
+                              style="resize:vertical;height:auto;"></textarea>
+                </div>
+            </div>
+
+            <button class="btn btn-white" style="width:100%;margin-top:8px;justify-content:center;"
+                    onclick="salvarRascunho()">
+                Salvar rascunho
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── ESTADO ──
+    let itens = [];
+    let camposClienteAtivos = [];
+    let buscaTimer = null;
+
+    // ── CAMPOS DO CLIENTE ──
+    function toggleCampoCliente(btn) {
+        const campo = btn.dataset.campo;
+        const idx = camposClienteAtivos.indexOf(campo);
+        if (idx === -1) {
+            camposClienteAtivos.push(campo);
+            btn.classList.add('ativo');
+        } else {
+            camposClienteAtivos.splice(idx, 1);
+            btn.classList.remove('ativo');
+        }
+        renderCamposCliente();
+    }
+
+    const labelCampo = {
+        artista: 'Artista / Show',
+        cidade: 'Cidade',
+        data_show: 'Data do Show',
+        cnpj: 'CNPJ',
+        semana: 'Semana'
+    };
+
+    function renderCamposCliente() {
+        const wrap = document.getElementById('camposCliente');
+        const nomeVal = document.getElementById('clienteNome')?.value || '';
+        const tipoInput = c === 'cnpj' ? 'text" inputmode="numeric" oninput="mascaraCNPJ(this)' : 'text';
+        let html = `<div class="campo"><label>Nome / Escritório</label><input type="text" id="clienteNome" placeholder="Ex: AGF, Soares, SAM..." value="${esc(nomeVal)}"></div>`;
+        camposClienteAtivos.forEach(c => {
+            html += `<div class="campo"><label>${labelCampo[c]}</label><input type="${tipoInput}" id="cliente_${c}" placeholder="${labelCampo[c]}"></div>`;
+        });
+        wrap.innerHTML = html;
+    }
+
+    // ── AUTOCOMPLETE ──
+    async function buscarProduto(q) {
+        clearTimeout(buscaTimer);
+        const list = document.getElementById('autocompleteList');
+        if (!q || q.length < 2) {
+            list.style.display = 'none';
+            return;
+        }
+        buscaTimer = setTimeout(async () => {
+            const res = await fetch(`/api/catalogo/buscar?q=${encodeURIComponent(q)}`);
+            const json = await res.json();
+            if (!json.success || !json.data.length) {
+                list.innerHTML = '<div class="ac-vazio">Nenhum produto encontrado</div>';
+                list.style.display = 'block';
+                return;
+            }
+            list.innerHTML = json.data.map(p => {
+                const imgEl = p.imagem
+                    ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">`
+                    : `<div class="ac-img-ph">📦</div>`;
+                const precoStr = p.preco > 0 ? fmtMoney(p.preco) : 'Sem preço';
+                return `<div class="ac-item" onclick="adicionarItem(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                ${imgEl}
+                <div class="ac-info">
+                    <div class="ac-cod">${esc(p.codigo)}</div>
+                    <div class="ac-nome">${esc(p.nome)}</div>
+                </div>
+                <div class="ac-preco">${precoStr}</div>
+            </div>`;
+            }).join('');
+            list.style.display = 'block';
+        }, 200);
+    }
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.busca-wrap')) {
+            document.getElementById('autocompleteList').style.display = 'none';
+        }
+    });
+
+    // ── ITENS ──
+    function adicionarItem(prod) {
+        document.getElementById('autocompleteList').style.display = 'none';
+        document.getElementById('buscaProduto').value = '';
+
+        const existe = itens.find(i => i.codigo === prod.codigo);
+        if (existe) {
+            existe.qtd_entrada++;
+            existe.preco_total = existe.qtd_entrada * existe.preco_unit;
+            renderItens();
+            return;
+        }
+
+        itens.push({
+            codigo: prod.codigo,
+            descricao: prod.nome,
+            imagem: prod.imagem || null,
+            qtd_entrada: 1,
+            unidade_entrada: prod.unidade || 'UN',
+            fator: prod.fator || 1,
+            qtd_un: prod.fator || 1,
+            preco_unit: prod.preco || 0,
+            preco_total: prod.preco || 0,
+            status: 'verde'
+        });
+        renderItens();
+    }
+
+    function removerItem(idx) {
+        itens.splice(idx, 1);
+        renderItens();
+    }
+
+    function atualizarItem(idx, campo, valor) {
+        const item = itens[idx];
+        if (!item) return;
+        if (campo === 'qtd_entrada') {
+            item.qtd_entrada = parseFloat(valor) || 0;
+            item.qtd_un = item.qtd_entrada * item.fator;
+        } else if (campo === 'preco_unit') {
+            item.preco_unit = parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+        } else if (campo === 'unidade_entrada') {
+            item.unidade_entrada = valor;
+        }
+        item.preco_total = item.qtd_entrada * item.preco_unit;
+        recalcularTotais();
+        // Atualiza só o total da linha sem re-render completo
+        const totalEl = document.getElementById(`total-${idx}`);
+        if (totalEl) totalEl.textContent = fmtMoney(item.preco_total);
+    }
+
+    function renderItens() {
+        const container = document.getElementById('itensList');
+        const vazio = document.getElementById('itensVazio');
+        if (itens.length === 0) {
+            container.innerHTML = '<div class="itens-vazio" id="itensVazio">Nenhum produto adicionado. Use a busca acima.</div>';
+            recalcularTotais();
+            return;
+        }
+        container.innerHTML = itens.map((item, i) => {
+            const imgEl = item.imagem
+                ? `<img class="item-img" src="/data/produtos/${esc(item.imagem)}" onerror="this.className='item-img-placeholder';this.textContent='📦'">`
+                : `<div class="item-img-placeholder">📦</div>`;
+            return `<div class="item-row" id="item-row-${i}">
+            ${imgEl}
+            <div class="item-desc">
+                <div class="item-cod">${esc(item.codigo)}</div>
+                <div class="item-nome">${esc(item.descricao)}</div>
+            </div>
+            <input class="item-input" type="number" value="${item.qtd_entrada}" min="1" step="1" pattern="[0-9]*" inputmode="numeric"
+                onchange="atualizarItem(${i}, 'qtd_entrada', this.value)">
+            <select class="item-input" onchange="atualizarItem(${i}, 'unidade_entrada', this.value)" style="text-align:center;">
+                <option value="UN" ${item.unidade_entrada === 'UN' ? 'selected' : ''}>UN</option>
+                <option value="CX" ${item.unidade_entrada === 'CX' ? 'selected' : ''}>CX</option>
+                <option value="GL" ${item.unidade_entrada === 'GL' ? 'selected' : ''}>GL</option>
+                <option value="RL" ${item.unidade_entrada === 'RL' ? 'selected' : ''}>RL</option>
+                <option value="KIT" ${item.unidade_entrada === 'KIT' ? 'selected' : ''}>KIT</option>
+            </select>
+            <input class="item-input" type="text" inputmode="decimal" value="${fmtDecimal(item.preco_unit)}"
+                onblur="atualizarItem(${i}, 'preco_unit', this.value)"
+                onfocus="this.select()"
+                oninput="mascaraDinheiro(this)">
+            <div class="item-total" id="total-${i}">${fmtMoney(item.preco_total)}</div>
+            <button class="item-remove" onclick="removerItem(${i})">×</button>
+        </div>`;
+        }).join('');
+        recalcularTotais();
+    }
+
+    // ── BLOCOS ──
+    function toggleBloco(header, bodyId) {
+        const body = document.getElementById(bodyId);
+        const ativo = header.classList.toggle('ativo');
+        body.classList.toggle('aberto', ativo);
+        recalcularTotais();
+    }
+
+    function isBlocoAtivo(bodyId) {
+        return document.getElementById(bodyId)?.classList.contains('aberto');
+    }
+
+    // ── PARCELAS ──
+    let parcelas = [];
+
+    function adicionarParcela() {
+        parcelas.push({data: '', valor: '', forma: ''});
+        renderParcelas();
+    }
+
+    function removerParcela(idx) {
+        parcelas.splice(idx, 1);
+        renderParcelas();
+    }
+
+    function renderParcelas() {
+        const list = document.getElementById('parcelasList');
+        if (!parcelas.length) {
+            list.innerHTML = '';
+            return;
+        }
+        list.innerHTML = parcelas.map((p, i) => `
+        <div class="parcela-item">
+            <input class="bloco-input" style="margin:0;flex:1;" type="date" value="${p.data}"
+                onchange="parcelas[${i}].data=this.value">
+            <input class="bloco-input" style="margin:0;flex:1;" type="number" placeholder="R$" value="${p.valor}"
+                onchange="parcelas[${i}].valor=this.value">
+            <input class="bloco-input" style="margin:0;flex:1;" type="text" placeholder="Forma" value="${p.forma}"
+                onchange="parcelas[${i}].forma=this.value">
+            <button class="parcela-remove" onclick="removerParcela(${i})">×</button>
+        </div>
+    `).join('');
+    }
+
+    // ── TOTAIS ──
+    function recalcularTotais() {
+        const subtotal = itens.reduce((s, i) => s + i.preco_total, 0);
+        document.getElementById('totalSubtotal').textContent = fmtMoney(subtotal);
+
+        let total = subtotal;
+
+        // Desconto
+        const descontoAtivo = isBlocoAtivo('blocoDescontoBody');
+        const descontoValor = parseFloat(document.getElementById('descontoValor')?.value) || 0;
+        document.getElementById('linhaDesconto').style.display = descontoAtivo ? '' : 'none';
+        if (descontoAtivo && descontoValor > 0) {
+            document.getElementById('labelDesconto').textContent = document.getElementById('descontoLabel')?.value || 'Desconto';
+            document.getElementById('totalDesconto').textContent = `- ${fmtMoney(descontoValor)}`;
+            total -= descontoValor;
+        }
+
+        // NF
+        const nfAtivo = isBlocoAtivo('blocoNFBody');
+        const nfPct = parseFloat(document.getElementById('nfPercent')?.value) || 18;
+        document.getElementById('linhaNF').style.display = nfAtivo ? '' : 'none';
+        if (nfAtivo) {
+            const nfVal = subtotal * nfPct / 100;
+            document.getElementById('labelNF').textContent = `NF (${nfPct}%)`;
+            document.getElementById('totalNF').textContent = `+ ${fmtMoney(nfVal)}`;
+            total += nfVal;
+        }
+
+        document.getElementById('totalGeral').textContent = fmtMoney(total);
+    }
+
+    // ── SALVAR ──
+    async function salvarRascunho() {
+        if (!itens.length) {
+            alert('Adicione pelo menos um produto');
+            return;
+        }
+
+        const clienteNome = document.getElementById('clienteNome')?.value?.trim() || '';
+        const camposExtras = {};
+        camposClienteAtivos.forEach(c => {
+            camposExtras[c] = document.getElementById(`cliente_${c}`)?.value?.trim() || '';
+        });
+
+        const descontoAtivo = isBlocoAtivo('blocoDescontoBody');
+        const nfAtivo = isBlocoAtivo('blocoNFBody');
+        const parcAtivo = isBlocoAtivo('blocoParcBody');
+        const obsAtivo = isBlocoAtivo('blocoObsBody');
+
+        const payload = {
+            secoes: [{titulo: '', itens}],
+            blocos: {
+                cliente: {nome: clienteNome, campos: camposClienteAtivos, ...camposExtras},
+                nf: {ativo: nfAtivo, percent: parseFloat(document.getElementById('nfPercent')?.value) || 18},
+                desconto: {
+                    ativo: descontoAtivo,
+                    label: document.getElementById('descontoLabel')?.value || 'DESCONTO',
+                    valor: parseFloat(document.getElementById('descontoValor')?.value) || 0
+                },
+                parcelas: {ativo: parcAtivo, lista: parcelas},
+                observacoes: obsAtivo ? (document.getElementById('obsTexto')?.value || '') : ''
+            }
+        };
+
+        try {
+            const res = await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            alert(`Pedido ${json.data.numero} salvo!`);
+            // TODO: redirecionar pro Hall ou pro preview
+        } catch (err) {
+            alert('Erro: ' + err.message);
+        }
+    }
+
+    // ── HELPERS ──
+    function fmtMoney(v) {
+        return 'R$ ' + (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function mascaraDinheiro(input) {
+        let v = input.value.replace(/\D/g, '');
+        v = (parseInt(v) || 0) / 100;
+        input.value = v.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function mascaraCNPJ(input) {
+        let v = input.value.replace(/\D/g, '').slice(0, 14);
+        v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        v = v.replace(/(\d{4})(\d)/, '$1-$2');
+        input.value = v;
+    }
+
+    function fmtDecimal(v) {
+        return (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+</script>
+</body>
+</html>
