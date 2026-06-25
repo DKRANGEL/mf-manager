@@ -1,5 +1,5 @@
 {
-  "proximo_id": 275,
+  "proximo_id": 277,
   "produtos": [
     {
       "id": 1,
@@ -2718,6 +2718,26 @@
       "codigo": "MFSCH-003",
       "nome": "Smoke Roxa 1/1 - [Explosão] - 100 tubos",
       "categoria": "MFSCH",
+      "preco": 0,
+      "unidade": "Cx",
+      "observacoes": "",
+      "data_cadastro": "2026-06-25"
+    },
+    {
+      "id": 275,
+      "codigo": "MFSS1.2-033",
+      "nome": "33 - Gold Tail  + Blue Mine",
+      "categoria": "MFSS1.2",
+      "preco": 0,
+      "unidade": "Cx",
+      "observacoes": "",
+      "data_cadastro": "2026-06-25"
+    },
+    {
+      "id": 276,
+      "codigo": "MFSS1.2-034",
+      "nome": "34 - Gold Tail  Blue Tip",
+      "categoria": "MFSS1.2",
       "preco": 0,
       "unidade": "Cx",
       "observacoes": "",

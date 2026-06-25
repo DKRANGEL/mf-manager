@@ -261,4 +261,38 @@ router.delete('/item/:id/imagem', (req, res) => {
     }
 });
 
+// GET /api/catalogo/buscar?q=texto — autocomplete com foto
+router.get('/buscar', (req, res) => {
+    try {
+        const q = (req.query.q || '').toLowerCase().trim();
+        const db = lerProdutos();
+
+        let resultados = db.produtos;
+
+        if (q) {
+            resultados = resultados.filter(p =>
+                (p.codigo || '').toLowerCase().includes(q) ||
+                (p.nome || '').toLowerCase().includes(q) ||
+                (p.categoria || '').toLowerCase().includes(q)
+            );
+        }
+
+        // Limita a 20 resultados no autocomplete
+        resultados = resultados.slice(0, 20).map(p => ({
+            id: p.id,
+            codigo: p.codigo,
+            nome: p.nome,
+            categoria: p.categoria,
+            preco: p.preco,
+            unidade: p.unidade,
+            imagem: p.imagem || null,
+            fator: p.fator || 1
+        }));
+
+        res.json({success: true, data: resultados});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 module.exports = router;
