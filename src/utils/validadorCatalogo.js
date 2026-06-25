@@ -28,11 +28,7 @@ function validarItem(item, catalogo) {
     // Erro de parse — já é vermelho
     if (item.erro_parse) {
         return {
-            ...item,
-            status: 'vermelho',
-            motivo: item.erro_parse,
-            descricao: '',
-            candidatos: []
+            ...item, status: 'vermelho', motivo: item.erro_parse, descricao: '', candidatos: []
         };
     }
 
@@ -46,8 +42,7 @@ function validarItem(item, catalogo) {
     const candidatos = [];
     for (const [key, prod] of catalogo) {
         const nomeUpper = (prod.nome || '').toUpperCase();
-        if (key.includes(codigoUpper) || codigoUpper.includes(key) ||
-            nomeUpper.includes(codigoUpper)) {
+        if (key.includes(codigoUpper) || codigoUpper.includes(key) || nomeUpper.includes(codigoUpper)) {
             candidatos.push({codigo: prod.codigo, nome: prod.nome});
             if (candidatos.length >= 5) break;
         }
@@ -61,28 +56,18 @@ function validarItem(item, catalogo) {
 
     if (candidatos.length > 1) {
         return {
-            ...item,
-            status: 'amarelo',
-            motivo: `${candidatos.length} candidatos encontrados`,
-            descricao: '',
-            candidatos
+            ...item, status: 'amarelo', motivo: `${candidatos.length} candidatos encontrados`, descricao: '', candidatos
         };
     }
 
     // Nada
     return {
-        ...item,
-        status: 'vermelho',
-        motivo: 'Código não encontrado no catálogo',
-        descricao: '',
-        candidatos: []
+        ...item, status: 'vermelho', motivo: 'Código não encontrado no catálogo', descricao: '', candidatos: []
     };
 }
 
 function montarResultado(item, produto, status, motivo) {
-    const fator = item.unidade_entrada === 'CX'
-        ? obterFator(produto.codigo)
-        : 1;
+    const fator = item.unidade_entrada === 'CX' ? obterFator(produto.codigo) : 1;
     const qtd_un = item.qtd_entrada * fator;
 
     return {
@@ -108,7 +93,15 @@ function validarItens(itensParsed) {
         amarelos: resultados.filter(r => r.status === 'amarelo').length,
         vermelhos: resultados.filter(r => r.status === 'vermelho').length
     };
-    return {itens: resultados, resumo};
+    return {
+        secoes: [{titulo: '', itens: resultados}], blocos: {
+            cliente: {nome: '', campos: []},
+            nf: {ativo: false, percent: 18},
+            desconto: {ativo: false, label: 'DESCONTO', valor: 0},
+            parcelas: {ativo: false, lista: []},
+            observacoes: ''
+        }, resumo
+    };
 }
 
 module.exports = {validarItens};
