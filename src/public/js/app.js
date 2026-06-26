@@ -58,16 +58,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const dz = document.getElementById('dropzone');
-    dz.addEventListener('dragover', e => {
-        e.preventDefault();
-        dz.classList.add('dragover');
-    });
-    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
-    dz.addEventListener('drop', e => {
-        e.preventDefault();
-        dz.classList.remove('dragover');
-        handleFiles(e.dataTransfer.files);
-    });
+    if (dz) {
+        dz.addEventListener('dragover', e => {
+            e.preventDefault();
+            dz.classList.add('dragover');
+        });
+        dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+        dz.addEventListener('drop', e => {
+            e.preventDefault();
+            dz.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+    }
 });
 
 function setModo(el) {

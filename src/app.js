@@ -76,6 +76,10 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
     });
 
+    app.get('/pedidos', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'emitir.html')); // Temporário — vira hall depois
+    });
+
     app.get('/emitir', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'emitir.html'));
     });

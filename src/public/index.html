@@ -244,6 +244,156 @@
             color: #333;
             font-family: var(--mono);
         }
+
+        /* Esconde os cards mobile no desktop */
+        .mobile-nav {
+            display: none;
+        }
+
+        /* ── MOBILE HOME ── */
+        @media (max-width: 768px) {
+            body {
+                overflow: auto;
+            }
+
+            .app {
+                display: block;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            /* Sidebar vira topo fixo compacto */
+            .sidebar {
+                width: 100%;
+                min-width: 0;
+                border-right: none;
+                border-bottom: 1px solid var(--sb-border);
+                box-shadow: none;
+                flex-direction: row;
+                align-items: center;
+                display: flex;
+                padding: 0;
+            }
+
+            .sidebar-header {
+                padding: 14px 20px;
+                border-bottom: none;
+                flex: 1;
+            }
+
+            .brand h1 {
+                font-size: 15px;
+            }
+
+            .brand-sub {
+                font-size: 10px;
+            }
+
+            .brand-logo img {
+                width: 32px;
+                height: 32px;
+            }
+
+            .brand-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+
+            /* Esconde o conteúdo da sidebar no mobile — vira cards abaixo */
+            .sidebar-content {
+                display: none;
+            }
+
+            .sidebar-footer {
+                display: none;
+            }
+
+            /* Preview area vira área de cards de navegação */
+            .preview-area {
+                padding: 24px 20px 40px;
+                justify-content: flex-start;
+                align-items: stretch;
+                display: block;
+                background: #09090a;
+                min-height: calc(100vh - 65px);
+            }
+
+            /* Esconde o empty state de desktop */
+            .empty-state {
+                display: none !important;
+            }
+
+            .recibo-wrapper {
+                display: none !important;
+            }
+
+            /* Grid de cards de navegação */
+            .mobile-nav {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .mobile-nav-card {
+                background: #121214;
+                border: 1px solid #29292e;
+                border-radius: 12px;
+                padding: 20px 24px;
+                text-decoration: none;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 16px;
+                cursor: pointer;
+                transition: border-color .15s, background .15s;
+                -webkit-tap-highlight-color: transparent;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .mobile-nav-card:hover, .mobile-nav-card:active {
+                border-color: #444;
+                background: #1a1a1e;
+            }
+
+            .mobile-nav-card.destaque {
+                grid-column: unset;
+                background: #fff;
+                border-color: #fff;
+            }
+
+            .mobile-nav-card.destaque:hover {
+                background: #e8e8e8;
+                border-color: #e8e8e8;
+            }
+
+            .mobile-nav-card .card-icon {
+                font-size: 28px;
+                line-height: 1;
+                flex-shrink: 0;
+            }
+
+            .mobile-nav-card .card-label {
+                font-size: 15px;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .mobile-nav-card .card-sub {
+                font-size: 12px;
+                color: #555;
+                margin-top: 2px;
+            }
+
+            .mobile-nav-card.destaque .card-label {
+                color: #000;
+            }
+
+            .mobile-nav-card.destaque .card-sub {
+                color: #666;
+            }
+        }
     </style>
 </head>
 <body>
@@ -273,9 +423,14 @@
 
             <!-- MODO: PEDIDO DE VENDA -->
             <div id="modoPedido">
-                <!-- Repropositado na issue 6 (Tela de pedido) -->
+                <div class="input-group">
+                    <label>Emitir Pedido</label>
+                    <a href="/emitir" class="btn-export"
+                       style="background:#fff;color:#000;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        ✏️ Novo Pedido de Venda
+                    </a>
+                </div>
             </div>
-
             <!-- MODO: ORDEM DE EQUIPAMENTO -->
             <div id="modoEquipamento" style="display:none;">
                 <div class="sidebar-section">
@@ -318,6 +473,38 @@
     </aside>
 
     <main class="preview-area">
+        <div class="mobile-nav">
+            <a href="/pedidos" class="mobile-nav-card destaque">
+                <div class="card-icon">📄</div>
+                <div>
+                    <div class="card-label">Pedidos</div>
+                    <div class="card-sub">Ver, criar e emitir pedidos</div>
+                </div>
+            </a>
+            <a href="/equipamentos" class="mobile-nav-card">
+                <div class="card-icon">📦</div>
+                <div>
+                    <div class="card-label">Equipamentos</div>
+                    <div class="card-sub">Gerenciar cadastro</div>
+                </div>
+            </a>
+            <a href="/produtos" class="mobile-nav-card">
+                <div class="card-icon">🧨</div>
+                <div>
+                    <div class="card-label">Produtos</div>
+                    <div class="card-sub">Catálogo de efeitos</div>
+                </div>
+            </a>
+            <button class="mobile-nav-card"
+                    onclick="setModo(document.querySelector('[data-mode=equipamento]'));window.scrollTo(0,0);">
+                <div class="card-icon">📋</div>
+                <div>
+                    <div class="card-label">Nova OS</div>
+                    <div class="card-sub">Ordem de equipamento</div>
+                </div>
+            </button>
+        </div>
+
         <div id="emptyState" class="empty-state">
             <div class="empty-icon">📋</div>
             <h2>Pronto para gerar</h2>
