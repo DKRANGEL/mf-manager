@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
+    <link rel="stylesheet" href="/public/css/documento.css">
     <style>
         body {
             overflow: auto;
@@ -20,7 +21,6 @@
             padding: 32px 24px 80px;
         }
 
-        /* ── HEADER ── */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -48,7 +48,6 @@
             gap: 10px;
         }
 
-        /* ── BOTÕES ── */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -84,21 +83,6 @@
             color: #fff;
         }
 
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-danger {
-            background: rgba(220, 38, 38, .12);
-            color: #f87171;
-        }
-
-        .btn-danger:hover {
-            background: rgba(220, 38, 38, .2);
-        }
-
-        /* ── GRID PRINCIPAL ── */
         .layout {
             display: grid;
             grid-template-columns: 1fr 320px;
@@ -106,7 +90,6 @@
             align-items: start;
         }
 
-        /* ── CARDS / SEÇÕES ── */
         .card {
             background: #121214;
             border: 1px solid #29292e;
@@ -124,7 +107,6 @@
             margin-bottom: 16px;
         }
 
-        /* ── CLIENTE ── */
         .campo-row {
             display: flex;
             flex-wrap: wrap;
@@ -147,7 +129,7 @@
             margin-bottom: 5px;
         }
 
-        .campo input {
+        .campo input, .campo select {
             width: 100%;
             background: #1a1a1e;
             border: 1px solid #2a2a30;
@@ -159,7 +141,7 @@
             font-family: inherit;
         }
 
-        .campo input:focus {
+        .campo input:focus, .campo select:focus {
             border-color: #555;
         }
 
@@ -196,10 +178,9 @@
             color: #ccc;
         }
 
-        /* ── TABELA DE ITENS (desktop) ── */
         .itens-header {
             display: grid;
-            grid-template-columns: 52px 1fr 80px 70px 100px 90px 36px;
+            grid-template-columns: 52px 1fr 80px 70px 100px 90px 72px;
             gap: 8px;
             padding: 0 4px 8px;
             border-bottom: 1px solid #29292e;
@@ -214,13 +195,9 @@
             letter-spacing: .5px;
         }
 
-        .itens-header span:nth-child(3), .itens-header span:nth-child(4), .itens-header span:nth-child(5), .itens-header span:nth-child(6) {
-            text-align: center;
-        }
-
         .item-row {
             display: grid;
-            grid-template-columns: 52px 1fr 80px 70px 100px 90px 36px;
+            grid-template-columns: 52px 1fr 80px 70px 100px 90px 72px;
             gap: 8px;
             align-items: center;
             padding: 6px 4px;
@@ -272,6 +249,10 @@
             text-overflow: ellipsis;
         }
 
+        .item-resumo-mobile {
+            display: none;
+        }
+
         .item-input {
             width: 100%;
             background: #1a1a1e;
@@ -314,7 +295,6 @@
             background: rgba(220, 38, 38, .1);
         }
 
-        /* ── AUTOCOMPLETE ── */
         .busca-wrap {
             position: relative;
             margin-bottom: 12px;
@@ -424,7 +404,6 @@
             font-size: 12px;
         }
 
-        /* ── SIDEBAR DE BLOCOS ── */
         .bloco {
             margin-bottom: 12px;
         }
@@ -520,16 +499,6 @@
             border-color: #555;
         }
 
-        .bloco-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .bloco-row .bloco-input {
-            flex: 1;
-        }
-
-        /* Parcelas */
         .parcela-item {
             display: flex;
             gap: 6px;
@@ -572,7 +541,6 @@
             color: #888;
         }
 
-        /* ── TOTAIS ── */
         .totais-card {
             background: #121214;
             border: 1px solid #29292e;
@@ -613,8 +581,57 @@
             font-size: 16px;
         }
 
-        /* ── MOBILE ── */
+        .itens-vazio {
+            text-align: center;
+            padding: 32px 0;
+            color: #444;
+            font-size: 13px;
+        }
+
+        .modal-item-input {
+            width: 100%;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .modal-item-input:focus {
+            border-color: #555;
+        }
+
+        #previewContent {
+            transform-origin: top center;
+        }
+
         @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-header h1 {
+                font-size: 18px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
+                font-size: 12px;
+                padding: 10px;
+            }
+
             .layout {
                 grid-template-columns: 1fr;
             }
@@ -624,65 +641,105 @@
             }
 
             .item-row {
-                grid-template-columns: 44px 1fr 36px;
-                grid-template-rows: auto auto;
+                grid-template-columns: 44px 1fr 72px;
                 gap: 6px;
                 padding: 10px 4px;
             }
 
-            .item-desc {
-                grid-column: 2;
-            }
-
-            .item-remove {
-                grid-column: 3;
-                grid-row: 1;
-            }
-
-            .item-qtds-mobile {
-                grid-column: 1 / -1;
-                display: flex;
-                gap: 8px;
-                align-items: center;
-            }
-
-            .item-input {
-                max-width: 70px;
-            }
-
-            /* esconde colunas que viram mobile */
-            .item-row > .item-input:not(.item-qtd-mobile),
-            .item-row > .item-total {
+            .item-row > .item-input, .item-row > .item-total {
                 display: none;
             }
+
+            .item-resumo-mobile {
+                display: flex;
+                gap: 5px;
+                font-size: 11px;
+                color: #666;
+                font-family: var(--mono);
+                margin-top: 3px;
+                flex-wrap: wrap;
+            }
+
+            .item-resumo-mobile span:last-child {
+                color: #ccc;
+            }
+
+            #previewModal {
+                padding: 8px 0;
+            }
+
+            #previewContent {
+                width: 760px !important;
+                max-width: 760px !important;
+            }
         }
 
-        /* ── STATUS BALDE ── */
-        .balde-verde {
-            color: #4ade80;
-            font-size: 10px;
-        }
+        @media print {
+            body > .page {
+                display: none !important;
+            }
 
-        .balde-amarelo {
-            color: #fbbf24;
-            font-size: 10px;
-        }
+            #previewModal {
+                position: static !important;
+                background: #fff !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
 
-        .balde-vermelho {
-            color: #f87171;
-            font-size: 10px;
-        }
+            #previewModal > div:first-child {
+                display: none !important;
+            }
 
-        /* ── EMPTY STATE ── */
-        .itens-vazio {
-            text-align: center;
-            padding: 32px 0;
-            color: #444;
-            font-size: 13px;
+            #previewContent {
+                box-shadow: none !important;
+                max-width: 100% !important;
+                transform: none !important;
+            }
         }
     </style>
 </head>
 <body>
+
+<!-- ── MODAL EDIÇÃO DE ITEM ── -->
+<div id="modalItem"
+     style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.8);align-items:flex-end;justify-content:center;">
+    <div style="background:#121214;border:1px solid #333;border-radius:16px 16px 0 0;padding:24px;width:100%;max-width:480px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+                <div id="modalItemCod" style="font-family:var(--mono);font-size:11px;color:#666;"></div>
+                <div id="modalItemNome" style="font-size:14px;color:#fff;font-weight:600;"></div>
+            </div>
+            <button onclick="fecharModalItem()"
+                    style="background:#333;border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                ×
+            </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div class="campo">
+                <label>Quantidade</label>
+                <input type="number" class="modal-item-input" id="modalItemQtd" min="1" step="1" inputmode="numeric">
+            </div>
+            <div class="campo">
+                <label>Unidade</label>
+                <select class="modal-item-input" id="modalItemUn">
+                    <option value="UN">UN</option>
+                    <option value="CX">CX</option>
+                    <option value="GL">GL</option>
+                    <option value="RL">RL</option>
+                    <option value="KIT">KIT</option>
+                </select>
+            </div>
+            <div class="campo" style="grid-column:1/-1;">
+                <label>Preço unitário (R$)</label>
+                <input type="text" class="modal-item-input" id="modalItemPreco" inputmode="decimal"
+                       oninput="mascaraDinheiro(this)">
+            </div>
+        </div>
+        <button class="btn btn-white" style="width:100%;justify-content:center;" onclick="salvarModalItem()">Confirmar
+        </button>
+    </div>
+</div>
+
 <div class="page">
     <div class="page-header">
         <div>
@@ -692,11 +749,13 @@
         <div class="header-actions">
             <a href="/" class="btn btn-ghost">← Voltar</a>
             <button class="btn btn-white" onclick="salvarRascunho()">Salvar rascunho</button>
+            <button id="btnPreview" class="btn btn-ghost" style="display:none;"
+                    onclick="abrirPreview(numeroPedidoAtual)">👁 Preview
+            </button>
         </div>
     </div>
 
     <div class="layout">
-        <!-- ── COLUNA PRINCIPAL ── -->
         <div>
             <!-- Cliente -->
             <div class="card">
@@ -723,16 +782,12 @@
             <div class="card">
                 <div class="card-title">Produtos</div>
                 <div class="busca-wrap">
-                    <input type="text" class="busca-input" id="buscaProduto"
-                           placeholder="Buscar por nome ou código..."
-                           oninput="buscarProduto(this.value)"
-                           autocomplete="off">
+                    <input type="text" class="busca-input" id="buscaProduto" placeholder="Buscar por nome ou código..."
+                           oninput="buscarProduto(this.value)" autocomplete="off">
                     <div class="autocomplete-list" id="autocompleteList" style="display:none;"></div>
                 </div>
-
                 <div class="itens-header">
-                    <span>IMG</span>
-                    <span>Produto</span>
+                    <span>IMG</span><span>Produto</span>
                     <span style="text-align:center;">QTD</span>
                     <span style="text-align:center;">UN</span>
                     <span style="text-align:center;">Preço unit.</span>
@@ -740,56 +795,43 @@
                     <span></span>
                 </div>
                 <div id="itensList">
-                    <div class="itens-vazio" id="itensVazio">Nenhum produto adicionado. Use a busca acima.</div>
+                    <div class="itens-vazio">Nenhum produto adicionado. Use a busca acima.</div>
                 </div>
             </div>
         </div>
 
-        <!-- ── SIDEBAR ── -->
+        <!-- Sidebar -->
         <div>
-            <!-- Totais -->
             <div class="totais-card" style="margin-bottom:16px;">
                 <div class="card-title" style="margin-bottom:12px;">Resumo</div>
-                <div class="totais-linha">
-                    <span>Subtotal</span>
-                    <span class="totais-valor" id="totalSubtotal">R$ 0,00</span>
+                <div class="totais-linha"><span>Subtotal</span><span class="totais-valor"
+                                                                     id="totalSubtotal">R$ 0,00</span></div>
+                <div class="totais-linha" id="linhaDesconto" style="display:none;"><span
+                        id="labelDesconto">Desconto</span><span class="totais-valor" id="totalDesconto">- R$ 0,00</span>
                 </div>
-                <div class="totais-linha" id="linhaDesconto" style="display:none;">
-                    <span id="labelDesconto">Desconto</span>
-                    <span class="totais-valor" id="totalDesconto">- R$ 0,00</span>
-                </div>
-                <div class="totais-linha" id="linhaNF" style="display:none;">
-                    <span id="labelNF">NF (18%)</span>
-                    <span class="totais-valor" id="totalNF">+ R$ 0,00</span>
-                </div>
-                <div class="totais-linha destaque">
-                    <span>Total</span>
-                    <span class="totais-valor" id="totalGeral">R$ 0,00</span>
-                </div>
+                <div class="totais-linha" id="linhaNF" style="display:none;"><span id="labelNF">NF (18%)</span><span
+                        class="totais-valor" id="totalNF">+ R$ 0,00</span></div>
+                <div class="totais-linha destaque"><span>Total</span><span class="totais-valor"
+                                                                           id="totalGeral">R$ 0,00</span></div>
             </div>
 
-            <!-- Blocos -->
-            <div class="card-title" style="padding: 0 4px; margin-bottom: 8px;">Opções do documento</div>
+            <div class="card-title" style="padding:0 4px;margin-bottom:8px;">Opções do documento</div>
 
-            <!-- Desconto -->
             <div class="bloco">
-                <div class="bloco-header" onclick="toggleBloco(this, 'blocoDescontoBody')">
-                    <span class="bloco-label">Desconto</span>
+                <div class="bloco-header" onclick="toggleBloco(this,'blocoDescontoBody')"><span class="bloco-label">Desconto</span>
                     <div class="bloco-toggle"></div>
                 </div>
                 <div class="bloco-body" id="blocoDescontoBody">
                     <input type="text" class="bloco-input" id="descontoLabel" placeholder="Label (ex: Valor já pago)"
                            value="DESCONTO">
-                    <input type="text" class="bloco-input" id="descontoValor"
-                           inputmode="decimal" placeholder="R$ 0,00"
-                           oninput="mascaraDinheiro(this); recalcularTotais()">
+                    <input type="text" class="bloco-input" id="descontoValor" inputmode="decimal" placeholder="R$ 0,00"
+                           oninput="mascaraDinheiro(this);recalcularTotais()">
                 </div>
             </div>
 
-            <!-- NF -->
             <div class="bloco">
-                <div class="bloco-header" onclick="toggleBloco(this, 'blocoNFBody')">
-                    <span class="bloco-label">NF Fiscal</span>
+                <div class="bloco-header" onclick="toggleBloco(this,'blocoNFBody')"><span
+                        class="bloco-label">NF Fiscal</span>
                     <div class="bloco-toggle"></div>
                 </div>
                 <div class="bloco-body" id="blocoNFBody">
@@ -799,22 +841,21 @@
                 </div>
             </div>
 
-            <!-- Parcelas -->
             <div class="bloco">
-                <div class="bloco-header" onclick="toggleBloco(this, 'blocoParcBody')">
-                    <span class="bloco-label">Parcelas</span>
+                <div class="bloco-header" onclick="toggleBloco(this,'blocoParcBody')"><span
+                        class="bloco-label">Parcelas</span>
                     <div class="bloco-toggle"></div>
                 </div>
                 <div class="bloco-body" id="blocoParcBody">
                     <div id="parcelasList"></div>
-                    <button class="btn-add-parcela" onclick="adicionarParcela()">+ Adicionar parcela</button>
+                    <button class="btn-add-parcela" onclick="event.stopPropagation();adicionarParcela()">+ Adicionar
+                        parcela
+                    </button>
                 </div>
             </div>
 
-            <!-- Observações -->
             <div class="bloco">
-                <div class="bloco-header" onclick="toggleBloco(this, 'blocoObsBody')">
-                    <span class="bloco-label">Observações</span>
+                <div class="bloco-header" onclick="toggleBloco(this,'blocoObsBody')"><span class="bloco-label">Observações</span>
                     <div class="bloco-toggle"></div>
                 </div>
                 <div class="bloco-body" id="blocoObsBody">
@@ -824,20 +865,35 @@
             </div>
 
             <button class="btn btn-white" style="width:100%;margin-top:8px;justify-content:center;"
-                    onclick="salvarRascunho()">
-                Salvar rascunho
+                    onclick="salvarRascunho()">Salvar rascunho
             </button>
         </div>
     </div>
 </div>
 
 <script>
-    // ── ESTADO ──
+    // ── ESTADO (declarações únicas no topo) ──
     let itens = [];
     let camposClienteAtivos = [];
     let buscaTimer = null;
+    let numeroPedidoAtual = null;
+    let parcelas = [];
+    let modalItemIdx = null;
+
+    // ── MODAL ITEM: fecha clicando fora ──
+    document.getElementById('modalItem').addEventListener('click', function (e) {
+        if (e.target === this) fecharModalItem();
+    });
 
     // ── CAMPOS DO CLIENTE ──
+    const labelCampo = {
+        artista: 'Artista / Show',
+        cidade: 'Cidade',
+        data_show: 'Data do Show',
+        cnpj: 'CNPJ',
+        semana: 'Semana'
+    };
+
     function toggleCampoCliente(btn) {
         const campo = btn.dataset.campo;
         const idx = camposClienteAtivos.indexOf(campo);
@@ -851,21 +907,14 @@
         renderCamposCliente();
     }
 
-    const labelCampo = {
-        artista: 'Artista / Show',
-        cidade: 'Cidade',
-        data_show: 'Data do Show',
-        cnpj: 'CNPJ',
-        semana: 'Semana'
-    };
-
     function renderCamposCliente() {
         const wrap = document.getElementById('camposCliente');
         const nomeVal = document.getElementById('clienteNome')?.value || '';
-        const tipoInput = c === 'cnpj' ? 'text" inputmode="numeric" oninput="mascaraCNPJ(this)' : 'text';
         let html = `<div class="campo"><label>Nome / Escritório</label><input type="text" id="clienteNome" placeholder="Ex: AGF, Soares, SAM..." value="${esc(nomeVal)}"></div>`;
         camposClienteAtivos.forEach(c => {
-            html += `<div class="campo"><label>${labelCampo[c]}</label><input type="${tipoInput}" id="cliente_${c}" placeholder="${labelCampo[c]}"></div>`;
+            const val = document.getElementById(`cliente_${c}`)?.value || '';
+            const tipo = c === 'cnpj' ? 'text" inputmode="numeric" oninput="mascaraCNPJ(this)' : 'text';
+            html += `<div class="campo"><label>${labelCampo[c] || c}</label><input type="${tipo}" id="cliente_${c}" placeholder="${labelCampo[c] || c}" value="${esc(val)}"></div>`;
         });
         wrap.innerHTML = html;
     }
@@ -887,17 +936,11 @@
                 return;
             }
             list.innerHTML = json.data.map(p => {
-                const imgEl = p.imagem
-                    ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">`
-                    : `<div class="ac-img-ph">📦</div>`;
-                const precoStr = p.preco > 0 ? fmtMoney(p.preco) : 'Sem preço';
+                const imgEl = p.imagem ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">` : `<div class="ac-img-ph">📦</div>`;
                 return `<div class="ac-item" onclick="adicionarItem(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 ${imgEl}
-                <div class="ac-info">
-                    <div class="ac-cod">${esc(p.codigo)}</div>
-                    <div class="ac-nome">${esc(p.nome)}</div>
-                </div>
-                <div class="ac-preco">${precoStr}</div>
+                <div class="ac-info"><div class="ac-cod">${esc(p.codigo)}</div><div class="ac-nome">${esc(p.nome)}</div></div>
+                <div class="ac-preco">${p.preco > 0 ? fmtMoney(p.preco) : 'Sem preço'}</div>
             </div>`;
             }).join('');
             list.style.display = 'block';
@@ -905,16 +948,13 @@
     }
 
     document.addEventListener('click', e => {
-        if (!e.target.closest('.busca-wrap')) {
-            document.getElementById('autocompleteList').style.display = 'none';
-        }
+        if (!e.target.closest('.busca-wrap')) document.getElementById('autocompleteList').style.display = 'none';
     });
 
     // ── ITENS ──
     function adicionarItem(prod) {
         document.getElementById('autocompleteList').style.display = 'none';
         document.getElementById('buscaProduto').value = '';
-
         const existe = itens.find(i => i.codigo === prod.codigo);
         if (existe) {
             existe.qtd_entrada++;
@@ -922,7 +962,6 @@
             renderItens();
             return;
         }
-
         itens.push({
             codigo: prod.codigo,
             descricao: prod.nome,
@@ -956,47 +995,77 @@
         }
         item.preco_total = item.qtd_entrada * item.preco_unit;
         recalcularTotais();
-        // Atualiza só o total da linha sem re-render completo
-        const totalEl = document.getElementById(`total-${idx}`);
-        if (totalEl) totalEl.textContent = fmtMoney(item.preco_total);
+        const el = document.getElementById(`total-${idx}`);
+        if (el) el.textContent = fmtMoney(item.preco_total);
     }
 
     function renderItens() {
         const container = document.getElementById('itensList');
-        const vazio = document.getElementById('itensVazio');
         if (itens.length === 0) {
-            container.innerHTML = '<div class="itens-vazio" id="itensVazio">Nenhum produto adicionado. Use a busca acima.</div>';
+            container.innerHTML = '<div class="itens-vazio">Nenhum produto adicionado. Use a busca acima.</div>';
             recalcularTotais();
             return;
         }
         container.innerHTML = itens.map((item, i) => {
-            const imgEl = item.imagem
-                ? `<img class="item-img" src="/data/produtos/${esc(item.imagem)}" onerror="this.className='item-img-placeholder';this.textContent='📦'">`
-                : `<div class="item-img-placeholder">📦</div>`;
+            const imgEl = item.imagem ? `<img class="item-img" src="/data/produtos/${esc(item.imagem)}" onerror="this.className='item-img-placeholder';this.textContent='📦'">` : `<div class="item-img-placeholder">📦</div>`;
             return `<div class="item-row" id="item-row-${i}">
             ${imgEl}
             <div class="item-desc">
                 <div class="item-cod">${esc(item.codigo)}</div>
                 <div class="item-nome">${esc(item.descricao)}</div>
+                <div class="item-resumo-mobile">
+                    <span>${item.qtd_entrada} ${esc(item.unidade_entrada)}</span><span>×</span>
+                    <span>${fmtMoney(item.preco_unit)}</span><span>=</span>
+                    <span style="font-weight:700;">${fmtMoney(item.preco_total)}</span>
+                </div>
             </div>
-            <input class="item-input" type="number" value="${item.qtd_entrada}" min="1" step="1" pattern="[0-9]*" inputmode="numeric"
-                onchange="atualizarItem(${i}, 'qtd_entrada', this.value)">
-            <select class="item-input" onchange="atualizarItem(${i}, 'unidade_entrada', this.value)" style="text-align:center;">
+            <input class="item-input" type="number" value="${item.qtd_entrada}" min="1" step="1" inputmode="numeric" onchange="atualizarItem(${i},'qtd_entrada',this.value)">
+            <select class="item-input" onchange="atualizarItem(${i},'unidade_entrada',this.value)">
                 <option value="UN" ${item.unidade_entrada === 'UN' ? 'selected' : ''}>UN</option>
                 <option value="CX" ${item.unidade_entrada === 'CX' ? 'selected' : ''}>CX</option>
                 <option value="GL" ${item.unidade_entrada === 'GL' ? 'selected' : ''}>GL</option>
                 <option value="RL" ${item.unidade_entrada === 'RL' ? 'selected' : ''}>RL</option>
                 <option value="KIT" ${item.unidade_entrada === 'KIT' ? 'selected' : ''}>KIT</option>
             </select>
-            <input class="item-input" type="text" inputmode="decimal" value="${fmtDecimal(item.preco_unit)}"
-                onblur="atualizarItem(${i}, 'preco_unit', this.value)"
-                onfocus="this.select()"
-                oninput="mascaraDinheiro(this)">
+            <input class="item-input" type="text" inputmode="decimal" value="${fmtDecimal(item.preco_unit)}" onblur="atualizarItem(${i},'preco_unit',this.value)" onfocus="this.select()" oninput="mascaraDinheiro(this)">
             <div class="item-total" id="total-${i}">${fmtMoney(item.preco_total)}</div>
-            <button class="item-remove" onclick="removerItem(${i})">×</button>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+                <button class="item-remove" style="color:#666;" onclick="abrirModalItem(${i})">✏️</button>
+                <button class="item-remove" onclick="removerItem(${i})">×</button>
+            </div>
         </div>`;
         }).join('');
         recalcularTotais();
+    }
+
+    // ── MODAL ITEM ──
+    function abrirModalItem(idx) {
+        const item = itens[idx];
+        if (!item) return;
+        modalItemIdx = idx;
+        document.getElementById('modalItemCod').textContent = item.codigo;
+        document.getElementById('modalItemNome').textContent = item.descricao;
+        document.getElementById('modalItemQtd').value = item.qtd_entrada;
+        document.getElementById('modalItemUn').value = item.unidade_entrada;
+        document.getElementById('modalItemPreco').value = fmtDecimal(item.preco_unit);
+        document.getElementById('modalItem').style.display = 'flex';
+    }
+
+    function fecharModalItem() {
+        document.getElementById('modalItem').style.display = 'none';
+        modalItemIdx = null;
+    }
+
+    function salvarModalItem() {
+        if (modalItemIdx === null) return;
+        const item = itens[modalItemIdx];
+        item.qtd_entrada = parseFloat(document.getElementById('modalItemQtd').value) || 1;
+        item.unidade_entrada = document.getElementById('modalItemUn').value;
+        item.preco_unit = parseFloat(document.getElementById('modalItemPreco').value.replace(/\./g, '').replace(',', '.')) || 0;
+        item.qtd_un = item.qtd_entrada * item.fator;
+        item.preco_total = item.qtd_entrada * item.preco_unit;
+        fecharModalItem();
+        renderItens();
     }
 
     // ── BLOCOS ──
@@ -1012,8 +1081,6 @@
     }
 
     // ── PARCELAS ──
-    let parcelas = [];
-
     function adicionarParcela() {
         parcelas.push({data: '', valor: '', forma: ''});
         renderParcelas();
@@ -1032,35 +1099,27 @@
         }
         list.innerHTML = parcelas.map((p, i) => `
         <div class="parcela-item">
-            <input class="bloco-input" style="margin:0;flex:1;" type="date" value="${p.data}"
-                onchange="parcelas[${i}].data=this.value">
-            <input class="bloco-input" style="margin:0;flex:1;" type="number" placeholder="R$" value="${p.valor}"
-                onchange="parcelas[${i}].valor=this.value">
-            <input class="bloco-input" style="margin:0;flex:1;" type="text" placeholder="Forma" value="${p.forma}"
-                onchange="parcelas[${i}].forma=this.value">
+            <input class="bloco-input" style="margin:0;flex:1;" type="date" value="${p.data}" onchange="parcelas[${i}].data=this.value">
+            <input class="bloco-input" style="margin:0;flex:1;" type="number" placeholder="R$" value="${p.valor}" onchange="parcelas[${i}].valor=this.value">
+            <input class="bloco-input" style="margin:0;flex:1;" type="text" placeholder="Forma" value="${p.forma}" onchange="parcelas[${i}].forma=this.value">
             <button class="parcela-remove" onclick="removerParcela(${i})">×</button>
-        </div>
-    `).join('');
+        </div>`).join('');
     }
 
     // ── TOTAIS ──
     function recalcularTotais() {
         const subtotal = itens.reduce((s, i) => s + i.preco_total, 0);
         document.getElementById('totalSubtotal').textContent = fmtMoney(subtotal);
-
         let total = subtotal;
-
-        // Desconto
         const descontoAtivo = isBlocoAtivo('blocoDescontoBody');
-        const descontoValor = parseFloat(document.getElementById('descontoValor')?.value) || 0;
+        const descontoStr = document.getElementById('descontoValor')?.value || '0';
+        const descontoValor = parseFloat(descontoStr.replace(/\./g, '').replace(',', '.')) || 0;
         document.getElementById('linhaDesconto').style.display = descontoAtivo ? '' : 'none';
         if (descontoAtivo && descontoValor > 0) {
             document.getElementById('labelDesconto').textContent = document.getElementById('descontoLabel')?.value || 'Desconto';
             document.getElementById('totalDesconto').textContent = `- ${fmtMoney(descontoValor)}`;
             total -= descontoValor;
         }
-
-        // NF
         const nfAtivo = isBlocoAtivo('blocoNFBody');
         const nfPct = parseFloat(document.getElementById('nfPercent')?.value) || 18;
         document.getElementById('linhaNF').style.display = nfAtivo ? '' : 'none';
@@ -1070,7 +1129,6 @@
             document.getElementById('totalNF').textContent = `+ ${fmtMoney(nfVal)}`;
             total += nfVal;
         }
-
         document.getElementById('totalGeral').textContent = fmtMoney(total);
     }
 
@@ -1080,33 +1138,29 @@
             alert('Adicione pelo menos um produto');
             return;
         }
-
         const clienteNome = document.getElementById('clienteNome')?.value?.trim() || '';
         const camposExtras = {};
         camposClienteAtivos.forEach(c => {
             camposExtras[c] = document.getElementById(`cliente_${c}`)?.value?.trim() || '';
         });
-
-        const descontoAtivo = isBlocoAtivo('blocoDescontoBody');
-        const nfAtivo = isBlocoAtivo('blocoNFBody');
-        const parcAtivo = isBlocoAtivo('blocoParcBody');
-        const obsAtivo = isBlocoAtivo('blocoObsBody');
-
+        const descontoStr = document.getElementById('descontoValor')?.value || '0';
         const payload = {
             secoes: [{titulo: '', itens}],
             blocos: {
                 cliente: {nome: clienteNome, campos: camposClienteAtivos, ...camposExtras},
-                nf: {ativo: nfAtivo, percent: parseFloat(document.getElementById('nfPercent')?.value) || 18},
-                desconto: {
-                    ativo: descontoAtivo,
-                    label: document.getElementById('descontoLabel')?.value || 'DESCONTO',
-                    valor: parseFloat(document.getElementById('descontoValor')?.value) || 0
+                nf: {
+                    ativo: isBlocoAtivo('blocoNFBody'),
+                    percent: parseFloat(document.getElementById('nfPercent')?.value) || 18
                 },
-                parcelas: {ativo: parcAtivo, lista: parcelas},
-                observacoes: obsAtivo ? (document.getElementById('obsTexto')?.value || '') : ''
+                desconto: {
+                    ativo: isBlocoAtivo('blocoDescontoBody'),
+                    label: document.getElementById('descontoLabel')?.value || 'DESCONTO',
+                    valor: parseFloat(descontoStr.replace(/\./g, '').replace(',', '.')) || 0
+                },
+                parcelas: {ativo: isBlocoAtivo('blocoParcBody'), lista: parcelas},
+                observacoes: isBlocoAtivo('blocoObsBody') ? (document.getElementById('obsTexto')?.value || '') : ''
             }
         };
-
         try {
             const res = await fetch('/api/pedidos', {
                 method: 'POST',
@@ -1115,11 +1169,128 @@
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            alert(`Pedido ${json.data.numero} salvo!`);
-            // TODO: redirecionar pro Hall ou pro preview
+            numeroPedidoAtual = json.data.numero;
+            const btn = document.getElementById('btnPreview');
+            btn.style.display = 'flex';
+            btn.textContent = `👁 ${json.data.numero}`;
+            abrirPreview(json.data.numero);
         } catch (err) {
             alert('Erro: ' + err.message);
         }
+    }
+
+    // ── PREVIEW ──
+    async function abrirPreview(numeroPedido) {
+        const res = await fetch(`/api/pedidos/${numeroPedido}`);
+        const json = await res.json();
+        if (!json.success) {
+            alert('Erro ao carregar pedido');
+            return;
+        }
+        const tplRes = await fetch('/public/templates/pedido-venda.html');
+        const tpl = await tplRes.text();
+        let modal = document.getElementById('previewModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'previewModal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;padding:12px;overflow-y:auto;';
+            modal.innerHTML = `
+            <div style="width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;">
+                <span style="color:#fff;font-weight:700;font-size:14px;">Preview</span>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="window.print()" style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">🖨 Imprimir</button>
+                    <button onclick="fecharPreview()" style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">✕</button>
+                </div>
+            </div>
+            <div id="previewContent" class="recibo-wrapper" style="width:100%;max-width:760px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+                <div id="previewRecibo" class="recibo"></div>
+            </div>`;
+            document.body.appendChild(modal);
+        } else {
+            modal.style.display = 'flex';
+        }
+        document.getElementById('previewRecibo').innerHTML = tpl;
+        escalarPreview();
+        window.addEventListener('resize', escalarPreview);
+        renderPedidoNoTemplate(json.data);
+    }
+
+    function escalarPreview() {
+        const content = document.getElementById('previewContent');
+        const modal = document.getElementById('previewModal');
+        if (!content || !modal) return;
+        const disponivel = modal.clientWidth - 16;
+        const escala = Math.min(1, disponivel / 760);
+        content.style.transform = `scale(${escala})`;
+        content.style.marginBottom = `${-(760 * (1 - escala))}px`;
+    }
+
+    function fecharPreview() {
+        const m = document.getElementById('previewModal');
+        if (m) m.style.display = 'none';
+    }
+
+    function renderPedidoNoTemplate(pedido) {
+        const blocos = pedido.blocos || {};
+        const itensPedido = (pedido.secoes || [{itens: []}])[0].itens || [];
+        setText('pdDocNum', pedido.numero || '000');
+        setText('pdDocData', new Date(pedido.data_emissao).toLocaleDateString('pt-BR'));
+        const cli = blocos.cliente || {};
+        const camposAtivos = cli.campos || [];
+        const labelMap = {
+            artista: 'ARTISTA / SHOW',
+            cidade: 'CIDADE',
+            data_show: 'DATA DO SHOW',
+            cnpj: 'CNPJ',
+            semana: 'SEMANA'
+        };
+        let clienteHTML = `<table class="client-data-table-title"><tr><td class="bg-black-title">CLIENTE</td><td class="data-cell highlight" colspan="3">${esc((cli.nome || 'CONSUMIDOR FINAL').toUpperCase())}</td></tr></table>`;
+        if (camposAtivos.length > 0) {
+            clienteHTML += '<table class="client-data-table">';
+            camposAtivos.forEach(c => {
+                clienteHTML += `<tr><td class="bg-gray-title">${labelMap[c] || c.toUpperCase()}</td><td class="data-cell" colspan="3">${esc((cli[c] || '-').toUpperCase())}</td></tr>`;
+            });
+            clienteHTML += '</table>';
+        }
+        document.getElementById('pdClienteContainer').innerHTML = clienteHTML;
+        const tbody = document.getElementById('pdItens');
+        tbody.innerHTML = '';
+        let subtotal = 0;
+        itensPedido.forEach((item, i) => {
+            const total = item.preco_total || (item.qtd_entrada * item.preco_unit);
+            subtotal += total;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="c-item">${i + 1}</td><td class="c-img">${item.imagem ? `<img src="/data/produtos/${esc(item.imagem)}" class="prod-thumb">` : ''}</td><td class="c-sku">${esc(item.codigo || '-')}</td><td class="c-desc">${esc(item.descricao || '-')}</td><td style="text-align:center;font-size:11px;">${item.fator > 1 ? item.fator : '-'}</td><td class="c-qtd">${item.qtd_entrada}</td><td class="c-preco">${fmtMoney(item.preco_unit)}</td><td class="c-total">${fmtMoney(total)}</td>`;
+            tbody.appendChild(tr);
+        });
+        setText('pdSubtotal', fmtMoney(subtotal));
+        let totalFinal = subtotal;
+        const desc = blocos.desconto || {};
+        if (desc.ativo && desc.valor > 0) {
+            setText('pdDescontoLabel', (desc.label || 'DESCONTO') + ':');
+            setText('pdDesconto', `- ${fmtMoney(desc.valor)}`);
+            document.getElementById('pdDescontoRow').style.display = '';
+            totalFinal -= desc.valor;
+        } else document.getElementById('pdDescontoRow').style.display = 'none';
+        const nf = blocos.nf || {};
+        if (nf.ativo) {
+            const nfVal = subtotal * (nf.percent || 18) / 100;
+            setText('pdNFLabel', `NF FISCAL (${nf.percent || 18})%:`);
+            setText('pdNFValor', `+ ${fmtMoney(nfVal)}`);
+            document.getElementById('pdNFRow').style.display = '';
+            totalFinal += nfVal;
+        } else document.getElementById('pdNFRow').style.display = 'none';
+        setText('pdTotal', fmtMoney(totalFinal));
+        const parc = blocos.parcelas || {};
+        if (parc.ativo && parc.lista && parc.lista.length > 0) {
+            document.getElementById('pdParcelasItens').innerHTML = parc.lista.map(p => `<tr><td style="font-family:var(--mono)">${p.data || '-'}</td><td>${esc((p.forma || '-').toUpperCase())}</td><td style="text-align:right;font-family:var(--mono)">${fmtMoney(parseFloat(p.valor) || 0)}</td></tr>`).join('');
+            document.getElementById('pdParcelasSection').style.display = '';
+        } else document.getElementById('pdParcelasSection').style.display = 'none';
+        const obs = blocos.observacoes || '';
+        if (obs) {
+            setText('pdObs', obs);
+            document.getElementById('pdObsSection').style.display = '';
+        } else document.getElementById('pdObsSection').style.display = 'none';
     }
 
     // ── HELPERS ──
@@ -1127,11 +1298,20 @@
         return 'R$ ' + (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
+    function fmtDecimal(v) {
+        return (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
     function esc(s) {
         if (!s) return '';
         const d = document.createElement('div');
         d.textContent = s;
         return d.innerHTML;
+    }
+
+    function setText(id, t) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = t || '';
     }
 
     function mascaraDinheiro(input) {
@@ -1142,15 +1322,8 @@
 
     function mascaraCNPJ(input) {
         let v = input.value.replace(/\D/g, '').slice(0, 14);
-        v = v.replace(/^(\d{2})(\d)/, '$1.$2');
-        v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-        v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
-        v = v.replace(/(\d{4})(\d)/, '$1-$2');
+        v = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
         input.value = v;
-    }
-
-    function fmtDecimal(v) {
-        return (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 </script>
 </body>

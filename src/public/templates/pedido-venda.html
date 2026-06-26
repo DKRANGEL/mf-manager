@@ -1,0 +1,96 @@
+﻿<!-- TEMPLATE: PEDIDO DE VENDA — Magic Fireworks -->
+<!-- Injeta dentro do .recibo (documento.css já carregado) -->
+<!-- Usa os mesmos blocos do documento.css: doc-header-table, client-data-table, r-table, totals-area, doc-footer -->
+
+<!-- ── 1. CABEÇALHO ── -->
+<table class="doc-header-table">
+    <tr>
+        <td style="width:140px;padding:0;">
+            <div class="r-logo-rect">
+                <img id="pdLogoImg" src="/public/MagicFireworksLogo.jpeg" alt="Logo" onerror="this.style.opacity='0'">
+            </div>
+        </td>
+        <td style="padding-left:12px;">
+            <div id="pdEmpresaNome" style="font-size:16px;font-weight:700;text-transform:uppercase;color:#000;letter-spacing:1.5px;margin-bottom:4px;">MAGIC FIREWORKS</div>
+            <div id="pdEmpresaCnpj" class="doc-info">CNPJ: 22.748.770/0001-50</div>
+            <div id="pdEmpresaEmail" class="doc-info">contato@magicfireworks.com.br</div>
+        </td>
+        <td style="text-align:right;width:160px;">
+            <div class="doc-box-number">
+                <span class="doc-label" id="pdDocTitulo">PEDIDO DE VENDA</span>
+                <div id="pdDocNum" class="doc-big-num">000</div>
+                <div id="pdDocData" class="doc-date">-</div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<!-- ── 2. DADOS DO CLIENTE (renderizado dinamicamente) ── -->
+<div id="pdClienteContainer" style="margin-bottom:20px;"></div>
+
+<!-- ── 3. TABELA DE ITENS ── -->
+<table class="r-table">
+    <thead>
+    <tr>
+        <th class="c-item">ITEM</th>
+        <th class="c-img">IMG</th>
+        <th class="c-sku">CÓDIGO</th>
+        <th class="c-desc">DESCRIÇÃO DO PRODUTO</th>
+        <th style="text-align:center;width:45px;" id="thCX">CX</th>
+        <th class="c-qtd">QTD</th>
+        <th class="c-preco">V.UNIT</th>
+        <th class="c-total">TOTAL</th>
+    </tr>
+    </thead>
+    <tbody id="pdItens"></tbody>
+</table>
+
+<!-- ── 4. ÁREA DE TOTAIS ── -->
+<div class="totals-area">
+    <table class="totals-table">
+        <tr>
+            <td>SUBTOTAL PRODUTOS:</td>
+            <td class="totals-value" id="pdSubtotal">R$ 0,00</td>
+        </tr>
+        <tr id="pdDescontoRow" style="display:none;">
+            <td id="pdDescontoLabel">DESCONTO:</td>
+            <td class="totals-value" id="pdDesconto">- R$ 0,00</td>
+        </tr>
+        <tr id="pdNFRow" style="display:none;">
+            <td id="pdNFLabel">NF FISCAL (18%):</td>
+            <td class="totals-value" id="pdNFValor">+ R$ 0,00</td>
+        </tr>
+        <tr class="final-row">
+            <td style="background:transparent;color:#000;border:none;">VALOR TOTAL:</td>
+            <td id="pdTotal">R$ 0,00</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ── 5. PARCELAS (condicional) ── -->
+<div id="pdParcelasSection" style="display:none;margin-top:20px;">
+    <h4 class="section-title">CONDIÇÃO DE PAGAMENTO</h4>
+    <table class="r-table" id="pdParcelasTable" style="margin-top:0;">
+        <thead>
+        <tr>
+            <th style="width:120px;">VENCIMENTO</th>
+            <th>FORMA DE PAGAMENTO</th>
+            <th style="width:120px;text-align:right;">VALOR</th>
+        </tr>
+        </thead>
+        <tbody id="pdParcelasItens"></tbody>
+    </table>
+</div>
+
+<!-- ── 6. OBSERVAÇÕES (condicional) ── -->
+<div id="pdObsSection" style="display:none;margin-top:20px;">
+    <h4 class="section-title">OBSERVAÇÕES</h4>
+    <div class="doc-obs-box">
+        <p id="pdObs"></p>
+    </div>
+</div>
+
+<!-- ── 7. RODAPÉ ── -->
+<div class="doc-footer" style="margin-top:30px;">
+    <p>DADOS BANCÁRIOS: C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50 </p>
+</div>
