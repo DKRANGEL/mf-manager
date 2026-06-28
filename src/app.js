@@ -8,6 +8,7 @@ const equipamentosRoutes = require('./routes/equipamentos');
 const botRoutes = require('./routes/bot');
 const catalogoRoutes = require('./routes/catalogo');
 const pedidosRoutes = require('./routes/pedidos');
+const contagensRoutes = require('./routes/contagens');
 
 function createApp() {
     const app = express();
@@ -59,6 +60,7 @@ function createApp() {
     app.use('/api/pedidos', pedidosRoutes);
     app.use('/api', apiRoutes);
     app.use('/api/catalogo', catalogoRoutes);
+    app.use('/api/contagens', contagensRoutes);
 
     // ─── Rotas Bot (protegidas) ──────────────────────────────────────────────────
     app.use('/bot', botRoutes);
@@ -82,6 +84,10 @@ function createApp() {
 
     app.get('/emitir', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'emitir.html'));
+    });
+
+    app.get('/contagem', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'contagem.html'));
     });
 
     return app;

@@ -1,0 +1,992 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contagem de Estoque - MF Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <link rel="stylesheet" href="/public/css/documento.css">
+    <style>
+        body {
+            overflow: auto;
+            background: #09090a;
+        }
+
+        .page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 28px 20px 80px;
+        }
+
+        /* HEADER */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .page-header .sub {
+            font-size: 11px;
+            color: #555;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: .15s;
+            font-family: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-white {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-white:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+        }
+
+        .btn-ghost:hover {
+            border-color: #555;
+            color: #fff;
+        }
+
+        .btn-accent {
+            background: var(--sb-accent);
+            color: #fff;
+        }
+
+        .btn-accent:hover {
+            background: var(--sb-accent-hover);
+        }
+
+        /* BARRA DE CONFIGURAÇÃO */
+        .config-bar {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .config-field label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .config-input {
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            height: 40px;
+        }
+
+        .config-input:focus {
+            border-color: #555;
+        }
+
+        .config-field.flex-grow {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .ultima-contagem {
+            font-size: 11px;
+            color: #555;
+            align-self: center;
+            padding-top: 16px;
+        }
+
+        /* CATEGORIA */
+        .categoria-bloco {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            transition: opacity .2s;
+        }
+
+        .categoria-bloco.desativado {
+            opacity: .35;
+        }
+
+        .categoria-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #1a1a1e;
+            border-bottom: 1px solid #29292e;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .categoria-header:hover {
+            background: #202024;
+        }
+
+        .categoria-nome {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ccc;
+        }
+
+        .categoria-codigo {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: #444;
+            margin-left: 8px;
+        }
+
+        .categoria-resumo {
+            font-size: 11px;
+            color: #444;
+            margin-top: 2px;
+        }
+
+        /* TOGGLE */
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-label {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .toggle-sw {
+            width: 36px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background .2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-sw::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #666;
+            border-radius: 50%;
+            transition: .2s;
+        }
+
+        .toggle-sw.on {
+            background: #fff;
+        }
+
+        .toggle-sw.on::after {
+            left: 18px;
+            background: #000;
+        }
+
+        /* TABELA DE ITENS */
+        .categoria-tabela {
+            display: none;
+        }
+
+        .categoria-tabela.aberto {
+            display: block;
+        }
+
+        .contagem-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .contagem-table thead th {
+            background: #111;
+            color: #555;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #1e1e22;
+        }
+
+        .contagem-table thead th.num {
+            text-align: center;
+        }
+
+        .contagem-table tbody tr {
+            border-bottom: 1px solid #1a1a1e;
+            transition: background .1s;
+        }
+
+        .contagem-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .contagem-table tbody tr:hover {
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .contagem-table tbody td {
+            padding: 9px 14px;
+            vertical-align: middle;
+        }
+
+        .td-cod {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .td-nome {
+            color: #ccc;
+        }
+
+        .td-num {
+            text-align: center;
+        }
+
+        .input-contagem {
+            width: 70px;
+            background: #1a1a1e;
+            border: 1px solid #2a2a30;
+            border-radius: 5px;
+            padding: 5px 8px;
+            color: #fff;
+            font-size: 12px;
+            font-family: var(--mono);
+            text-align: center;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .input-contagem:focus {
+            border-color: #666;
+            background: #202024;
+        }
+
+        .input-contagem:not([value="0"]):not([value=""]) {
+            border-color: #3a3a4a;
+        }
+
+        .td-total-un {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .td-total-un.preenchido {
+            color: #4ade80;
+            font-weight: 700;
+        }
+
+        /* RODAPÉ DE TOTAIS DA CATEGORIA */
+        .cat-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 24px;
+            padding: 10px 20px;
+            background: #111;
+            border-top: 1px solid #1e1e22;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .cat-footer span {
+            font-family: var(--mono);
+            color: #888;
+            margin-left: 4px;
+        }
+
+        /* RESUMO GERAL */
+        .resumo-geral {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-top: 24px;
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .resumo-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .resumo-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .resumo-valor {
+            font-family: var(--mono);
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* MODAL PREVIEW PDF */
+        #pdfModal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, .9);
+            display: none;
+            flex-direction: column;
+            align-items: flex-start; /* ← left, não center */
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #pdfModal.ativo {
+            display: flex;
+        }
+
+        .pdf-toolbar {
+            width: 100%;
+            max-width: 760px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 8px;
+            flex-shrink: 0;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+        }
+
+        .pdf-nome {
+            flex: 1;
+            background: #1a1a1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        #pdfContent {
+            width: 760px;
+            background: #fff;
+            transform-origin: top left;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .page {
+                padding: 16px 14px 60px;
+            }
+
+            .config-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .input-contagem {
+                width: 60px;
+            }
+
+            .contagem-table thead th:nth-child(2) {
+                display: none;
+            }
+
+            .contagem-table tbody td:nth-child(2) {
+                display: none;
+            }
+        }
+
+        @media print {
+            body > .page, #pdfModal .pdf-toolbar {
+                display: none !important;
+            }
+
+            #pdfModal {
+                position: static !important;
+                background: #fff !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            #pdfContent {
+                transform: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- MODAL PDF -->
+<div id="pdfModal">
+    <div class="pdf-toolbar">
+        <span style="color:#fff;font-weight:700;font-size:14px;">Contagem de Estoque</span>
+        <input type="text" class="pdf-nome" id="pdfNome" placeholder="Nome do arquivo">
+        <div style="display:flex;gap:8px;">
+            <button onclick="imprimirPDF()"
+                    style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
+                🖨 Imprimir
+            </button>
+            <button onclick="fecharPDF()"
+                    style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">
+                ✕
+            </button>
+        </div>
+    </div>
+    <div id="pdfContent" class="recibo">
+        <!-- gerado dinamicamente -->
+    </div>
+</div>
+
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Contagem de Estoque</h1>
+            <div class="sub">MF Manager · Magic Fireworks</div>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn btn-ghost">← Início</a>
+            <button class="btn btn-ghost" onclick="abrirPDF()">📄 Gerar PDF</button>
+            <button class="btn btn-white" onclick="salvarContagem()">💾 Salvar Contagem</button>
+        </div>
+    </div>
+
+    <div class="config-bar">
+        <div class="config-field">
+            <label>Data da Contagem</label>
+            <input type="date" class="config-input" id="dataContagem">
+        </div>
+        <div class="config-field flex-grow">
+            <label>Responsável</label>
+            <input type="text" class="config-input" id="responsavel" placeholder="Quem está contando...">
+        </div>
+        <div class="config-field">
+            <label>Observações</label>
+            <input type="text" class="config-input" id="obsContagem" placeholder="Opcional..." style="width:220px;">
+        </div>
+        <div class="ultima-contagem" id="ultimaContagemInfo">Carregando última contagem...</div>
+    </div>
+
+    <div id="categoriasBlocos"></div>
+
+    <div class="resumo-geral" id="resumoGeral" style="display:none;">
+        <div class="resumo-item">
+            <div class="resumo-label">Categorias ativas</div>
+            <div class="resumo-valor" id="resCateg">0</div>
+        </div>
+        <div class="resumo-item">
+            <div class="resumo-label">Itens contados</div>
+            <div class="resumo-valor" id="resItens">0</div>
+        </div>
+        <div class="resumo-item">
+            <div class="resumo-label">Total em CX</div>
+            <div class="resumo-valor" id="resCX">0</div>
+        </div>
+        <div class="resumo-item">
+            <div class="resumo-label">Total em UN</div>
+            <div class="resumo-valor" id="resUN">0</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── MAPA DE CATEGORIAS ──
+    const CATEGORIAS_LABELS = {
+        'MFSSS': 'Monotiros 0.8',
+        'MFSS1.2': 'Monotiros 1.2"',
+        'MFS3I': 'Shells 3"',
+        'MFS4I': 'Shells 4"',
+        'MFS5I': 'Shells 5"',
+        'MFS6I': 'Shells 6"',
+        'MFCS': 'Tortas Malta',
+        'MFCSM': 'Fumaça Colorida (Caixinha)',
+        'MFSCW': 'Fumaça Cascata',
+        'MFSCH': 'Fumaça Explosão'
+    };
+
+    // Estado
+    let catalogo = {};       // { categoria: [produto, ...] }
+    let toggles = {};        // { categoria: bool }
+    let contagens = {};      // { id_produto: { cx: num, un: num } }
+    let fatores = {};        // { codigo: fator }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Data padrão = hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('dataContagem').value = hoje;
+
+        await carregarCatalogo();
+        await carregarUltimaContagem();
+    });
+
+    async function carregarCatalogo() {
+        try {
+            const res = await fetch('/api/catalogo/catalogo');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            catalogo = json.data;
+
+            // Inicializa toggles e contagens
+            Object.keys(catalogo).forEach(cat => {
+                toggles[cat] = true; // começa ativo
+                catalogo[cat].forEach(p => {
+                    contagens[p.id] = {cx: 0, un: 0};
+                    fatores[p.codigo] = p.fator || 1;
+                });
+            });
+
+            renderCategorias();
+        } catch (err) {
+            document.getElementById('categoriasBlocos').innerHTML = `<p style="color:#f87171;padding:20px;">Erro ao carregar catálogo: ${err.message}</p>`;
+        }
+    }
+
+    async function carregarUltimaContagem() {
+        try {
+            const res = await fetch('/api/contagens/ultima');
+            const json = await res.json();
+            const el = document.getElementById('ultimaContagemInfo');
+            if (json.success && json.data) {
+                el.textContent = `Última contagem: ${formatData(json.data.data)} por ${json.data.responsavel || '-'}`;
+            } else {
+                el.textContent = 'Nenhuma contagem anterior';
+            }
+        } catch {
+            document.getElementById('ultimaContagemInfo').textContent = 'Sem contagem anterior';
+        }
+    }
+
+    function renderCategorias() {
+        const container = document.getElementById('categoriasBlocos');
+        const cats = Object.keys(catalogo).sort();
+
+        container.innerHTML = cats.map(cat => {
+            const label = CATEGORIAS_LABELS[cat] || cat;
+            const itens = catalogo[cat];
+            const ativo = toggles[cat];
+
+            return `<div class="categoria-bloco ${ativo ? '' : 'desativado'}" id="bloco-${cat}">
+            <div class="categoria-header" onclick="toggleCategoria('${cat}')">
+                <div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span class="categoria-nome">${esc(label)}</span>
+                        <span class="categoria-codigo">${cat}</span>
+                    </div>
+                    <div class="categoria-resumo" id="resumo-${cat}">${itens.length} produtos</div>
+                </div>
+                <div class="toggle-wrap" onclick="event.stopPropagation();ativarToggle('${cat}')">
+                    <span class="toggle-label">${ativo ? 'Incluir no PDF' : 'Ignorar'}</span>
+                    <div class="toggle-sw ${ativo ? 'on' : ''}" id="toggle-${cat}"></div>
+                </div>
+            </div>
+            <div class="categoria-tabela ${ativo ? 'aberto' : ''}" id="tabela-${cat}">
+                <table class="contagem-table">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">CÓDIGO</th>
+                            <th>NOME</th>
+                            <th class="num" style="width:90px;">CX inteiras</th>
+                            <th class="num" style="width:90px;">UN avulsas</th>
+                            <th class="num" style="width:100px;">TOTAL UN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itens.map(p => `
+                        <tr>
+                            <td class="td-cod">${esc(p.codigo)}</td>
+                            <td class="td-nome">${esc(p.nome)}</td>
+                            <td class="td-num">
+                                <input type="number" class="input-contagem" min="0" value="0"
+                                    id="cx-${p.id}"
+                                    oninput="atualizarContagem(${p.id}, '${p.codigo}', ${p.fator || 1})"
+                                    onchange="atualizarContagem(${p.id}, '${p.codigo}', ${p.fator || 1})">
+                            </td>
+                            <td class="td-num">
+                                <input type="number" class="input-contagem" min="0" value="0"
+                                    id="un-${p.id}"
+                                    oninput="atualizarContagem(${p.id}, '${p.codigo}', ${p.fator || 1})"
+                                    onchange="atualizarContagem(${p.id}, '${p.codigo}', ${p.fator || 1})">
+                            </td>
+                            <td class="td-total-un" id="total-${p.id}">0</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="cat-footer" id="footer-${cat}">
+                    <div>CX total: <span id="cat-cx-${cat}">0</span></div>
+                    <div>UN total: <span id="cat-un-${cat}">0</span></div>
+                    <div>Itens preenchidos: <span id="cat-preench-${cat}">0</span></div>
+                </div>
+            </div>
+        </div>`;
+        }).join('');
+
+        atualizarResumoGeral();
+    }
+
+    function toggleCategoria(cat) {
+        // Abre/fecha a tabela sem mudar o toggle
+        const tabela = document.getElementById(`tabela-${cat}`);
+        tabela.classList.toggle('aberto');
+    }
+
+    function ativarToggle(cat) {
+        toggles[cat] = !toggles[cat];
+        const bloco = document.getElementById(`bloco-${cat}`);
+        const sw = document.getElementById(`toggle-${cat}`);
+        const tabela = document.getElementById(`tabela-${cat}`);
+        const label = sw.previousElementSibling;
+
+        bloco.classList.toggle('desativado', !toggles[cat]);
+        sw.classList.toggle('on', toggles[cat]);
+        tabela.classList.toggle('aberto', toggles[cat]);
+        label.textContent = toggles[cat] ? 'Incluir no PDF' : 'Ignorar';
+
+        atualizarResumoGeral();
+    }
+
+    function atualizarContagem(id, codigo, fator) {
+        const cx = parseInt(document.getElementById(`cx-${id}`)?.value) || 0;
+        const un = parseInt(document.getElementById(`un-${id}`)?.value) || 0;
+        contagens[id] = {cx, un};
+
+        const total = cx * fator + un;
+        const tdTotal = document.getElementById(`total-${id}`);
+        if (tdTotal) {
+            tdTotal.textContent = total.toLocaleString('pt-BR');
+            tdTotal.className = `td-total-un ${total > 0 ? 'preenchido' : ''}`;
+        }
+
+        // Atualiza footer da categoria
+        atualizarFooterCategoria(id);
+        atualizarResumoGeral();
+    }
+
+    function atualizarFooterCategoria(prodId) {
+        // Descobre qual categoria tem esse produto
+        for (const cat of Object.keys(catalogo)) {
+            const itens = catalogo[cat];
+            if (!itens.find(p => p.id === prodId)) continue;
+
+            let totalCX = 0, totalUN = 0, preench = 0;
+            itens.forEach(p => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                const f = p.fator || 1;
+                totalCX += c.cx;
+                totalUN += c.cx * f + c.un;
+                if (c.cx > 0 || c.un > 0) preench++;
+            });
+
+            const elCX = document.getElementById(`cat-cx-${cat}`);
+            const elUN = document.getElementById(`cat-un-${cat}`);
+            const elP = document.getElementById(`cat-preench-${cat}`);
+            if (elCX) elCX.textContent = totalCX.toLocaleString('pt-BR');
+            if (elUN) elUN.textContent = totalUN.toLocaleString('pt-BR');
+            if (elP) elP.textContent = `${preench}/${itens.length}`;
+
+            const resumoEl = document.getElementById(`resumo-${cat}`);
+            if (resumoEl) resumoEl.textContent = `${itens.length} produtos · ${preench} preenchidos`;
+            break;
+        }
+    }
+
+    function atualizarResumoGeral() {
+        let catAtivas = 0, itensContados = 0, totalCX = 0, totalUN = 0;
+
+        Object.keys(catalogo).forEach(cat => {
+            if (!toggles[cat]) return;
+            catAtivas++;
+            catalogo[cat].forEach(p => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                const f = p.fator || 1;
+                if (c.cx > 0 || c.un > 0) itensContados++;
+                totalCX += c.cx;
+                totalUN += c.cx * f + c.un;
+            });
+        });
+
+        document.getElementById('resCateg').textContent = catAtivas;
+        document.getElementById('resItens').textContent = itensContados;
+        document.getElementById('resCX').textContent = totalCX.toLocaleString('pt-BR');
+        document.getElementById('resUN').textContent = totalUN.toLocaleString('pt-BR');
+        document.getElementById('resumoGeral').style.display = 'flex';
+    }
+
+    // ── SALVAR ──
+    async function salvarContagem() {
+        const data = document.getElementById('dataContagem').value;
+        if (!data) {
+            alert('Preencha a data da contagem');
+            return;
+        }
+
+        const payload = {
+            data,
+            responsavel: document.getElementById('responsavel').value.trim(),
+            observacoes: document.getElementById('obsContagem').value.trim(),
+            itens: []
+        };
+
+        Object.keys(catalogo).forEach(cat => {
+            catalogo[cat].forEach(p => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                if (c.cx > 0 || c.un > 0) {
+                    payload.itens.push({
+                        id: p.id,
+                        codigo: p.codigo,
+                        nome: p.nome,
+                        categoria: cat,
+                        fator: p.fator || 1,
+                        cx: c.cx,
+                        un_avulsas: c.un,
+                        total_un: c.cx * (p.fator || 1) + c.un
+                    });
+                }
+            });
+        });
+
+        try {
+            const res = await fetch('/api/contagens', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            alert(`Contagem salva: ${json.data.numero}`);
+            carregarUltimaContagem();
+        } catch (err) {
+            alert('Erro ao salvar: ' + err.message);
+        }
+    }
+
+    // ── PDF ──
+    function abrirPDF() {
+        const data = document.getElementById('dataContagem').value;
+        document.getElementById('pdfNome').value = `Contagem Estoque ${data || new Date().toLocaleDateString('pt-BR')}`;
+        gerarHTMLPDF();
+        document.getElementById('pdfModal').classList.add('ativo');
+        setTimeout(escalarPDF, 50);
+    }
+
+    function fecharPDF() {
+        document.getElementById('pdfModal').classList.remove('ativo');
+    }
+
+    function imprimirPDF() {
+        const nome = document.getElementById('pdfNome').value.trim();
+        if (nome) document.title = nome;
+        window.print();
+        setTimeout(() => {
+            document.title = 'Contagem de Estoque - MF Manager';
+        }, 1000);
+    }
+
+    function escalarPDF() {
+        const content = document.getElementById('pdfContent');
+        const modal = document.getElementById('pdfModal');
+        if (!content || !modal) return;
+        const escala = Math.min(1, modal.clientWidth / 760);
+        content.style.transform = `scale(${escala})`;
+        content.style.transformOrigin = 'top left';
+        // Compensa altura perdida pelo scale
+        const alturaOriginal = content.offsetHeight;
+        content.style.marginBottom = `${-(alturaOriginal * (1 - escala))}px`;
+        // Centraliza horizontalmente
+        const offset = (modal.clientWidth - 760 * escala) / 2;
+        content.style.marginLeft = `${Math.max(0, offset)}px`;
+    }
+
+    window.addEventListener('resize', escalarPDF);
+
+    function gerarHTMLPDF() {
+        const data = document.getElementById('dataContagem').value;
+        const resp = document.getElementById('responsavel').value.trim();
+        const obs = document.getElementById('obsContagem').value.trim();
+        const cats = Object.keys(catalogo).sort().filter(c => toggles[c]);
+
+        let html = `
+    <table class="doc-header-table">
+        <tr>
+            <td style="width:140px;padding:0;">
+                <div class="r-logo-rect">
+                    <img src="/public/MagicFireworksLogo.jpeg" alt="Logo" onerror="this.style.opacity=0">
+                </div>
+            </td>
+            <td style="padding-left:12px;">
+                <div style="font-size:16px;font-weight:700;text-transform:uppercase;color:#000;letter-spacing:1.5px;">MAGIC FIREWORKS</div>
+                <div class="doc-info">CNPJ: 22.748.770/0001-50</div>
+                <div class="doc-info">Brasília - DF</div>
+            </td>
+            <td style="text-align:right;width:160px;">
+                <div class="doc-box-number">
+                    <span class="doc-label">CONTAGEM DE ESTOQUE</span>
+                    <div class="doc-big-num" style="font-size:14px;letter-spacing:0;">${formatData(data)}</div>
+                    ${resp ? `<div class="doc-date">${esc(resp)}</div>` : ''}
+                </div>
+            </td>
+        </tr>
+    </table>`;
+
+        // Tabela por categoria
+        cats.forEach(cat => {
+            const label = CATEGORIAS_LABELS[cat] || cat;
+            const itens = catalogo[cat].filter(p => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                return c.cx > 0 || c.un > 0;
+            });
+            if (itens.length === 0) return; // pula categoria sem nada contado
+
+            let catCX = 0, catUN = 0;
+            itens.forEach(p => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                catCX += c.cx;
+                catUN += c.cx * (p.fator || 1) + c.un;
+            });
+
+            html += `
+        <table class="client-data-table-title" style="margin-top:20px;margin-bottom:0;">
+            <tr>
+                <td class="bg-black-title" style="text-align:left;padding:8px 14px;">${esc(label.toUpperCase())}</td>
+                <td class="data-cell" style="text-align:right;font-size:11px;color:#888;">
+                    ${itens.length} itens &nbsp;·&nbsp; ${catCX} CX &nbsp;·&nbsp; ${catUN.toLocaleString('pt-BR')} UN
+                </td>
+            </tr>
+        </table>
+        <table class="r-table" style="margin-bottom:8px;">
+            <thead>
+                <tr>
+                    <th class="c-item">Nº</th>
+                    <th class="c-sku">CÓDIGO</th>
+                    <th class="c-desc">DESCRIÇÃO</th>
+                    <th style="text-align:center;width:70px;">CX</th>
+                    <th style="text-align:center;width:70px;">UN AVULS.</th>
+                    <th style="text-align:center;width:90px;">TOTAL UN</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${itens.map((p, i) => {
+                const c = contagens[p.id] || {cx: 0, un: 0};
+                const total = c.cx * (p.fator || 1) + c.un;
+                return `<tr>
+                        <td class="c-item">${i + 1}</td>
+                        <td class="c-sku">${esc(p.codigo)}</td>
+                        <td class="c-desc">${esc(p.nome)}</td>
+                        <td style="text-align:center;font-weight:700;">${c.cx || '-'}</td>
+                        <td style="text-align:center;">${c.un || '-'}</td>
+                        <td style="text-align:center;font-weight:700;">${total.toLocaleString('pt-BR')}</td>
+                    </tr>`;
+            }).join('')}
+            </tbody>
+        </table>`;
+        });
+
+        // Observações
+        if (obs) {
+            html += `<div style="margin-top:20px;">
+            <h4 class="section-title">OBSERVAÇÕES</h4>
+            <div class="doc-obs-box"><p>${esc(obs)}</p></div>
+        </div>`;
+        }
+
+        // Rodapé
+        html += `<div class="doc-footer" style="margin-top:30px;">
+        <p>MAGIC FIREWORKS — CONTROLE DE ESTOQUE</p>
+    </div>`;
+
+        document.getElementById('pdfContent').innerHTML = html;
+    }
+
+    // ── HELPERS ──
+    function formatData(d) {
+        if (!d) return '-';
+        if (d.includes('-')) {
+            const [y, m, day] = d.split('-');
+            return `${day}/${m}/${y}`;
+        }
+        return d;
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+</script>
+</body>
+</html>
