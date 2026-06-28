@@ -1,4 +1,5 @@
-﻿const express = require('express');
+﻿const fs = require('fs');
+const express = require('express');
 const path = require('path');
 const {readJSON, writeJSONAtomic, listJSON} = require('../utils/storage');
 const {parsearTexto} = require('../utils/parserPedido');
@@ -100,31 +101,41 @@ router.post('/', (req, res) => {
     }
 });
 
-// GET /api/pedidos — lista (com filtro opcional de/até)
+// GET /api/pedidos — lista com dados reais
 router.get('/', (req, res) => {
     try {
-        const {de, ate} = req.query;
-        const arquivos = listJSON(PEDIDOS_DIR);
-        let pedidos = arquivos.map(f => readJSON(path.join(PEDIDOS_DIR, f), null)).filter(Boolean);
+        const dir = path.join(__dirname, '..', 'data', 'pedidos');
+        if (!fs.existsSync(dir)) return res.json({success: true, data: [], total: 0});
 
-        // Filtro por período
-        if (de) pedidos = pedidos.filter(p => p.data_emissao >= de);
-        if (ate) pedidos = pedidos.filter(p => p.data_emissao <= ate + 'T23:59:59.999Z');
+        const arquivos = fs.readdirSync(dir)
+            .filter(f => f.endsWith('.json') && f.startsWith('PED-'))
+            .sort()
+            .reverse(); // mais recentes primeiro
 
-        // Ordena do mais recente pro mais antigo
-        pedidos.sort((a, b) => (b.data_emissao || '').localeCompare(a.data_emissao || ''));
+        const data = arquivos.map(f => {
+            try {
+                const pedido = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+                const blocos = pedido.blocos || {};
+                const cliente = blocos.cliente?.nome || '';
+                const secoes = pedido.secoes || [];
+                const itens = secoes.flatMap(s => s.itens || []);
+                const subtotal = itens.reduce((s, i) => s + (i.preco_total || (i.qtd_entrada * i.preco_unit) || 0), 0);
 
-        // Retorna resumo (sem itens/movimentos, pra não pesar)
-        const lista = pedidos.map(p => ({
-            numero: p.numero,
-            cliente: p.cliente,
-            status: p.status,
-            data_emissao: p.data_emissao,
-            total_itens: (p.itens || []).length,
-            total_valor: (p.itens || []).reduce((s, i) => s + (i.qtd_un || 0) * (i.preco_unit || 0), 0)
-        }));
+                return {
+                    numero: pedido.numero,
+                    status: pedido.status || 'rascunho',
+                    data_emissao: pedido.data_emissao,
+                    data_atualizacao: pedido.data_atualizacao,
+                    cliente,
+                    total_itens: itens.length,
+                    total_valor: subtotal
+                };
+            } catch {
+                return null;
+            }
+        }).filter(Boolean);
 
-        res.json({success: true, data: lista, total: lista.length});
+        res.json({success: true, data, total: data.length});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
@@ -191,7 +202,6 @@ router.put('/:numero', (req, res) => {
 // DELETE /api/pedidos/:numero — exclui (só rascunho)
 router.delete('/:numero', (req, res) => {
     try {
-        const fs = require('fs');
         const filePath = pedidoPath(req.params.numero);
         const pedido = readJSON(filePath, null);
         if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});

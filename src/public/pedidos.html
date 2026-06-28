@@ -1,0 +1,728 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - MF Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <link rel="stylesheet" href="/public/css/documento.css">
+    <style>
+        body {
+            overflow: auto;
+            background: #09090a;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px 80px;
+        }
+
+        /* HEADER */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .page-header .sub {
+            font-size: 11px;
+            color: #555;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: .15s;
+            font-family: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-white {
+            background: #fff;
+            color: #000;
+        }
+
+        .btn-white:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+        }
+
+        .btn-ghost:hover {
+            border-color: #555;
+            color: #fff;
+        }
+
+        /* FILTROS */
+        .filtros {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filtro-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #29292e;
+            background: transparent;
+            color: #555;
+            font-family: inherit;
+            transition: .15s;
+        }
+
+        .filtro-btn.ativo {
+            background: #222;
+            border-color: #555;
+            color: #ccc;
+        }
+
+        .filtro-btn:hover {
+            border-color: #444;
+            color: #ccc;
+        }
+
+        /* GRID DE CARDS */
+        .pedidos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .pedido-card {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s, transform .15s;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+        }
+
+        .pedido-card:hover {
+            border-color: #444;
+            transform: translateY(-2px);
+        }
+
+        /* Thumbnail topo do card */
+        .card-thumb {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #1a1a1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 1px solid #1e1e22;
+        }
+
+        .card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-thumb-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-thumb-initials {
+            font-size: 28px;
+            font-weight: 800;
+            color: #333;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .card-thumb-icon {
+            font-size: 32px;
+            opacity: .3;
+        }
+
+        .card-thumb-num {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: #3a3a3f;
+            position: absolute;
+            bottom: 6px;
+            right: 8px;
+        }
+
+        /* Status badge */
+        .card-status {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .status-rascunho {
+            background: rgba(0, 0, 0, .5);
+            color: #666;
+        }
+
+        .status-emitido {
+            background: rgba(74, 222, 128, .15);
+            color: #4ade80;
+        }
+
+        /* Info do card */
+        .card-info {
+            padding: 12px 14px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .card-cliente {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .card-total {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: #ccc;
+            margin-top: 4px;
+        }
+
+        .card-total.zero {
+            color: #444;
+        }
+
+        /* Ações do card */
+        .card-actions {
+            display: flex;
+            border-top: 1px solid #1e1e22;
+        }
+
+        .card-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #444;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 10px;
+            transition: .15s;
+            font-family: inherit;
+        }
+
+        .card-btn:hover {
+            color: #ccc;
+            background: rgba(255, 255, 255, .04);
+        }
+
+        .card-btn.danger:hover {
+            color: #f87171;
+            background: rgba(220, 38, 38, .08);
+        }
+
+        .card-btn + .card-btn {
+            border-left: 1px solid #1e1e22;
+        }
+
+        /* EMPTY / LOADING */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #444;
+            grid-column: 1/-1;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: .3;
+        }
+
+        .empty p {
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 13px;
+            grid-column: 1/-1;
+        }
+
+        /* MODAL PREVIEW */
+        #previewModal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #previewModal.ativo {
+            display: flex;
+        }
+
+        .preview-toolbar {
+            width: 100%;
+            max-width: 760px;
+            padding: 0 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .preview-nome-arquivo {
+            flex: 1;
+            min-width: 180px;
+            background: #1a1a1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .preview-nome-arquivo:focus {
+            border-color: #555;
+        }
+
+        .preview-btns {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        #previewContent {
+            width: 760px;
+            background: #fff;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+            transform-origin: top left;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 600px) {
+            .page {
+                padding: 16px 14px 60px;
+            }
+
+            .pedidos-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .card-info {
+                padding: 10px 12px;
+            }
+
+            .card-cliente {
+                font-size: 12px;
+            }
+
+            .card-total {
+                font-size: 12px;
+            }
+        }
+
+        @media print {
+            body > .page, #previewModal .preview-toolbar {
+                display: none !important;
+            }
+
+            #previewModal {
+                position: static !important;
+                background: #fff !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            #previewContent {
+                box-shadow: none !important;
+                transform: none !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- MODAL PREVIEW -->
+<div id="previewModal">
+    <div class="preview-toolbar">
+        <input type="text" class="preview-nome-arquivo" id="nomeArquivo"
+               placeholder="Nome do arquivo (ex: Pedido Marcio)">
+        <div class="preview-btns">
+            <button onclick="imprimirPreview()"
+                    style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
+                🖨 Imprimir
+            </button>
+            <button onclick="fecharPreview()"
+                    style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">
+                ✕
+            </button>
+        </div>
+    </div>
+    <div id="previewContent" class="recibo-wrapper">
+        <div id="previewRecibo" class="recibo"></div>
+    </div>
+</div>
+
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Pedidos</h1>
+            <div class="sub">MF Manager · Magic Fireworks</div>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn btn-ghost">← Início</a>
+            <a href="/emitir" class="btn btn-white">✏️ Novo Pedido</a>
+        </div>
+    </div>
+
+    <div class="filtros">
+        <button class="filtro-btn ativo" data-filtro="todos" onclick="setFiltro(this)">Todos</button>
+        <button class="filtro-btn" data-filtro="hoje" onclick="setFiltro(this)">Hoje</button>
+        <button class="filtro-btn" data-filtro="semana" onclick="setFiltro(this)">Esta semana</button>
+        <button class="filtro-btn" data-filtro="mes" onclick="setFiltro(this)">Este mês</button>
+    </div>
+
+    <div id="pedidosGrid" class="pedidos-grid">
+        <div class="loading">Carregando pedidos...</div>
+    </div>
+</div>
+
+<script>
+    let todosPedidos = [];
+    let filtroAtivo = 'todos';
+
+    document.addEventListener('DOMContentLoaded', carregarPedidos);
+
+    async function carregarPedidos() {
+        try {
+            const res = await fetch('/api/pedidos');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            todosPedidos = (json.data || []).sort((a, b) =>
+                new Date(b.data_atualizacao || b.data_emissao) - new Date(a.data_atualizacao || a.data_emissao)
+            );
+            renderGrid();
+        } catch (err) {
+            document.getElementById('pedidosGrid').innerHTML = `<div class="empty"><p>Erro ao carregar: ${err.message}</p></div>`;
+        }
+    }
+
+    function setFiltro(btn) {
+        document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+        btn.classList.add('ativo');
+        filtroAtivo = btn.dataset.filtro;
+        renderGrid();
+    }
+
+    function filtrarPorPeriodo(pedidos) {
+        if (filtroAtivo === 'todos') return pedidos;
+        const agora = new Date();
+        const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+        return pedidos.filter(p => {
+            const d = new Date(p.data_atualizacao || p.data_emissao);
+            if (filtroAtivo === 'hoje') return d >= hoje;
+            if (filtroAtivo === 'semana') {
+                const s = new Date(hoje);
+                s.setDate(hoje.getDate() - 7);
+                return d >= s;
+            }
+            if (filtroAtivo === 'mes') return d >= new Date(agora.getFullYear(), agora.getMonth(), 1);
+            return true;
+        });
+    }
+
+    function getInitials(nome) {
+        if (!nome) return '?';
+        return nome.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    }
+
+    function renderGrid() {
+        const container = document.getElementById('pedidosGrid');
+        const lista = filtrarPorPeriodo(todosPedidos);
+
+        if (lista.length === 0) {
+            container.innerHTML = `<div class="empty">
+            <div class="empty-icon">📄</div>
+            <div style="color:#555;font-size:14px;font-weight:600;">Nenhum pedido encontrado</div>
+            <p>Crie um novo pedido para começar</p>
+        </div>`;
+            return;
+        }
+
+        container.innerHTML = lista.map(p => {
+            const cliente = p.cliente || '';
+            const subtotal = p.total_valor || 0;
+            const totalStr = subtotal > 0 ? fmtMoney(subtotal) : 'Sem valor';
+            const totalClass = subtotal > 0 ? '' : 'zero';
+            const data = formatData(p.data_atualizacao || p.data_emissao);
+            const status = p.status || 'rascunho';
+            const initials = getInitials(cliente);
+
+            // Thumb: usa imagem do primeiro item se tiver, senão placeholder com iniciais
+            const thumbImg = p.primeira_imagem
+                ? `<img src="/data/produtos/${esc(p.primeira_imagem)}" alt="">`
+                : `<div class="card-thumb-placeholder">
+                <div class="card-thumb-initials">${esc(initials)}</div>
+                <div class="card-thumb-icon">📄</div>
+               </div>`;
+
+            return `<div class="pedido-card">
+            <div class="card-thumb" onclick="abrirEditar('${esc(p.numero)}')">
+                ${thumbImg}
+                <span class="card-status status-${status}">${status}</span>
+                <span class="card-thumb-num">${esc(p.numero)}</span>
+            </div>
+            <div class="card-info" onclick="abrirEditar('${esc(p.numero)}')">
+                <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
+                <div class="card-meta">${data} · ${p.total_itens} ${p.total_itens === 1 ? 'item' : 'itens'}</div>
+                <div class="card-total ${totalClass}">${totalStr}</div>
+            </div>
+            <div class="card-actions">
+                <button class="card-btn" onclick="abrirPreview('${esc(p.numero)}', '${esc(cliente)}')" title="Preview">👁</button>
+                <button class="card-btn" onclick="abrirEditar('${esc(p.numero)}')" title="Editar">✏️</button>
+                <button class="card-btn danger" onclick="deletarPedido('${esc(p.numero)}', '${esc(cliente)}')" title="Excluir">🗑️</button>
+            </div>
+        </div>`;
+        }).join('');
+    }
+
+    function abrirEditar(numero) {
+        window.location.href = `/emitir?numero=${encodeURIComponent(numero)}`;
+    }
+
+    async function abrirPreview(numero, cliente) {
+        try {
+            const [resP, resTpl] = await Promise.all([
+                fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json()),
+                fetch('/public/templates/pedido-venda.html').then(r => r.text())
+            ]);
+            if (!resP.success) throw new Error(resP.error);
+
+            document.getElementById('previewRecibo').innerHTML = resTpl;
+            document.getElementById('nomeArquivo').value = cliente ? `Pedido ${cliente}` : numero;
+            document.getElementById('previewModal').classList.add('ativo');
+            renderPedidoNoTemplate(resP.data);
+
+            renderPedidoNoTemplate(resP.data);
+            setTimeout(escalarPreview, 50);
+            escalarPreview();
+        } catch (err) {
+            alert('Erro ao carregar preview: ' + err.message);
+        }
+    }
+
+    function escalarPreview() {
+        const content = document.getElementById('previewContent');
+        const modal = document.getElementById('previewModal');
+        if (!content || !modal) return;
+        const disponivel = modal.clientWidth - 24;
+        const escala = Math.min(1, disponivel / 760);
+        content.style.transform = `scale(${escala})`;
+        content.style.transformOrigin = 'top center';
+        const alturaReal = content.offsetHeight * escala;
+        const alturaOriginal = content.offsetHeight;
+        content.style.marginBottom = `${alturaReal - alturaOriginal}px`;
+    }
+
+    window.addEventListener('resize', escalarPreview);
+
+    function fecharPreview() {
+        document.getElementById('previewModal').classList.remove('ativo');
+    }
+
+    function imprimirPreview() {
+        const nome = document.getElementById('nomeArquivo').value.trim();
+        if (nome) document.title = nome;
+        window.print();
+        setTimeout(() => {
+            document.title = 'Pedidos - MF Manager';
+        }, 1000);
+    }
+
+    async function deletarPedido(numero, cliente) {
+        if (!confirm(`Excluir pedido ${numero}${cliente ? ` de "${cliente}"` : ''}?`)) return;
+        try {
+            const res = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`, {method: 'DELETE'});
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            todosPedidos = todosPedidos.filter(p => p.numero !== numero);
+            renderGrid();
+        } catch (err) {
+            alert('Erro ao excluir: ' + err.message);
+        }
+    }
+
+    // ── RENDER DO DOCUMENTO ──
+    function renderPedidoNoTemplate(pedido) {
+        const blocos = pedido.blocos || {};
+        const itensPedido = (pedido.secoes || [{itens: []}])[0].itens || [];
+        setText('pdDocNum', pedido.numero || '000');
+        setText('pdDocData', new Date(pedido.data_emissao).toLocaleDateString('pt-BR'));
+        const cli = blocos.cliente || {};
+        const camposAtivos = cli.campos || [];
+        const labelMap = {
+            artista: 'ARTISTA / SHOW',
+            cidade: 'CIDADE',
+            data_show: 'DATA DO SHOW',
+            cnpj: 'CNPJ',
+            semana: 'SEMANA'
+        };
+        let cHTML = `<table class="client-data-table-title"><tr><td class="bg-black-title">CLIENTE</td><td class="data-cell highlight" colspan="3">${esc((cli.nome || 'CONSUMIDOR FINAL').toUpperCase())}</td></tr></table>`;
+        if (camposAtivos.length) {
+            cHTML += '<table class="client-data-table">';
+            camposAtivos.forEach(c => {
+                cHTML += `<tr><td class="bg-gray-title">${labelMap[c] || c.toUpperCase()}</td><td class="data-cell" colspan="3">${esc((cli[c] || '-').toUpperCase())}</td></tr>`;
+            });
+            cHTML += '</table>';
+        }
+        document.getElementById('pdClienteContainer').innerHTML = cHTML;
+        const tbody = document.getElementById('pdItens');
+        tbody.innerHTML = '';
+        let sub = 0;
+        itensPedido.forEach((item, i) => {
+            const tot = item.preco_total || (item.qtd_entrada * item.preco_unit) || 0;
+            sub += tot;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="c-item">${i + 1}</td><td class="c-img">${item.imagem ? `<img src="/data/produtos/${esc(item.imagem)}" class="prod-thumb">` : ''}</td><td class="c-sku">${esc(item.codigo || '-')}</td><td class="c-desc">${esc(item.descricao || '-')}</td><td style="text-align:center;font-size:11px;">${item.fator > 1 ? item.fator : '-'}</td><td class="c-qtd">${item.qtd_entrada}</td><td class="c-preco">${fmtMoney(item.preco_unit)}</td><td class="c-total">${fmtMoney(tot)}</td>`;
+            tbody.appendChild(tr);
+        });
+        setText('pdSubtotal', fmtMoney(sub));
+        let tot = sub;
+        const desc = blocos.desconto || {};
+        if (desc.ativo && desc.valor > 0) {
+            setText('pdDescontoLabel', (desc.label || 'DESCONTO') + ':');
+            setText('pdDesconto', `- ${fmtMoney(desc.valor)}`);
+            show('pdDescontoRow');
+            tot -= desc.valor;
+        } else hide('pdDescontoRow');
+        const nf = blocos.nf || {};
+        if (nf.ativo) {
+            const nv = sub * (nf.percent || 18) / 100;
+            setText('pdNFLabel', `NF FISCAL (${nf.percent || 18}%):`);
+            setText('pdNFValor', `+ ${fmtMoney(nv)}`);
+            show('pdNFRow');
+            tot += nv;
+        } else hide('pdNFRow');
+        setText('pdTotal', fmtMoney(tot));
+        const parc = blocos.parcelas || {};
+        if (parc.ativo && parc.lista?.length) {
+            document.getElementById('pdParcelasItens').innerHTML = parc.lista.map(p => `<tr><td>${p.data || '-'}</td><td>${esc((p.forma || '-').toUpperCase())}</td><td style="text-align:right">${fmtMoney(parseFloat(p.valor) || 0)}</td></tr>`).join('');
+            show('pdParcelasSection');
+        } else hide('pdParcelasSection');
+        const obs = blocos.observacoes || '';
+        if (obs) {
+            setText('pdObs', obs);
+            show('pdObsSection');
+        } else hide('pdObsSection');
+    }
+
+    function setText(id, t) {
+        const e = document.getElementById(id);
+        if (e) e.textContent = t || '';
+    }
+
+    function show(id) {
+        const e = document.getElementById(id);
+        if (e) e.style.display = '';
+    }
+
+    function hide(id) {
+        const e = document.getElementById(id);
+        if (e) e.style.display = 'none';
+    }
+
+    function fmtMoney(v) {
+        return 'R$ ' + (v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function formatData(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'});
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+</script>
+</body>
+</html>

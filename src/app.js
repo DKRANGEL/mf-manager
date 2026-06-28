@@ -77,7 +77,7 @@ function createApp() {
     });
 
     app.get('/pedidos', (req, res) => {
-        res.sendFile(path.join(__dirname, 'public', 'emitir.html')); // Temporário — vira hall depois
+        res.sendFile(path.join(__dirname, 'public', 'pedidos.html'));
     });
 
     app.get('/emitir', (req, res) => {
