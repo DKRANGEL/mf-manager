@@ -21,7 +21,6 @@
             padding: 28px 20px 80px;
         }
 
-        /* HEADER */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -88,7 +87,6 @@
             color: #fff;
         }
 
-        /* FILTROS */
         .filtros {
             display: flex;
             gap: 8px;
@@ -120,7 +118,6 @@
             color: #ccc;
         }
 
-        /* GRID DE CARDS */
         .pedidos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -132,11 +129,9 @@
             border: 1px solid #29292e;
             border-radius: 12px;
             overflow: hidden;
-            cursor: pointer;
             transition: border-color .15s, transform .15s;
             display: flex;
             flex-direction: column;
-            text-decoration: none;
         }
 
         .pedido-card:hover {
@@ -144,7 +139,6 @@
             transform: translateY(-2px);
         }
 
-        /* Thumbnail topo do card */
         .card-thumb {
             width: 100%;
             aspect-ratio: 4/3;
@@ -155,6 +149,7 @@
             overflow: hidden;
             position: relative;
             border-bottom: 1px solid #1e1e22;
+            cursor: pointer;
         }
 
         .card-thumb img {
@@ -195,7 +190,6 @@
             right: 8px;
         }
 
-        /* Status badge */
         .card-status {
             position: absolute;
             top: 8px;
@@ -218,13 +212,13 @@
             color: #4ade80;
         }
 
-        /* Info do card */
         .card-info {
             padding: 12px 14px;
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 4px;
+            cursor: pointer;
         }
 
         .card-cliente {
@@ -253,7 +247,6 @@
             color: #444;
         }
 
-        /* Ações do card */
         .card-actions {
             display: flex;
             border-top: 1px solid #1e1e22;
@@ -281,11 +274,14 @@
             background: rgba(220, 38, 38, .08);
         }
 
+        .card-btn.emitido {
+            color: #4ade80;
+        }
+
         .card-btn + .card-btn {
             border-left: 1px solid #1e1e22;
         }
 
-        /* EMPTY / LOADING */
         .empty {
             text-align: center;
             padding: 60px 20px;
@@ -312,15 +308,14 @@
             grid-column: 1/-1;
         }
 
-        /* MODAL PREVIEW */
         #previewModal {
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: rgba(0,0,0,.9);
+            background: rgba(0, 0, 0, .9);
             display: none;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             padding: 12px 0;
             overflow-y: auto;
             overflow-x: hidden;
@@ -341,6 +336,7 @@
             flex-shrink: 0;
             gap: 10px;
             flex-wrap: wrap;
+            box-sizing: border-box;
         }
 
         .preview-nome-arquivo {
@@ -369,7 +365,7 @@
         #previewContent {
             width: 760px;
             background: #fff;
-            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
             transform-origin: top left;
             flex-shrink: 0;
         }
@@ -412,14 +408,13 @@
             #previewContent {
                 box-shadow: none !important;
                 transform: none !important;
-                max-width: 100% !important;
+                width: 100% !important;
             }
         }
     </style>
 </head>
 <body>
 
-<!-- MODAL PREVIEW -->
 <div id="previewModal">
     <div class="preview-toolbar">
         <input type="text" class="preview-nome-arquivo" id="nomeArquivo"
@@ -451,14 +446,12 @@
             <a href="/emitir" class="btn btn-white">✏️ Novo Pedido</a>
         </div>
     </div>
-
     <div class="filtros">
         <button class="filtro-btn ativo" data-filtro="todos" onclick="setFiltro(this)">Todos</button>
         <button class="filtro-btn" data-filtro="hoje" onclick="setFiltro(this)">Hoje</button>
         <button class="filtro-btn" data-filtro="semana" onclick="setFiltro(this)">Esta semana</button>
         <button class="filtro-btn" data-filtro="mes" onclick="setFiltro(this)">Este mês</button>
     </div>
-
     <div id="pedidosGrid" class="pedidos-grid">
         <div class="loading">Carregando pedidos...</div>
     </div>
@@ -495,8 +488,8 @@
         if (filtroAtivo === 'todos') return pedidos;
         const agora = new Date();
         const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
-        return pedidos.filter(p => {
-            const d = new Date(p.data_atualizacao || p.data_emissao);
+        return pedidos.filter(ped => {
+            const d = new Date(ped.data_atualizacao || ped.data_emissao);
             if (filtroAtivo === 'hoje') return d >= hoje;
             if (filtroAtivo === 'semana') {
                 const s = new Date(hoje);
@@ -526,38 +519,43 @@
             return;
         }
 
-        container.innerHTML = lista.map(p => {
-            const cliente = p.cliente || '';
-            const subtotal = p.total_valor || 0;
+        container.innerHTML = lista.map(ped => {
+            const cliente = ped.cliente || '';
+            const subtotal = ped.total_valor || 0;
             const totalStr = subtotal > 0 ? fmtMoney(subtotal) : 'Sem valor';
             const totalClass = subtotal > 0 ? '' : 'zero';
-            const data = formatData(p.data_atualizacao || p.data_emissao);
-            const status = p.status || 'rascunho';
+            const data = formatData(ped.data_atualizacao || ped.data_emissao);
+            const status = ped.status || 'rascunho';
+            const emitido = status === 'emitido';
             const initials = getInitials(cliente);
+            const toggleIcon = emitido ? '🟢' : '⚪';
+            const toggleTitle = emitido ? 'Reverter baixa de estoque' : 'Baixar estoque';
 
-            // Thumb: usa imagem do primeiro item se tiver, senão placeholder com iniciais
-            const thumbImg = p.primeira_imagem
-                ? `<img src="/data/produtos/${esc(p.primeira_imagem)}" alt="">`
+            const thumbImg = ped.primeira_imagem
+                ? `<img src="/data/produtos/${esc(ped.primeira_imagem)}" alt="">`
                 : `<div class="card-thumb-placeholder">
                 <div class="card-thumb-initials">${esc(initials)}</div>
                 <div class="card-thumb-icon">📄</div>
                </div>`;
 
             return `<div class="pedido-card">
-            <div class="card-thumb" onclick="abrirEditar('${esc(p.numero)}')">
+            <div class="card-thumb" onclick="abrirEditar('${esc(ped.numero)}')">
                 ${thumbImg}
                 <span class="card-status status-${status}">${status}</span>
-                <span class="card-thumb-num">${esc(p.numero)}</span>
+                <span class="card-thumb-num">${esc(ped.numero)}</span>
             </div>
-            <div class="card-info" onclick="abrirEditar('${esc(p.numero)}')">
+            <div class="card-info" onclick="abrirEditar('${esc(ped.numero)}')">
                 <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
-                <div class="card-meta">${data} · ${p.total_itens} ${p.total_itens === 1 ? 'item' : 'itens'}</div>
+                <div class="card-meta">${data} · ${ped.total_itens} ${ped.total_itens === 1 ? 'item' : 'itens'}</div>
                 <div class="card-total ${totalClass}">${totalStr}</div>
             </div>
             <div class="card-actions">
-                <button class="card-btn" onclick="abrirPreview('${esc(p.numero)}', '${esc(cliente)}')" title="Preview">👁</button>
-                <button class="card-btn" onclick="abrirEditar('${esc(p.numero)}')" title="Editar">✏️</button>
-                <button class="card-btn danger" onclick="deletarPedido('${esc(p.numero)}', '${esc(cliente)}')" title="Excluir">🗑️</button>
+                <button class="card-btn ${emitido ? 'emitido' : ''}"
+                    onclick="toggleBaixa('${esc(ped.numero)}', ${emitido}, '${esc(cliente)}')"
+                    title="${toggleTitle}">${toggleIcon}</button>
+                <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview">👁</button>
+                <button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar">✏️</button>
+                <button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir">🗑️</button>
             </div>
         </div>`;
         }).join('');
@@ -567,6 +565,26 @@
         window.location.href = `/emitir?numero=${encodeURIComponent(numero)}`;
     }
 
+    async function toggleBaixa(numero, jaEmitido, cliente) {
+        const ativar = !jaEmitido;
+        const msg = ativar
+            ? `Baixar estoque do pedido ${numero}${cliente ? ` (${cliente})` : ''}?\n\nIsso vai descontar os itens do estoque.`
+            : `Reverter baixa do pedido ${numero}?\n\nIsso vai devolver os itens ao estoque.`;
+        if (!confirm(msg)) return;
+        try {
+            const res = await fetch(`/api/pedidos/${encodeURIComponent(numero)}/baixa`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ativar})
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            await carregarPedidos();
+        } catch (err) {
+            alert('Erro: ' + err.message);
+        }
+    }
+
     async function abrirPreview(numero, cliente) {
         try {
             const [resP, resTpl] = await Promise.all([
@@ -574,15 +592,11 @@
                 fetch('/public/templates/pedido-venda.html').then(r => r.text())
             ]);
             if (!resP.success) throw new Error(resP.error);
-
             document.getElementById('previewRecibo').innerHTML = resTpl;
             document.getElementById('nomeArquivo').value = cliente ? `Pedido ${cliente}` : numero;
             document.getElementById('previewModal').classList.add('ativo');
             renderPedidoNoTemplate(resP.data);
-
-            renderPedidoNoTemplate(resP.data);
             setTimeout(escalarPreview, 50);
-            escalarPreview();
         } catch (err) {
             alert('Erro ao carregar preview: ' + err.message);
         }
@@ -592,13 +606,12 @@
         const content = document.getElementById('previewContent');
         const modal = document.getElementById('previewModal');
         if (!content || !modal) return;
-        const disponivel = modal.clientWidth - 24;
-        const escala = Math.min(1, disponivel / 760);
+        const escala = Math.min(1, modal.clientWidth / 760);
         content.style.transform = `scale(${escala})`;
-        content.style.transformOrigin = 'top center';
-        const alturaReal = content.offsetHeight * escala;
-        const alturaOriginal = content.offsetHeight;
-        content.style.marginBottom = `${alturaReal - alturaOriginal}px`;
+        content.style.transformOrigin = 'top left';
+        content.style.marginBottom = `${-(content.offsetHeight * (1 - escala))}px`;
+        const offset = (modal.clientWidth - 760 * escala) / 2;
+        content.style.marginLeft = `${Math.max(0, offset)}px`;
     }
 
     window.addEventListener('resize', escalarPreview);
@@ -622,14 +635,13 @@
             const res = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            todosPedidos = todosPedidos.filter(p => p.numero !== numero);
+            todosPedidos = todosPedidos.filter(ped => ped.numero !== numero);
             renderGrid();
         } catch (err) {
             alert('Erro ao excluir: ' + err.message);
         }
     }
 
-    // ── RENDER DO DOCUMENTO ──
     function renderPedidoNoTemplate(pedido) {
         const blocos = pedido.blocos || {};
         const itensPedido = (pedido.secoes || [{itens: []}])[0].itens || [];
@@ -683,7 +695,9 @@
         setText('pdTotal', fmtMoney(tot));
         const parc = blocos.parcelas || {};
         if (parc.ativo && parc.lista?.length) {
-            document.getElementById('pdParcelasItens').innerHTML = parc.lista.map(p => `<tr><td>${p.data || '-'}</td><td>${esc((p.forma || '-').toUpperCase())}</td><td style="text-align:right">${fmtMoney(parseFloat(p.valor) || 0)}</td></tr>`).join('');
+            document.getElementById('pdParcelasItens').innerHTML = parc.lista.map(pi =>
+                `<tr><td>${pi.data || '-'}</td><td>${esc((pi.forma || '-').toUpperCase())}</td><td style="text-align:right">${fmtMoney(parseFloat(pi.valor) || 0)}</td></tr>`
+            ).join('');
             show('pdParcelasSection');
         } else hide('pdParcelasSection');
         const obs = blocos.observacoes || '';

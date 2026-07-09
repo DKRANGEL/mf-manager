@@ -199,6 +199,54 @@ router.put('/:numero', (req, res) => {
     }
 });
 
+// PUT /api/pedidos/:numero/baixa — ativa ou reverte baixa de estoque
+router.put('/:numero/baixa', (req, res) => {
+    try {
+        const pedido = readJSON(pedidoPath(req.params.numero), null);
+        if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+
+        const {ativar} = req.body; // true = baixar, false = reverter
+        const jaEmitido = pedido.status === 'emitido';
+
+        if (ativar && jaEmitido) return res.status(400).json({success: false, error: 'Pedido já foi baixado'});
+        if (!ativar && pedido.status !== 'emitido') return res.status(400).json({
+            success: false,
+            error: 'Pedido não está emitido'
+        });
+
+        // Monta os movimentos de saída/entrada
+        const secao = (pedido.secoes || [])[0] || {itens: []};
+        const itens = secao.itens || [];
+        const movimentos = itens.map(item => ({
+            codigo: item.codigo,
+            descricao: item.descricao,
+            qtd_un: item.qtd_un || (item.qtd_entrada * (item.fator || 1)),
+            tipo: ativar ? 'saida' : 'entrada',
+            origem: 'pedido',
+            numero_pedido: pedido.numero,
+            data: new Date().toISOString()
+        }));
+
+        // Grava log de movimentos
+        const LOG_DIR = path.join(__dirname, '..', 'data', 'movimentos');
+        if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, {recursive: true});
+        const logFile = path.join(LOG_DIR, `${pedido.numero}.json`);
+        const logExistente = fs.existsSync(logFile) ? JSON.parse(fs.readFileSync(logFile, 'utf8')) : {movimentos: []};
+        logExistente.movimentos.push(...movimentos);
+        fs.writeFileSync(logFile, JSON.stringify(logExistente, null, 2));
+
+        // Atualiza status do pedido
+        pedido.status = ativar ? 'emitido' : 'rascunho';
+        pedido.data_baixa = ativar ? new Date().toISOString() : null;
+        pedido.data_atualizacao = new Date().toISOString();
+        writeJSONAtomic(pedidoPath(req.params.numero), pedido);
+
+        res.json({success: true, data: {status: pedido.status, movimentos}});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 // DELETE /api/pedidos/:numero — exclui (só rascunho)
 router.delete('/:numero', (req, res) => {
     try {
