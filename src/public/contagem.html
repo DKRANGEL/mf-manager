@@ -447,14 +447,33 @@
             flex-shrink: 0;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .page {
                 padding: 16px 14px 60px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
             }
 
             .config-bar {
                 flex-direction: column;
                 gap: 12px;
+            }
+
+            .config-field {
+                width: 100%;
+            }
+
+            .config-field input {
+                width: 100% !important;
             }
 
             .input-contagem {
@@ -537,7 +556,7 @@
         </div>
         <div class="config-field">
             <label>Observações</label>
-            <input type="text" class="config-input" id="obsContagem" placeholder="Opcional..." style="width:220px;">
+            <input type="text" class="config-input" id="obsContagem" placeholder="Opcional...">
         </div>
         <div class="ultima-contagem" id="ultimaContagemInfo">Carregando última contagem...</div>
     </div>

@@ -393,6 +393,56 @@
             padding: 60px 20px;
             color: #333;
         }
+
+        #tabelaContainer {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 20px 16px 40px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .page-header h1 {
+                font-size: 20px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .header-actions .btn-back,
+            .header-actions .btn-primary {
+                flex: 1;
+                text-align: center;
+                justify-content: center;
+                min-width: 0;
+            }
+
+            .filter-select {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .search-box {
+                min-width: 0;
+            }
+
+            .modal-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
     </style>
 </head>
 <body>

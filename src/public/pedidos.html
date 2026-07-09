@@ -370,9 +370,20 @@
             flex-shrink: 0;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .page {
                 padding: 16px 14px 60px;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 0;
             }
 
             .pedidos-grid {
@@ -390,6 +401,12 @@
 
             .card-total {
                 font-size: 12px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .pedidos-grid {
+                grid-template-columns: 1fr;
             }
         }
 
