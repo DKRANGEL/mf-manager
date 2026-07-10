@@ -1,144 +1,118 @@
-# 🧾 Tiny Recibo Pro
+# MF Manager — Magic Fireworks
 
-**Gerador de recibos profissionais para o ERP Tiny/Olist**
+Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Effects Brasil Importações Ltda** — empresa de pirotecnia, Brasília-DF.
 
-Transforma os recibos genéricos do PDV do Tiny ERP em documentos profissionais com identidade visual da empresa. Integração direta via API — sem retrabalho manual.
-
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-24+-339933?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-blue)
+![Deploy](https://img.shields.io/badge/Deploy-Fly.io-8B5CF6?logo=fly.io&logoColor=white)
 
 ---
 
-## 🎯 Problema
+## Funcionalidades
 
-O Tiny ERP gera recibos com layout fixo e genérico que não transmitem profissionalismo. Não há opção nativa para customizar a estrutura, fontes, cores ou layout dos recibos de venda — apenas a inclusão do logo é possível.
+- **Pedidos de venda** — criar, emitir e controlar baixa de estoque bidirecional
+- **Estoque em tempo real** — saldo por produto calculado a partir da última contagem + movimentos
+- **Contagem física** — registrar contagens por categoria com exportação em PDF
+- **Catálogo de produtos** — CRUD com upload de imagem, autocomplete e importação do Tiny ERP
+- **Equipamentos** — cadastro e ordens de serviço
+- **Mobile-first** — interface otimizada para uso no celular pelo Mateus (usuário principal)
 
-## 💡 Solução
+---
 
-App web que consome a API do Tiny, extrai os dados do pedido e renderiza um recibo com design profissional, pronto para envio via WhatsApp ou impressão.
+## Stack
 
-## ✨ Features
+| Camada | Tecnologia |
+|--------|-----------|
+| Runtime | Node.js 24 + Express |
+| Banco de dados | Arquivos JSON em volume persistente (Fly.io) |
+| Frontend | HTML/CSS/JS vanilla |
+| Ícones | Lucide Icons (CDN) |
+| Deploy | Fly.io |
 
-- 🔗 Integração direta com API v2 do Tiny ERP
-- 🎨 Template profissional com logo, cores e tipografia customizáveis
-- 📱 Otimizado para compartilhamento via WhatsApp (exporta como imagem)
-- 📄 Exportação em PDF (A4 ou térmico 80mm)
-- ⚡ Interface minimalista — cola o número do pedido, gera o recibo
-- 🔒 Token da API armazenado como variável de ambiente (seguro)
+---
 
-## 🏗️ Arquitetura
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Browser/UI    │────▶│  Express Proxy    │────▶│  API Tiny ERP   │
-│  (HTML/CSS/JS)  │◀────│  (Node.js)       │◀────│  (v2 REST)      │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-        │
-        ▼
-  ┌───────────┐
-  │ html2canvas│ → Exporta como PNG/PDF
-  │  + jsPDF   │
-  └───────────┘
-```
-
-## 🚀 Quick Start
+## Rodando localmente
 
 ### Pré-requisitos
 
 - Node.js 18+
-- Token da API do Tiny ERP ([como gerar](https://tiny.com.br/api-docs/api2-auth))
+- Token da API do Tiny ERP (para importação de produtos)
 
 ### Instalação
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/tiny-recibo-pro.git
+git clone <repo>
 cd tiny-recibo-pro
-
-# Instale as dependências
 npm install
-
-# Configure as variáveis de ambiente
-cp .env.example .env
-# Edite o .env com seu token da API
-
-# Inicie o servidor
+cp .env.example .env   # edite com seu token
 npm run dev
 ```
 
-### Configuração
-
-Edite o arquivo `.env`:
+### Variáveis de ambiente
 
 ```env
-TINY_API_TOKEN=seu_token_aqui
-PORT=3000
+TINY_API_TOKEN=seu_token_aqui   # API v2 do Tiny ERP
+BOT_API_KEY=chave_do_fastzap    # autenticação do endpoint /bot
+PORT=3003                        # porta local (Fly.io usa 8080)
 ```
 
-Edite o arquivo `src/config.json` para personalizar a empresa:
-
-```json
-{
-  "empresa": {
-    "nome": "Magic Fireworks",
-    "cnpj": "00.000.000/0001-00",
-    "endereco": "Rua Exemplo, 123 - Cidade/UF",
-    "telefone": "(00) 00000-0000",
-    "logo": "/public/logo.png"
-  }
-}
-```
-
-Acesse `http://localhost:3000` e pronto.
-
-## 📁 Estrutura do Projeto
-
-```
-tiny-recibo-pro/
-├── src/
-│   ├── public/           # Assets estáticos (CSS, JS frontend, imagens)
-│   │   ├── css/
-│   │   │   └── style.css
-│   │   ├── js/
-│   │   │   └── app.js
-│   │   └── logo.png
-│   ├── routes/
-│   │   └── api.js        # Rotas do proxy para API Tiny
-│   ├── utils/
-│   │   └── tinyClient.js # Client HTTP para API do Tiny
-│   └── server.js         # Entry point Express
-├── docs/
-│   └── SETUP_TINY.md     # Guia de configuração do Tiny
-├── .env.example
-├── .gitignore
-├── config.json           # Configurações da empresa
-├── package.json
-├── LICENSE
-└── README.md
-```
-
-## 🔧 API Endpoints
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/` | Interface web |
-| `GET` | `/api/pedido/:id` | Obtém dados do pedido via API Tiny |
-| `GET` | `/api/pdv/pedido/:id` | Obtém dados do pedido PDV via API Tiny |
-
-## 🛠️ Tech Stack
-
-- **Runtime:** Node.js 18+
-- **Framework:** Express.js
-- **Frontend:** Vanilla HTML/CSS/JS
-- **PDF:** html2canvas + jsPDF
-- **HTTP Client:** node-fetch
-- **API:** Tiny ERP API v2
-
-## 📝 Licença
-
-MIT License — veja o arquivo [LICENSE](LICENSE) para detalhes.
+Acesse `http://localhost:3003`.
 
 ---
 
-Desenvolvido para resolver um problema real de identidade visual em recibos de venda do Tiny ERP.
+## Páginas
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Home — desktop (gerador OS/recibo) e mobile (cards de navegação) |
+| `/pedidos` | Hall de pedidos com filtros e preview |
+| `/emitir` | Criar ou editar pedido de venda |
+| `/estoque` | Saldo em tempo real por produto |
+| `/contagem` | Registrar contagem física de estoque |
+| `/produtos` | Catálogo de produtos (CRUD + importar do Tiny) |
+| `/equipamentos` | Cadastro de equipamentos e ordens de serviço |
+
+---
+
+## API principal
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/catalogo/catalogo` | Lista produtos por categoria |
+| GET | `/api/catalogo/buscar?q=` | Autocomplete de produtos |
+| POST | `/api/catalogo/importar-tiny` | Importa todos os produtos da API do Tiny |
+| GET | `/api/pedidos` | Lista pedidos |
+| PUT | `/api/pedidos/:numero/baixa` | Ativa/reverte baixa de estoque |
+| POST | `/api/contagens` | Salva contagem física |
+| GET | `/api/estoque/atual` | Saldo em tempo real (baseline + movimentos) |
+| GET | `/api/equipamentos/catalogo` | Lista equipamentos por categoria |
+
+---
+
+## Estrutura de dados
+
+Os dados são armazenados em `src/data/` como arquivos JSON:
+
+```
+src/data/
+├── produtos.json         # catálogo completo
+├── config-pedidos.json   # próximo número de pedido
+├── pedidos/              # um arquivo por pedido
+├── contagens/            # um arquivo por contagem física
+├── movimentos/           # log de baixas por pedido
+└── ordens/               # ordens de equipamento
+```
+
+---
+
+## Deploy (Fly.io)
+
+```bash
+fly deploy
+```
+
+O volume de dados é montado em `/data` na máquina virtual. Os arquivos JSON persistem entre deploys.
+
+---
+
+Desenvolvido por Dérick para uso interno da Magic Effects Brasil.
