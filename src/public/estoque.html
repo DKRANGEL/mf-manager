@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque Real — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { overflow: auto; background: #050505; }
+
+        .page-container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+
+        .page-header .brand-sub {
+            font-size: 10px; color: var(--sb-text-dim); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; display: block;
+        }
+
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+
+        .btn-back {
+            background: transparent; border: 1px solid var(--sb-border); color: var(--sb-text-dim);
+            padding: 9px 16px; border-radius: var(--sb-radius); font-size: 13px; cursor: pointer;
+            text-decoration: none; transition: 0.15s; font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-back:hover { border-color: #444; color: #fff; }
+        .btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Info bar */
+        .info-bar {
+            background: #121214; border: 1px solid #29292e; border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 20px;
+            display: flex; gap: 32px; align-items: center; flex-wrap: wrap;
+        }
+
+        .info-item { display: flex; flex-direction: column; gap: 3px; }
+
+        .info-label {
+            font-size: 10px; font-weight: 700; color: var(--sb-text-dim);
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }
+
+        .info-value { font-size: 13px; color: #ccc; font-family: var(--mono); }
+        .info-value.sem-baseline { color: #ff6060; }
+
+        .info-bar-alert {
+            width: 100%; padding: 10px 14px; background: rgba(255,80,80,0.07);
+            border: 1px solid rgba(255,80,80,0.2); border-radius: var(--sb-radius);
+            color: #ff7070; font-size: 12px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex; gap: 10px; margin-bottom: 24px;
+            align-items: center; flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1; min-width: 200px; height: 40px; background: var(--sb-input-bg);
+            border: 1px solid var(--sb-border); border-radius: var(--sb-radius);
+            padding: 0 14px; color: #fff; font-size: 13px; outline: none; font-family: var(--font);
+            transition: 0.15s;
+        }
+        .search-box:focus { border-color: #444; }
+
+        .filter-select {
+            height: 40px; background: var(--sb-input-bg); border: 1px solid var(--sb-border);
+            border-radius: var(--sb-radius); padding: 0 14px; color: #fff; font-size: 13px;
+            outline: none; font-family: var(--font); min-width: 175px;
+        }
+
+        .stats { font-size: 12px; color: var(--sb-text-dim); margin-left: auto; white-space: nowrap; }
+        .stats .neg { color: #ff6060; font-weight: 700; }
+
+        /* Table */
+        #tabelaContainer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        .estoque-table {
+            width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px;
+        }
+
+        .estoque-table thead th {
+            background: #0e0e10; color: var(--sb-text-dim); font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px; text-align: left;
+            border-bottom: 1px solid var(--sb-border); position: sticky; top: 0; z-index: 10;
+        }
+
+        .estoque-table tbody td {
+            padding: 11px 14px; border-bottom: 1px solid var(--sb-border); vertical-align: middle;
+        }
+
+        .estoque-table tbody tr { transition: 0.1s; }
+        .estoque-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        /* Category row */
+        .cat-row td {
+            background: rgba(255,255,255,0.03); font-weight: 700; font-size: 10px;
+            color: var(--sb-text-dim); letter-spacing: 1px; text-transform: uppercase;
+            padding: 8px 14px; border-bottom: 1px solid var(--sb-border);
+        }
+        .cat-count { font-weight: 400; color: #333; font-size: 10px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
+        .cat-alert { color: #ff6060; font-size: 10px; margin-left: 6px; font-weight: 600; text-transform: none; letter-spacing: 0; }
+
+        /* Cells */
+        .td-sku  { font-family: var(--mono); font-weight: 700; color: #fff; font-size: 12px; white-space: nowrap; }
+        .td-nome { color: #ccc; }
+        .td-num  { font-family: var(--mono); font-weight: 600; text-align: right; color: #ccc; }
+        .td-num.positivo { color: #4cd964; }
+        .td-num.zerado   { color: #444; }
+        .td-num.negativo { color: #ff6060; }
+        .td-status       { text-align: center; white-space: nowrap; }
+
+        /* Negative row highlight */
+        .row-neg td { background: rgba(255, 60, 60, 0.04); }
+        .row-neg .td-sku { color: #ff9090; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .badge .lucide { width: 11px; height: 11px; vertical-align: 0; }
+        .badge-neg  { background: rgba(255,80,80,0.12);  color: #ff6060; }
+        .badge-ok   { background: rgba(76,217,100,0.1);  color: #4cd964; }
+        .badge-zero { background: rgba(255,255,255,0.04); color: #555; }
+
+        .empty-msg { text-align: center; padding: 60px 20px; color: #333; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .page-container { padding: 20px 16px 40px; }
+
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+
+            .header-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
+            .header-actions .btn-back { flex: 1; justify-content: center; min-width: 0; }
+
+            .info-bar { flex-direction: column; gap: 12px; }
+
+            .filter-select { min-width: 0; width: 100%; }
+            .search-box   { min-width: 0; }
+            .stats        { margin-left: 0; }
+
+            /* Esconde CX no mobile */
+            .estoque-table thead th:nth-child(3),
+            .estoque-table tbody td:nth-child(3) { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Estoque Real</h1>
+            <span class="brand-sub">MF Manager — Magic Fireworks</span>
+        </div>
+        <div class="header-actions">
+            <a href="/contagem" class="btn-back"><i data-lucide="clipboard-list"></i> Nova Contagem</a>
+            <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+            <button class="btn-back" id="btnAtualizar" onclick="carregar()">
+                <i data-lucide="refresh-cw"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <div class="info-bar" id="infoBar">
+        <div class="info-item">
+            <span class="info-label">Baseline</span>
+            <span class="info-value" id="infoNumero">—</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Data</span>
+            <span class="info-value" id="infoData">—</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Responsável</span>
+            <span class="info-value" id="infoResp">—</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Movimentos aplicados</span>
+            <span class="info-value" id="infoMovs">—</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <input type="text" class="search-box" id="searchBox"
+               placeholder="Buscar por código ou nome..." oninput="filtrar()">
+        <select class="filter-select" id="filterCategoria" onchange="filtrar()">
+            <option value="">Todas as categorias</option>
+        </select>
+        <select class="filter-select" id="filterStatus" onchange="filtrar()" style="min-width:150px;">
+            <option value="">Todos os saldos</option>
+            <option value="negativo">Saldo negativo</option>
+            <option value="zerado">Zerado</option>
+            <option value="positivo">Positivo</option>
+        </select>
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <div id="tabelaContainer"></div>
+</div>
+
+<script>
+    let todosProdutos = [];
+    let categorias = [];
+
+    document.addEventListener('DOMContentLoaded', carregar);
+
+    async function carregar() {
+        const btn = document.getElementById('btnAtualizar');
+        if (btn) btn.disabled = true;
+        document.getElementById('tabelaContainer').innerHTML =
+            '<div class="empty-msg">Carregando...</div>';
+        try {
+            const res = await fetch('/api/estoque/atual');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+
+            todosProdutos = json.produtos || [];
+            categorias = [...new Set(todosProdutos.map(p => p.categoria || 'Sem categoria'))].sort();
+
+            // Info bar
+            const infoBar = document.getElementById('infoBar');
+            // Remove alerta anterior se existir
+            infoBar.querySelectorAll('.info-bar-alert').forEach(el => el.remove());
+
+            if (json.baseline) {
+                const dt = new Date(json.baseline.data + 'T12:00:00').toLocaleDateString('pt-BR');
+                document.getElementById('infoNumero').textContent = json.baseline.numero;
+                document.getElementById('infoData').textContent = dt;
+                document.getElementById('infoResp').textContent = json.baseline.responsavel || '—';
+                document.getElementById('infoMovs').textContent = json.total_movimentos;
+            } else {
+                document.getElementById('infoNumero').textContent = 'Sem contagem';
+                document.getElementById('infoNumero').classList.add('sem-baseline');
+                document.getElementById('infoData').textContent = '—';
+                document.getElementById('infoResp').textContent = '—';
+                document.getElementById('infoMovs').textContent = '0';
+                const alerta = document.createElement('div');
+                alerta.className = 'info-bar-alert';
+                alerta.innerHTML = '<i data-lucide="alert-circle"></i> Nenhuma contagem salva ainda — o saldo exibido é 0 para todos os produtos. Faça uma contagem para estabelecer o baseline.';
+                infoBar.appendChild(alerta);
+                lucide.createIcons();
+            }
+
+            // Filtro de categorias
+            const sel = document.getElementById('filterCategoria');
+            sel.innerHTML = '<option value="">Todas as categorias</option>' +
+                categorias.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+            filtrar();
+        } catch (err) {
+            document.getElementById('tabelaContainer').innerHTML =
+                `<div class="empty-msg">Erro ao carregar: ${esc(err.message)}</div>`;
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    function filtrar() {
+        const q      = document.getElementById('searchBox').value.toLowerCase().trim();
+        const cat    = document.getElementById('filterCategoria').value;
+        const status = document.getElementById('filterStatus').value;
+
+        let lista = todosProdutos;
+        if (q)   lista = lista.filter(p =>
+            (p.codigo || '').toLowerCase().includes(q) ||
+            (p.nome   || '').toLowerCase().includes(q)
+        );
+        if (cat) lista = lista.filter(p => (p.categoria || 'Sem categoria') === cat);
+        if (status === 'negativo') lista = lista.filter(p => p.saldo_un < 0);
+        if (status === 'zerado')   lista = lista.filter(p => p.saldo_un === 0);
+        if (status === 'positivo') lista = lista.filter(p => p.saldo_un > 0);
+
+        renderTabela(lista);
+    }
+
+    function renderTabela(lista) {
+        const container = document.getElementById('tabelaContainer');
+        const negativos = lista.filter(p => p.saldo_negativo).length;
+        const negStr = negativos > 0
+            ? ` · <span class="neg">${negativos} negativo${negativos > 1 ? 's' : ''}</span>`
+            : '';
+        document.getElementById('stats').innerHTML = `${lista.length} produto${lista.length !== 1 ? 's' : ''}${negStr}`;
+
+        if (lista.length === 0) {
+            container.innerHTML = '<div class="empty-msg">Nenhum produto encontrado.</div>';
+            lucide.createIcons();
+            return;
+        }
+
+        const agrupado = {};
+        lista.forEach(p => {
+            const cat = p.categoria || 'Sem categoria';
+            if (!agrupado[cat]) agrupado[cat] = [];
+            agrupado[cat].push(p);
+        });
+
+        let html = `<table class="estoque-table"><thead><tr>
+            <th style="width:130px;">Código</th>
+            <th>Nome</th>
+            <th style="width:90px;text-align:right;">CX Est.</th>
+            <th style="width:100px;text-align:right;">Saldo UN</th>
+            <th style="width:100px;text-align:center;">Status</th>
+        </tr></thead><tbody>`;
+
+        Object.keys(agrupado).sort().forEach(cat => {
+            const itens = agrupado[cat];
+            const negCat = itens.filter(p => p.saldo_negativo).length;
+            const negLabel = negCat > 0
+                ? `<span class="cat-alert">▲ ${negCat} negativo${negCat > 1 ? 's' : ''}</span>`
+                : '';
+            html += `<tr class="cat-row">
+                <td colspan="5">${esc(cat)}<span class="cat-count">${itens.length} produtos</span>${negLabel}</td>
+            </tr>`;
+
+            itens.forEach(p => {
+                const rowClass = p.saldo_negativo ? 'row-neg' : '';
+                const saldoClass = p.saldo_un < 0 ? 'negativo' : p.saldo_un === 0 ? 'zerado' : 'positivo';
+                const cx = p.saldo_cx_estimado !== null ? p.saldo_cx_estimado : '—';
+                const badge = p.saldo_un < 0
+                    ? `<span class="badge badge-neg"><i data-lucide="alert-triangle"></i> Negativo</span>`
+                    : p.saldo_un === 0
+                    ? `<span class="badge badge-zero">Zerado</span>`
+                    : `<span class="badge badge-ok"><i data-lucide="check"></i> OK</span>`;
+
+                html += `<tr class="${rowClass}">
+                    <td class="td-sku">${esc(p.codigo)}</td>
+                    <td class="td-nome">${esc(p.nome)}</td>
+                    <td class="td-num">${cx}</td>
+                    <td class="td-num ${saldoClass}">${p.saldo_un}</td>
+                    <td class="td-status">${badge}</td>
+                </tr>`;
+            });
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+</script>
+</body>
+</html>
