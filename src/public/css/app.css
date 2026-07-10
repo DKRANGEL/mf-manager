@@ -751,6 +751,29 @@ body {
     background: #e0e0e0;
 }
 
+/* ===================== LUCIDE ICONS ===================== */
+
+.lucide {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: -3px;
+    flex-shrink: 0;
+    stroke-width: 2;
+}
+
+.empty-icon .lucide {
+    width: 52px;
+    height: 52px;
+    vertical-align: 0;
+}
+
+.btn-menu-icon .lucide {
+    width: 15px;
+    height: 15px;
+    vertical-align: -2px;
+}
+
 /* ===================== PRINT ===================== */
 
 @media print {

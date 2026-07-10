@@ -10,6 +10,7 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .progress-box {
             background: #111113;
@@ -372,6 +373,19 @@
                 font-size: 28px;
                 line-height: 1;
                 flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mobile-nav-card .card-icon .lucide {
+                width: 28px;
+                height: 28px;
+                vertical-align: 0;
+            }
+
+            .mobile-nav-card.destaque .card-icon .lucide {
+                color: #000;
             }
 
             .mobile-nav-card .card-label {
@@ -427,7 +441,7 @@
                     <label>Emitir Pedido</label>
                     <a href="/emitir" class="btn-export"
                        style="background:#fff;color:#000;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        ✏️ Novo Pedido de Venda
+                        <i data-lucide="pencil"></i> Novo Pedido de Venda
                     </a>
                 </div>
             </div>
@@ -436,22 +450,22 @@
                 <div class="sidebar-section">
                     <span class="section-label">Ordens de Serviço</span>
                     <button class="btn-menu btn-menu-accent" onclick="abrirModalNovaOS()">
-                        <span class="btn-menu-icon">＋</span>Nova Ordem de Equipamento
+                        <span class="btn-menu-icon"><i data-lucide="plus"></i></span>Nova Ordem de Equipamento
                     </button>
                     <button class="btn-menu" onclick="abrirModalBuscarOS()">
-                        <span class="btn-menu-icon">🔍</span>Buscar OS Existente
+                        <span class="btn-menu-icon"><i data-lucide="search"></i></span>Buscar OS Existente
                     </button>
                 </div>
                 <div class="sidebar-section">
                     <span class="section-label">Cadastro</span>
                     <a href="/equipamentos" class="btn-menu">
-                        <span class="btn-menu-icon">📦</span>Gerenciar Equipamentos
+                        <span class="btn-menu-icon"><i data-lucide="box"></i></span>Gerenciar Equipamentos
                     </a>
                 </div>
                 <div class="sidebar-section">
                     <span class="section-label">Relatórios</span>
                     <button class="btn-menu" onclick="gerarInventario()">
-                        <span class="btn-menu-icon">📋</span>Inventário de Equipamentos
+                        <span class="btn-menu-icon"><i data-lucide="clipboard-list"></i></span>Inventário de Equipamentos
                     </button>
                 </div>
             </div>
@@ -461,7 +475,7 @@
 
             <div id="exportActions" class="export-actions" style="display:none;">
                 <button class="btn-export" onclick="exportarPDF()">
-                    📄 Salvar PDF / Imprimir
+                    <i data-lucide="printer"></i> Salvar PDF / Imprimir
                 </button>
             </div>
 
@@ -475,28 +489,28 @@
     <main class="preview-area">
         <div class="mobile-nav">
             <a href="/pedidos" class="mobile-nav-card destaque">
-                <div class="card-icon">📄</div>
+                <div class="card-icon"><i data-lucide="file-text"></i></div>
                 <div>
                     <div class="card-label">Pedidos</div>
                     <div class="card-sub">Ver, criar e emitir pedidos</div>
                 </div>
             </a>
             <a href="/produtos" class="mobile-nav-card">
-                <div class="card-icon">🧨</div>
+                <div class="card-icon"><i data-lucide="sparkles"></i></div>
                 <div>
                     <div class="card-label">Produtos</div>
                     <div class="card-sub">Catálogo de efeitos</div>
                 </div>
             </a>
             <a href="/contagem" class="mobile-nav-card">
-                <div class="card-icon">📊</div>
+                <div class="card-icon"><i data-lucide="bar-chart-2"></i></div>
                 <div>
                     <div class="card-label">Estoque</div>
                     <div class="card-sub">Contagem e controle</div>
                 </div>
             </a>
             <a href="/equipamentos" class="mobile-nav-card">
-                <div class="card-icon">📦</div>
+                <div class="card-icon"><i data-lucide="box"></i></div>
                 <div>
                     <div class="card-label">Equipamentos</div>
                     <div class="card-sub">Gerenciar cadastro</div>
@@ -504,7 +518,7 @@
             </a>
             <button class="mobile-nav-card"
                     onclick="setModo(document.querySelector('[data-mode=equipamento]'));window.scrollTo(0,0);">
-                <div class="card-icon">📋</div>
+                <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
                 <div>
                     <div class="card-label">Nova OS</div>
                     <div class="card-sub">Ordem de equipamento</div>
@@ -513,7 +527,7 @@
         </div>
 
         <div id="emptyState" class="empty-state">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon"><i data-lucide="clipboard-list"></i></div>
             <h2>Pronto para gerar</h2>
             <p>Escolha o tipo de documento e preencha os dados</p>
         </div>
@@ -528,7 +542,7 @@
     <div class="modal-os">
         <div class="modal-header">
             <h2 id="modalOSTitulo">Nova Ordem de Equipamento</h2>
-            <button class="modal-close" onclick="fecharModalOS()">✕</button>
+            <button class="modal-close" onclick="fecharModalOS()"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
             <div class="modal-cols">
@@ -579,7 +593,7 @@
                         <div class="modal-search-row">
                             <input type="text" id="osBuscaProduto" class="modal-input"
                                    placeholder="Buscar por nome ou código...">
-                            <button class="btn-modal-search" onclick="buscarProdutos()">🔍</button>
+                            <button class="btn-modal-search" onclick="buscarProdutos()"><i data-lucide="search"></i></button>
                         </div>
                         <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
                     </div>
@@ -589,7 +603,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-modal-cancel" onclick="fecharModalOS()">Cancelar</button>
-            <button class="btn-modal-gerar" onclick="gerarOrdemEquipamento()">📋 Gerar Ordem de Equipamento</button>
+            <button class="btn-modal-gerar" onclick="gerarOrdemEquipamento()"><i data-lucide="clipboard-list"></i> Gerar Ordem de Equipamento</button>
         </div>
     </div>
 </div>
@@ -599,7 +613,7 @@
     <div class="modal-sm">
         <div class="modal-header">
             <h2>Buscar Ordem de Equipamento</h2>
-            <button class="modal-close" onclick="fecharModalBuscarOS()">✕</button>
+            <button class="modal-close" onclick="fecharModalBuscarOS()"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body" style="padding: 24px;">
             <div class="modal-field">
@@ -623,7 +637,7 @@
             <h2>Logs de Sincronização</h2>
             <div class="modal-logs-actions">
                 <button class="btn-clear-logs" onclick="limparLogs()">Limpar</button>
-                <button class="modal-logs-close" onclick="fecharModalLogs()">✕</button>
+                <button class="modal-logs-close" onclick="fecharModalLogs()"><i data-lucide="x"></i></button>
             </div>
         </div>
         <div class="modal-logs-body" id="logsBody"></div>
@@ -633,5 +647,6 @@
 
 <script src="/public/js/documento.js"></script>
 <script src="/public/js/app.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

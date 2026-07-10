@@ -9,6 +9,7 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             overflow: auto;
@@ -936,7 +937,7 @@
                 return;
             }
             list.innerHTML = json.data.map(p => {
-                const imgEl = p.imagem ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">` : `<div class="ac-img-ph">📦</div>`;
+                const imgEl = p.imagem ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">` : `<div class="ac-img-ph"><i data-lucide="box"></i></div>`;
                 return `<div class="ac-item" onclick="adicionarItem(${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 ${imgEl}
                 <div class="ac-info"><div class="ac-cod">${esc(p.codigo)}</div><div class="ac-nome">${esc(p.nome)}</div></div>
@@ -1007,7 +1008,7 @@
             return;
         }
         container.innerHTML = itens.map((item, i) => {
-            const imgEl = item.imagem ? `<img class="item-img" src="/data/produtos/${esc(item.imagem)}" onerror="this.className='item-img-placeholder';this.textContent='📦'">` : `<div class="item-img-placeholder">📦</div>`;
+            const imgEl = item.imagem ? `<img class="item-img" src="/data/produtos/${esc(item.imagem)}" onerror="this.className='item-img-placeholder'">` : `<div class="item-img-placeholder"><i data-lucide="box"></i></div>`;
             return `<div class="item-row" id="item-row-${i}">
             ${imgEl}
             <div class="item-desc">
@@ -1030,12 +1031,13 @@
             <input class="item-input" type="text" inputmode="decimal" value="${fmtDecimal(item.preco_unit)}" onblur="atualizarItem(${i},'preco_unit',this.value)" onfocus="this.select()" oninput="mascaraDinheiro(this)">
             <div class="item-total" id="total-${i}">${fmtMoney(item.preco_total)}</div>
             <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-                <button class="item-remove" style="color:#666;" onclick="abrirModalItem(${i})">✏️</button>
+                <button class="item-remove" style="color:#666;" onclick="abrirModalItem(${i})"><i data-lucide="pencil"></i></button>
                 <button class="item-remove" onclick="removerItem(${i})">×</button>
             </div>
         </div>`;
         }).join('');
         recalcularTotais();
+        lucide.createIcons();
     }
 
     // ── MODAL ITEM ──
@@ -1202,8 +1204,8 @@
             <div style="width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;">
                 <span style="color:#fff;font-weight:700;font-size:14px;">Preview</span>
                 <div style="display:flex;gap:8px;">
-                    <button onclick="window.print()" style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">🖨 Imprimir</button>
-                    <button onclick="fecharPreview()" style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">✕</button>
+                    <button onclick="window.print()" style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i data-lucide="printer"></i> Imprimir</button>
+                    <button onclick="fecharPreview()" style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;"><i data-lucide="x"></i></button>
                 </div>
             </div>
             <div id="previewContent" class="recibo-wrapper" style="width:100%;max-width:760px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);">
@@ -1391,6 +1393,8 @@
             }
         }
     });
+
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
 </body>
 </html>

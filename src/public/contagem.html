@@ -9,6 +9,7 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             overflow: auto;
@@ -519,11 +520,11 @@
         <div style="display:flex;gap:8px;">
             <button onclick="imprimirPDF()"
                     style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
-                🖨 Imprimir
+                <i data-lucide="printer"></i> Imprimir
             </button>
             <button onclick="fecharPDF()"
                     style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">
-                ✕
+                <i data-lucide="x"></i>
             </button>
         </div>
     </div>
@@ -540,8 +541,8 @@
         </div>
         <div class="header-actions">
             <a href="/" class="btn btn-ghost">← Início</a>
-            <button class="btn btn-ghost" onclick="abrirPDF()">📄 Gerar PDF</button>
-            <button class="btn btn-white" onclick="salvarContagem()">💾 Salvar Contagem</button>
+            <button class="btn btn-ghost" onclick="abrirPDF()"><i data-lucide="file-text"></i> Gerar PDF</button>
+            <button class="btn btn-white" onclick="salvarContagem()"><i data-lucide="save"></i> Salvar Contagem</button>
         </div>
     </div>
 
@@ -1006,6 +1007,8 @@
         d.textContent = s;
         return d.innerHTML;
     }
+
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
 </body>
 </html>

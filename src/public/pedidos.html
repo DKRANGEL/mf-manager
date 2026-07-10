@@ -9,6 +9,7 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             overflow: auto;
@@ -439,11 +440,11 @@
         <div class="preview-btns">
             <button onclick="imprimirPreview()"
                     style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
-                🖨 Imprimir
+                <i data-lucide="printer"></i> Imprimir
             </button>
             <button onclick="fecharPreview()"
                     style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;">
-                ✕
+                <i data-lucide="x"></i>
             </button>
         </div>
     </div>
@@ -460,7 +461,7 @@
         </div>
         <div class="header-actions">
             <a href="/" class="btn btn-ghost">← Início</a>
-            <a href="/emitir" class="btn btn-white">✏️ Novo Pedido</a>
+            <a href="/emitir" class="btn btn-white"><i data-lucide="pencil"></i> Novo Pedido</a>
         </div>
     </div>
     <div class="filtros">
@@ -754,6 +755,8 @@
         d.textContent = s;
         return d.innerHTML;
     }
+
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
 </body>
 </html>

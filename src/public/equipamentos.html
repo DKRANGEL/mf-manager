@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             overflow: auto;
@@ -453,7 +454,7 @@
             <span class="brand-sub">MF Manager — Magic Fireworks</span>
         </div>
         <div class="header-actions">
-            <button class="btn-back" onclick="gerarInventarioPDF()">📋 Inventário PDF</button>
+            <button class="btn-back" onclick="gerarInventarioPDF()"><i data-lucide="clipboard-list"></i> Inventário PDF</button>
             <a href="/" class="btn-back">← Voltar</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Equipamento</button>
         </div>
@@ -601,8 +602,8 @@
                 <td class="td-manut">${e.em_manutencao > 0 ? e.em_manutencao : '-'}</td>
                 <td class="td-obs" title="${esc(e.observacoes || '')}">${esc(e.observacoes || '-')}</td>
                 <td class="td-actions">
-                    <button class="btn-sm btn-edit" onclick="editarEquipamento(${e.id})">✏️</button>
-                    <button class="btn-sm btn-delete" onclick="deletarEquipamento(${e.id}, '${esc(e.nome)}')">🗑️</button>
+                    <button class="btn-sm btn-edit" onclick="editarEquipamento(${e.id})"><i data-lucide="pencil"></i></button>
+                    <button class="btn-sm btn-delete" onclick="deletarEquipamento(${e.id}, '${esc(e.nome)}')"><i data-lucide="trash-2"></i></button>
                 </td>
             </tr>`;
             });
@@ -610,6 +611,7 @@
 
         html += '</tbody></table>';
         container.innerHTML = html;
+        lucide.createIcons();
     }
 
     function esc(s) {

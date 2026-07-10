@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
             overflow: auto;
@@ -399,9 +400,7 @@
             <span class="brand-sub">Magic Fireworks — Catálogo</span>
         </div>
         <div class="header-actions">
-            <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;">⬇ Importar do
-                Tiny
-            </button>
+            <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;"><i data-lucide="download"></i> Importar do Tiny</button>
             <a href="/" class="btn-back">← Voltar ao Recibo</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
         </div>
@@ -530,7 +529,7 @@
             itens.forEach(p => {
                 const imgTag = p.imagem
                     ? `<img src="/data/produtos/${esc(p.imagem)}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;">`
-                    : `<div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;font-size:16px;">📷</div>`;
+                    : `<div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;color:#444;"><i data-lucide="image"></i></div>`;
 
                 html += `<tr>
                 <td style="text-align:center;padding:6px;">
@@ -546,9 +545,9 @@
                 <td class="td-un">${esc(p.unidade || 'UN')}</td>
                 <td class="td-obs" title="${esc(p.observacoes || '')}">${esc(p.observacoes || '-')}</td>
                 <td class="td-actions">
-                    <button class="btn-sm btn-edit" data-id="${p.id}" onclick="editarProduto(this.dataset.id)">✏️</button>
-                    <button class="btn-sm btn-delete" data-id="${p.id}" onclick="deletarProduto(this.dataset.id, this.closest('tr').querySelector('.td-nome').textContent)">🗑️</button>
-                    ${p.imagem ? `<button class="btn-sm btn-delete" data-id="${p.id}" onclick="removerImagem(this.dataset.id)" title="Remover imagem">🖼️</button>` : ''}
+                    <button class="btn-sm btn-edit" data-id="${p.id}" onclick="editarProduto(this.dataset.id)"><i data-lucide="pencil"></i></button>
+                    <button class="btn-sm btn-delete" data-id="${p.id}" onclick="deletarProduto(this.dataset.id, this.closest('tr').querySelector('.td-nome').textContent)"><i data-lucide="trash-2"></i></button>
+                    ${p.imagem ? `<button class="btn-sm btn-delete" data-id="${p.id}" onclick="removerImagem(this.dataset.id)" title="Remover imagem"><i data-lucide="image-off"></i></button>` : ''}
                 </td>
             </tr>`;
             });
@@ -556,6 +555,7 @@
 
         html += '</tbody></table>';
         container.innerHTML = html;
+        lucide.createIcons();
     }
 
     function fmtPreco(v) {
