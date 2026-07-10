@@ -530,7 +530,7 @@
 
         if (lista.length === 0) {
             container.innerHTML = `<div class="empty">
-            <div class="empty-icon">📄</div>
+            <div class="empty-icon"><i data-lucide="file-text"></i></div>
             <div style="color:#555;font-size:14px;font-weight:600;">Nenhum pedido encontrado</div>
             <p>Crie um novo pedido para começar</p>
         </div>`;
@@ -538,6 +538,7 @@
         }
 
         container.innerHTML = lista.map(ped => {
+
             const cliente = ped.cliente || '';
             const subtotal = ped.total_valor || 0;
             const totalStr = subtotal > 0 ? fmtMoney(subtotal) : 'Sem valor';
@@ -546,14 +547,14 @@
             const status = ped.status || 'rascunho';
             const emitido = status === 'emitido';
             const initials = getInitials(cliente);
-            const toggleIcon = emitido ? '🟢' : '⚪';
+            const toggleIcon = emitido ? '<i data-lucide="circle-check-big"></i>' : '<i data-lucide="circle"></i>';
             const toggleTitle = emitido ? 'Reverter baixa de estoque' : 'Baixar estoque';
 
             const thumbImg = ped.primeira_imagem
                 ? `<img src="/data/produtos/${esc(ped.primeira_imagem)}" alt="">`
                 : `<div class="card-thumb-placeholder">
                 <div class="card-thumb-initials">${esc(initials)}</div>
-                <div class="card-thumb-icon">📄</div>
+                <div class="card-thumb-icon"><i data-lucide="file-text"></i></div>
                </div>`;
 
             return `<div class="pedido-card">
@@ -571,12 +572,13 @@
                 <button class="card-btn ${emitido ? 'emitido' : ''}"
                     onclick="toggleBaixa('${esc(ped.numero)}', ${emitido}, '${esc(cliente)}')"
                     title="${toggleTitle}">${toggleIcon}</button>
-                <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview">👁</button>
-                <button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar">✏️</button>
-                <button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir">🗑️</button>
+                <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
+                <button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>
+                <button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir"><i data-lucide="trash-2"></i></button>
             </div>
         </div>`;
         }).join('');
+        lucide.createIcons();
     }
 
     function abrirEditar(numero) {

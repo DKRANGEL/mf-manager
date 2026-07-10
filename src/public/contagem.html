@@ -461,7 +461,8 @@
             .header-actions .btn {
                 flex: 1;
                 justify-content: center;
-                min-width: 0;
+                min-width: 120px;
+                white-space: nowrap;
             }
 
             .config-bar {
@@ -623,7 +624,7 @@
 
             // Inicializa toggles e contagens
             Object.keys(catalogo).forEach(cat => {
-                toggles[cat] = true; // começa ativo
+                toggles[cat] = false; // começa desativado — usuário ativa o que quer contar
                 catalogo[cat].forEach(p => {
                     contagens[p.id] = {cx: 0, un: 0};
                     fatores[p.codigo] = p.fator || 1;

@@ -235,9 +235,14 @@
         .td-actions {
             text-align: right;
             white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .td-actions-inner {
             display: flex;
             gap: 6px;
             justify-content: flex-end;
+            align-items: center;
         }
 
         .cat-row td {
@@ -545,9 +550,11 @@
                 <td class="td-un">${esc(p.unidade || 'UN')}</td>
                 <td class="td-obs" title="${esc(p.observacoes || '')}">${esc(p.observacoes || '-')}</td>
                 <td class="td-actions">
-                    <button class="btn-sm btn-edit" data-id="${p.id}" onclick="editarProduto(this.dataset.id)"><i data-lucide="pencil"></i></button>
-                    <button class="btn-sm btn-delete" data-id="${p.id}" onclick="deletarProduto(this.dataset.id, this.closest('tr').querySelector('.td-nome').textContent)"><i data-lucide="trash-2"></i></button>
-                    ${p.imagem ? `<button class="btn-sm btn-delete" data-id="${p.id}" onclick="removerImagem(this.dataset.id)" title="Remover imagem"><i data-lucide="image-off"></i></button>` : ''}
+                    <div class="td-actions-inner">
+                        <button class="btn-sm btn-edit" data-id="${p.id}" onclick="editarProduto(this.dataset.id)"><i data-lucide="pencil"></i></button>
+                        <button class="btn-sm btn-delete" data-id="${p.id}" onclick="deletarProduto(this.dataset.id, this.closest('tr').querySelector('.td-nome').textContent)"><i data-lucide="trash-2"></i></button>
+                        ${p.imagem ? `<button class="btn-sm btn-delete" data-id="${p.id}" onclick="removerImagem(this.dataset.id)" title="Remover imagem"><i data-lucide="image-off"></i></button>` : ''}
+                    </div>
                 </td>
             </tr>`;
             });

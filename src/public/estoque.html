@@ -32,12 +32,12 @@
         .header-actions { display: flex; gap: 10px; align-items: center; }
 
         .btn-back {
-            background: transparent; border: 1px solid var(--sb-border); color: var(--sb-text-dim);
+            background: transparent; border: 1px solid #333; color: #aaa;
             padding: 9px 16px; border-radius: var(--sb-radius); font-size: 13px; cursor: pointer;
             text-decoration: none; transition: 0.15s; font-family: var(--font);
             display: inline-flex; align-items: center; gap: 6px;
         }
-        .btn-back:hover { border-color: #444; color: #fff; }
+        .btn-back:hover { border-color: #555; color: #fff; }
         .btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Info bar */
@@ -50,11 +50,11 @@
         .info-item { display: flex; flex-direction: column; gap: 3px; }
 
         .info-label {
-            font-size: 10px; font-weight: 700; color: var(--sb-text-dim);
+            font-size: 10px; font-weight: 700; color: #666;
             text-transform: uppercase; letter-spacing: 0.8px;
         }
 
-        .info-value { font-size: 13px; color: #ccc; font-family: var(--mono); }
+        .info-value { font-size: 13px; color: #e8e8e8; font-family: var(--mono); }
         .info-value.sem-baseline { color: #ff6060; }
 
         .info-bar-alert {
@@ -94,7 +94,7 @@
         }
 
         .estoque-table thead th {
-            background: #0e0e10; color: var(--sb-text-dim); font-size: 10px; font-weight: 700;
+            background: #0e0e10; color: #666; font-size: 10px; font-weight: 700;
             text-transform: uppercase; letter-spacing: 0.8px; padding: 12px 14px; text-align: left;
             border-bottom: 1px solid var(--sb-border); position: sticky; top: 0; z-index: 10;
         }
@@ -112,13 +112,13 @@
             color: var(--sb-text-dim); letter-spacing: 1px; text-transform: uppercase;
             padding: 8px 14px; border-bottom: 1px solid var(--sb-border);
         }
-        .cat-count { font-weight: 400; color: #333; font-size: 10px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
+        .cat-count { font-weight: 400; color: #555; font-size: 10px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
         .cat-alert { color: #ff6060; font-size: 10px; margin-left: 6px; font-weight: 600; text-transform: none; letter-spacing: 0; }
 
         /* Cells */
         .td-sku  { font-family: var(--mono); font-weight: 700; color: #fff; font-size: 12px; white-space: nowrap; }
-        .td-nome { color: #ccc; }
-        .td-num  { font-family: var(--mono); font-weight: 600; text-align: right; color: #ccc; }
+        .td-nome { color: #e0e0e0; }
+        .td-num  { font-family: var(--mono); font-weight: 600; text-align: right; color: #e0e0e0; }
         .td-num.positivo { color: #4cd964; }
         .td-num.zerado   { color: #444; }
         .td-num.negativo { color: #ff6060; }
