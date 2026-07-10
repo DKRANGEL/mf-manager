@@ -134,30 +134,34 @@ router.delete('/item/:id', (req, res) => {
     }
 });
 
-// ===================== SEED DO TINY (read-only) =====================
+// ===================== MIGRAÇÃO DO TINY (API direta) =====================
 
-// POST /api/catalogo/importar-tiny — popula/atualiza produtos a partir do cache do Tiny
-// Traz só dados descritivos (codigo, nome, categoria, unidade). Estoque e preço NÃO
-// vêm do Tiny: estoque é nosso (contagem) e preço entra no cadastro/edição.
-router.post('/importar-tiny', (req, res) => {
+// POST /api/catalogo/importar-tiny — puxa todos os produtos da API do Tiny e
+// mescla com produtos.json. Atualiza nome/categoria/unidade dos existentes e
+// adiciona os novos. Preço e estoque NÃO vêm do Tiny — são geridos aqui.
+const TinyClient = require('../utils/tinyClient');
+
+router.post('/importar-tiny', async (req, res) => {
     try {
-        const cache = readJSON(CACHE_FILE, {produtos: []});
-        const tinyProdutos = cache.produtos || [];
+        const token = process.env.TINY_API_TOKEN;
+        if (!token) {
+            return res.status(500).json({success: false, error: 'TINY_API_TOKEN não configurado no ambiente'});
+        }
+
+        const client = new TinyClient(token);
+        const tinyProdutos = await client.pesquisarTodosProdutos('');
+
         if (tinyProdutos.length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Cache do Tiny vazio — aguarde a sincronização do catálogo'
-            });
+            return res.status(400).json({success: false, error: 'Nenhum produto encontrado no Tiny'});
         }
 
         const db = lerProdutos();
         const porCodigo = new Map(db.produtos.map(p => [p.codigo, p]));
-        let novos = 0;
-        let atualizados = 0;
+        let novos = 0, atualizados = 0, ignorados = 0;
 
         for (const t of tinyProdutos) {
             const codigo = (t.codigo || '').trim();
-            if (!codigo) continue;
+            if (!codigo) { ignorados++; continue; }
 
             if (porCodigo.has(codigo)) {
                 const p = porCodigo.get(codigo);
@@ -183,7 +187,7 @@ router.post('/importar-tiny', (req, res) => {
         }
 
         salvarProdutos(db);
-        res.json({success: true, novos, atualizados, total: db.produtos.length});
+        res.json({success: true, novos, atualizados, ignorados, total: db.produtos.length});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
