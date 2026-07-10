@@ -3,3 +3,12 @@ node_modules/
 .DS_Store
 dist/
 *.log
+.git/
+.idea/
+CLAUDE.md
+
+# dados de desenvolvimento — volume do Fly.io sobrescreve em produção
+src/data/pedidos/
+src/data/movimentos/
+src/data/contagens/
+src/data/ordens/
