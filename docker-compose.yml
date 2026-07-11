@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - mf_data:/app/src/data
+
+volumes:
+  mf_data:
+    driver: local

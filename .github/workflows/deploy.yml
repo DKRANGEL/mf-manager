@@ -1,0 +1,26 @@
+name: Deploy — MF Manager
+
+on:
+  push:
+    branches:
+      - magic-fireworks-template
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            set -e
+            cd /app/mf-manager
+            git pull origin magic-fireworks-template
+            docker compose up -d --build
+            docker image prune -f
+            echo "Deploy concluído: $(date)"
