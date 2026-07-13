@@ -449,9 +449,7 @@
             </button>
         </div>
     </div>
-    <div id="previewContent" class="recibo-wrapper">
-        <div id="previewRecibo" class="recibo"></div>
-    </div>
+    <div id="previewContent" style="width:760px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5);transform-origin:top left;"></div>
 </div>
 
 <div class="page">
@@ -608,15 +606,11 @@
 
     async function abrirPreview(numero, cliente) {
         try {
-            const [resP, resTpl] = await Promise.all([
-                fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json()),
-                fetch('/public/templates/pedido-venda.html').then(r => r.text())
-            ]);
+            const resP = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json());
             if (!resP.success) throw new Error(resP.error);
-            document.getElementById('previewRecibo').innerHTML = resTpl;
+            document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(resP.data);
             document.getElementById('nomeArquivo').value = cliente ? `Pedido ${cliente}` : numero;
             document.getElementById('previewModal').classList.add('ativo');
-            renderPedidoNoTemplate(resP.data);
             setTimeout(escalarPreview, 50);
         } catch (err) {
             alert('Erro ao carregar preview: ' + err.message);
@@ -663,81 +657,6 @@
         }
     }
 
-    function renderPedidoNoTemplate(pedido) {
-        const blocos = pedido.blocos || {};
-        const itensPedido = (pedido.secoes || [{itens: []}])[0].itens || [];
-        setText('pdDocNum', pedido.numero || '000');
-        setText('pdDocData', new Date(pedido.data_emissao).toLocaleDateString('pt-BR'));
-        const cli = blocos.cliente || {};
-        const camposAtivos = cli.campos || [];
-        const labelMap = {
-            artista: 'ARTISTA / SHOW',
-            cidade: 'CIDADE',
-            data_show: 'DATA DO SHOW',
-            cnpj: 'CNPJ',
-            semana: 'SEMANA'
-        };
-        let cHTML = `<table class="client-data-table-title"><tr><td class="bg-black-title">CLIENTE</td><td class="data-cell highlight" colspan="3">${esc((cli.nome || 'CONSUMIDOR FINAL').toUpperCase())}</td></tr></table>`;
-        if (camposAtivos.length) {
-            cHTML += '<table class="client-data-table">';
-            camposAtivos.forEach(c => {
-                cHTML += `<tr><td class="bg-gray-title">${labelMap[c] || c.toUpperCase()}</td><td class="data-cell" colspan="3">${esc((cli[c] || '-').toUpperCase())}</td></tr>`;
-            });
-            cHTML += '</table>';
-        }
-        document.getElementById('pdClienteContainer').innerHTML = cHTML;
-        const tbody = document.getElementById('pdItens');
-        tbody.innerHTML = '';
-        let sub = 0;
-        itensPedido.forEach((item, i) => {
-            const tot = item.preco_total || (item.qtd_entrada * item.preco_unit) || 0;
-            sub += tot;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td class="c-item">${i + 1}</td><td class="c-img">${item.imagem ? `<img src="/data/produtos/${esc(item.imagem)}" class="prod-thumb">` : ''}</td><td class="c-sku">${esc(item.codigo || '-')}</td><td class="c-desc">${esc(item.descricao || '-')}</td><td style="text-align:center;font-size:11px;">${item.fator > 1 ? item.fator : '-'}</td><td class="c-qtd">${item.qtd_entrada}</td><td class="c-preco">${fmtMoney(item.preco_unit)}</td><td class="c-total">${fmtMoney(tot)}</td>`;
-            tbody.appendChild(tr);
-        });
-        setText('pdSubtotal', fmtMoney(sub));
-        let tot = sub;
-        const desc = blocos.desconto || {};
-        if (desc.ativo && desc.valor > 0) {
-            setText('pdDescontoLabel', (desc.label || 'DESCONTO') + ':');
-            setText('pdDesconto', `- ${fmtMoney(desc.valor)}`);
-            show('pdDescontoRow');
-            tot -= desc.valor;
-        } else hide('pdDescontoRow');
-        const nf = blocos.nf || {};
-        if (nf.ativo) {
-            const nv = sub * (nf.percent || 18) / 100;
-            setText('pdNFLabel', `NF FISCAL (${nf.percent || 18}%):`);
-            setText('pdNFValor', `+ ${fmtMoney(nv)}`);
-            show('pdNFRow');
-            tot += nv;
-        } else hide('pdNFRow');
-        setText('pdTotal', fmtMoney(tot));
-        const parc = blocos.parcelas || {};
-        if (parc.ativo && parc.lista?.length) {
-            document.getElementById('pdParcelasItens').innerHTML = parc.lista.map(pi =>
-                `<tr><td>${pi.data || '-'}</td><td>${esc((pi.forma || '-').toUpperCase())}</td><td style="text-align:right">${fmtMoney(parseFloat(pi.valor) || 0)}</td></tr>`
-            ).join('');
-            show('pdParcelasSection');
-        } else hide('pdParcelasSection');
-        const obs = blocos.observacoes || '';
-        if (obs) {
-            setText('pdObs', obs);
-            show('pdObsSection');
-        } else hide('pdObsSection');
-    }
-
-    function setText(id, t) {
-        const e = document.getElementById(id);
-        if (e) e.textContent = t || '';
-    }
-
-    function show(id) {
-        const e = document.getElementById(id);
-        if (e) e.style.display = '';
-    }
-
     function hide(id) {
         const e = document.getElementById(id);
         if (e) e.style.display = 'none';
@@ -761,5 +680,6 @@
 
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
+<script src="/public/js/documento.js"></script>
 </body>
 </html>

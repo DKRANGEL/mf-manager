@@ -1385,13 +1385,7 @@ async function salvarRascunho() {
         });
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
-        if (!estado.numero) {
-            estado.numero = json.data.numero;
-            document.getElementById('topbarNumero').textContent = json.data.numero;
-            history.replaceState({}, '', `/emitir?numero=${json.data.numero}`);
-        }
-        document.getElementById('btnPreview').style.display = '';
-        mostrarToast('Salvo!');
+        window.location.href = '/pedidos';
     } catch (err) {
         alert('Erro: ' + err.message);
     }
@@ -1428,8 +1422,7 @@ async function carregarPedido(numero) {
 // ══════════════════════════════════════════════════════════════
 function abrirPreview() {
     coletarEstado();
-    const html = gerarDocumentoHTML();
-    document.getElementById('previewContent').innerHTML = html;
+    document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(estado);
     document.getElementById('previewModal').classList.add('active');
     escalarPreview();
     lucide.createIcons();
