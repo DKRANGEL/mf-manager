@@ -4,7 +4,7 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 
 ![Node.js](https://img.shields.io/badge/Node.js-24+-339933?logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)
-![Deploy](https://img.shields.io/badge/Deploy-Fly.io-8B5CF6?logo=fly.io&logoColor=white)
+![Deploy](https://img.shields.io/badge/Deploy-Hostinger_VPS-orange)
 
 ---
 
@@ -24,10 +24,10 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 | Camada | Tecnologia |
 |--------|-----------|
 | Runtime | Node.js 24 + Express |
-| Banco de dados | Arquivos JSON em volume persistente (Fly.io) |
+| Banco de dados | Arquivos JSON em Docker volume persistente |
 | Frontend | HTML/CSS/JS vanilla |
 | Ícones | Lucide Icons (CDN) |
-| Deploy | Fly.io |
+| Deploy | Hostinger VPS + Docker + Nginx |
 
 ---
 
@@ -53,7 +53,8 @@ npm run dev
 ```env
 TINY_API_TOKEN=seu_token_aqui   # API v2 do Tiny ERP
 BOT_API_KEY=chave_do_fastzap    # autenticação do endpoint /bot
-PORT=3003                        # porta local (Fly.io usa 8080)
+PORT=3003                        # porta local (produção usa 8080)
+NODE_ENV=production
 ```
 
 Acesse `http://localhost:3003`.
@@ -105,13 +106,42 @@ src/data/
 
 ---
 
-## Deploy (Fly.io)
+## Deploy — Hostinger VPS
+
+**URL de produção:** `https://manager.magicfireworks.com`
+
+### Acesso ao servidor
 
 ```bash
-fly deploy
+# Usar cmd.exe (não PowerShell 7)
+ssh root@85.31.60.246
 ```
 
-O volume de dados é montado em `/data` na máquina virtual. Os arquivos JSON persistem entre deploys.
+### Estrutura no servidor
+
+```
+/app/mf-manager/          # repositório clonado
+  .env                    # variáveis de ambiente (não commitado)
+  docker-compose.yml      # define container + volume
+```
+
+Os dados ficam em Docker volume (`mf_data`) montado em `/app/src/data` — persistem entre deploys e resets.
+
+### Deploy manual (se necessário)
+
+```bash
+ssh root@85.31.60.246
+cd /app/mf-manager
+git pull origin magic-fireworks-template
+docker compose up -d --build
+docker image prune -f
+```
+
+### Auto-deploy
+
+Todo `git push` na branch `magic-fireworks-template` dispara o GitHub Actions (`.github/workflows/deploy.yml`) que faz o deploy automaticamente via SSH.
+
+**Secrets necessários no GitHub:** `VPS_HOST`, `VPS_USER`, `VPS_KEY`
 
 ---
 

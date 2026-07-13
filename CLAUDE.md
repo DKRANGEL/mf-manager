@@ -9,11 +9,11 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 ## Stack
 
 - **Runtime:** Node.js 24 + Express
-- **Banco de dados:** arquivos JSON em volume persistente no Fly.io (`src/data/`)
+- **Banco de dados:** arquivos JSON em Docker volume persistente (`src/data/`)
 - **Frontend:** HTML/CSS/JS vanilla, mobile-first
 - **Ícones:** Lucide Icons (CDN, `lucide.createIcons()` após cada render dinâmico)
 - **Fontes:** DM Sans + JetBrains Mono (Google Fonts)
-- **Deploy:** Fly.io — branch `magic-fireworks-template`
+- **Deploy:** Hostinger VPS + Docker + Nginx — branch `magic-fireworks-template`
 
 ---
 
@@ -203,6 +203,27 @@ src/
 - `preco_total = qtd_entrada × preco_unit` — fator nunca multiplica preço, só quantidade
 - Lucide: adicionar `lucide.createIcons()` após qualquer `innerHTML =` que contenha `<i data-lucide>`
 - Commits convencionais na branch `magic-fireworks-template`
+
+## Servidor de produção
+
+- **URL:** `https://manager.magicfireworks.com`
+- **VPS:** Hostinger — IP `85.31.60.246`
+- **Acesso SSH:** `ssh root@85.31.60.246` (usar **cmd.exe**, não PowerShell 7)
+- **Pasta no servidor:** `/app/mf-manager`
+- **Dados persistentes:** Docker volume `mf_data` → `/app/src/data`
+- **Auto-deploy:** GitHub Actions via push na branch `magic-fireworks-template`
+
+### Comandos úteis no servidor
+
+```bash
+docker compose logs -f          # ver logs em tempo real
+docker compose restart          # reiniciar sem rebuild
+docker compose up -d --build    # rebuild completo
+docker ps                       # ver containers rodando
+systemctl status nginx          # status do Nginx
+```
+
+---
 
 ## Sobre o Tiny ERP
 
