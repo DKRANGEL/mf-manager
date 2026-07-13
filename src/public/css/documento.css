@@ -22,7 +22,35 @@
 }
 
 /* ==========================================================================
-   CABEÇALHO DA EMPRESA
+   HEADER NOVO (gerado inline pelo emitir.html)
+   ========================================================================== */
+.recibo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+    gap: 16px;
+}
+.recibo-logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.recibo-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+.recibo-tipo-area {
+    text-align: right;
+    border: 2px solid #1a1a1a;
+    padding: 8px 14px;
+    min-width: 180px;
+}
+
+/* ==========================================================================
+   CABEÇALHO DA EMPRESA (legado)
    ========================================================================== */
 .doc-header-table {
     width: 100%;

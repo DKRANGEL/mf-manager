@@ -58,39 +58,27 @@ router.post('/parse', (req, res) => {
 // POST /api/pedidos — salva rascunho
 router.post('/', (req, res) => {
     try {
-        const {cliente, secoes, blocos, observacoes} = req.body;
+        const {cliente, tipo, cabecalho, secoes, resumo, total_valor, total_itens, data_emissao} = req.body;
 
-        // Valida que tem pelo menos uma seção com itens
         const todasSecoes = secoes || [];
-        const totalItens = todasSecoes.reduce((s, sec) => s + (sec.itens || []).length, 0);
-        if (totalItens === 0) {
+        const nItens = total_itens ?? todasSecoes.reduce((s, sec) => s + (sec.itens || []).length, 0);
+        if (nItens === 0) {
             return res.status(400).json({success: false, error: 'Pedido precisa de pelo menos um item'});
         }
-
-        // Calcula preco_total por item em cada seção
-        const secoesComTotal = todasSecoes.map(sec => ({
-            titulo: sec.titulo || '',
-            itens: (sec.itens || []).map(item => ({
-                ...item,
-                preco_total: (item.qtd_entrada || 0) * (item.preco_unit || 0)
-            }))
-        }));
 
         const numero = proximoNumero();
         const pedido = {
             numero,
-            tipo: 'pedido',
+            tipo: tipo || 'PEDIDO DE VENDA',
             status: 'rascunho',
-            data_emissao: new Date().toISOString(),
+            data_emissao: data_emissao || new Date().toISOString(),
             data_atualizacao: new Date().toISOString(),
-            blocos: blocos || {
-                cliente: {nome: cliente || '', campos: []},
-                nf: {ativo: false, percent: 18},
-                desconto: {ativo: false, label: 'DESCONTO', valor: 0},
-                parcelas: {ativo: false, lista: []},
-                observacoes: observacoes || ''
-            },
-            secoes: secoesComTotal,
+            cliente: cabecalho?.cliente || cliente || '',
+            cabecalho: cabecalho || {cliente: cliente || '', data: new Date().toISOString().split('T')[0]},
+            secoes: todasSecoes,
+            resumo: resumo || {},
+            total_valor: total_valor || 0,
+            total_itens: nItens,
             movimentos: []
         };
 
@@ -115,19 +103,21 @@ router.get('/', (req, res) => {
         const data = arquivos.map(f => {
             try {
                 const pedido = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
-                const blocos = pedido.blocos || {};
-                const cliente = blocos.cliente?.nome || '';
+                // suporta novo schema (cabecalho.cliente) e antigo (blocos.cliente.nome)
+                const cliente = pedido.cabecalho?.cliente || pedido.blocos?.cliente?.nome || pedido.cliente || '';
                 const secoes = pedido.secoes || [];
                 const itens = secoes.flatMap(s => s.itens || []);
-                const subtotal = itens.reduce((s, i) => s + (i.preco_total || (i.qtd_entrada * i.preco_unit) || 0), 0);
+                const subtotal = pedido.total_valor ||
+                    itens.reduce((s, i) => s + (i.total || i.preco_total || (i.qtd_entrada * i.preco_unit) || 0), 0);
 
                 return {
                     numero: pedido.numero,
+                    tipo: pedido.tipo || 'PEDIDO DE VENDA',
                     status: pedido.status || 'rascunho',
                     data_emissao: pedido.data_emissao,
                     data_atualizacao: pedido.data_atualizacao,
                     cliente,
-                    total_itens: itens.length,
+                    total_itens: pedido.total_itens || itens.length,
                     total_valor: subtotal
                 };
             } catch {
@@ -177,18 +167,16 @@ router.put('/:numero', (req, res) => {
             });
         }
 
-        const {secoes, blocos} = req.body;
+        const {tipo, cabecalho, secoes, resumo, total_valor, total_itens, data_emissao, blocos, cliente} = req.body;
 
-        if (secoes !== undefined) {
-            pedido.secoes = secoes.map(sec => ({
-                titulo: sec.titulo || '',
-                itens: (sec.itens || []).map(item => ({
-                    ...item,
-                    preco_total: (item.qtd_entrada || 0) * (item.preco_unit || 0)
-                }))
-            }));
-        }
-
+        if (tipo !== undefined) pedido.tipo = tipo;
+        if (cabecalho !== undefined) { pedido.cabecalho = cabecalho; pedido.cliente = cabecalho.cliente || pedido.cliente; }
+        if (cliente !== undefined && !cabecalho) pedido.cliente = cliente;
+        if (secoes !== undefined) pedido.secoes = secoes;
+        if (resumo !== undefined) pedido.resumo = resumo;
+        if (total_valor !== undefined) pedido.total_valor = total_valor;
+        if (total_itens !== undefined) pedido.total_itens = total_itens;
+        if (data_emissao !== undefined) pedido.data_emissao = data_emissao;
         if (blocos !== undefined) pedido.blocos = blocos;
         pedido.data_atualizacao = new Date().toISOString();
 
@@ -214,18 +202,25 @@ router.put('/:numero/baixa', (req, res) => {
             error: 'Pedido não está emitido'
         });
 
-        // Monta os movimentos de saída/entrada
-        const secao = (pedido.secoes || [])[0] || {itens: []};
-        const itens = secao.itens || [];
-        const movimentos = itens.map(item => ({
-            codigo: item.codigo,
-            descricao: item.descricao,
-            qtd_un: item.qtd_un || (item.qtd_entrada * (item.fator || 1)),
-            tipo: ativar ? 'saida' : 'entrada',
-            origem: 'pedido',
-            numero_pedido: pedido.numero,
-            data: new Date().toISOString()
-        }));
+        // Monta os movimentos de saída/entrada — itera TODAS as seções
+        const itensTodos = (pedido.secoes || []).flatMap(sec => sec.itens || []);
+        const movimentos = itensTodos
+            .filter(item => item.codigo && !item.sem_valor)
+            .map(item => {
+                // Calcula qtd em unidades: qtd_un explícito > cx_100*100 > qtd*fator
+                const qtdUn = item.qtd_un
+                    || (item.cx_100 ? item.cx_100 * 100 : null)
+                    || ((item.qtd || 1) * (item.fator || 1));
+                return {
+                    codigo: item.codigo,
+                    descricao: item.descricao || item.nome || '',
+                    qtd_un: qtdUn,
+                    tipo: ativar ? 'saida' : 'entrada',
+                    origem: 'pedido',
+                    numero_pedido: pedido.numero,
+                    data: new Date().toISOString()
+                };
+            });
 
         // Grava log de movimentos
         const LOG_DIR = path.join(__dirname, '..', 'data', 'movimentos');
