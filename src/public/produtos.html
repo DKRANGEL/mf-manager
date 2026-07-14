@@ -354,23 +354,6 @@
         }
         .cat-rename-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
 
-        /* Import em massa */
-        #importProgress {
-            background: #111113; border: 1px solid #29292e; border-radius: 8px;
-            padding: 12px 16px; margin-bottom: 20px; display: none;
-        }
-        .import-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 4px 0; font-size: 11px; font-family: var(--mono);
-            border-bottom: 1px solid #1e1e22;
-        }
-        .import-item:last-child { border-bottom: none; }
-        .import-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .import-dot.ok { background: #4cd964; }
-        .import-dot.err { background: #ff6060; }
-        .import-dot.skip { background: #888; }
-        .import-dot.pending { background: #444; }
-
         #tabelaContainer {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -431,16 +414,11 @@
         </div>
         <div class="header-actions">
             <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;"><i data-lucide="download"></i> Importar do Tiny</button>
-            <label class="btn-back" style="cursor:pointer;border-color:#555;color:#fff;" title="Importar imagens em massa">
-                <i data-lucide="image"></i> Importar imagens
-                <input type="file" accept="image/*" multiple style="display:none;" onchange="importarImagensEmMassa(this)">
-            </label>
             <a href="/" class="btn-back">← Voltar</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
         </div>
     </div>
 
-    <div id="importProgress"></div>
     <div class="toolbar">
         <input type="text" class="search-box" id="searchBox" placeholder="Buscar por nome, código ou categoria..."
                oninput="filtrar()">
@@ -514,6 +492,31 @@
             filtrar();
         } catch (err) {
             document.getElementById('tabelaContainer').innerHTML = `<div class="empty-msg">Erro: ${err.message}</div>`;
+        }
+    }
+
+    // Recarrega dados preservando filtro e busca atuais
+    async function recarregarProdutos() {
+        try {
+            const categoriaAtual = document.getElementById('filterCategoria').value;
+            const buscaAtual = document.getElementById('searchBox').value;
+
+            const res = await fetch('/api/catalogo/catalogo');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+
+            todosProdutos = [];
+            categorias = Object.keys(json.data).sort();
+            categorias.forEach(cat => json.data[cat].forEach(p => todosProdutos.push(p)));
+
+            const sel = document.getElementById('filterCategoria');
+            sel.innerHTML = '<option value="">Todas as categorias</option>' +
+                categorias.map(c => `<option value="${esc(c)}" ${c === categoriaAtual ? 'selected' : ''}>${esc(c)}</option>`).join('');
+
+            document.getElementById('searchBox').value = buscaAtual;
+            filtrar();
+        } catch (err) {
+            console.error('Erro ao recarregar:', err);
         }
     }
 
@@ -672,7 +675,7 @@
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             fecharModal();
-            carregarDados();
+            recarregarProdutos();
         } catch (err) {
             alert(err.message);
         }
@@ -684,7 +687,7 @@
             const res = await fetch(`/api/catalogo/item/${id}`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            carregarDados();
+            recarregarProdutos();
         } catch (err) {
             alert(err.message);
         }
@@ -717,7 +720,7 @@
             const res = await fetch(`/api/catalogo/item/${id}/imagem`, {method: 'PUT', body: form});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            carregarDados();
+            recarregarProdutos();
         } catch (err) {
             alert(err.message);
         }
@@ -729,7 +732,7 @@
             const res = await fetch(`/api/catalogo/item/${id}/imagem`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            carregarDados();
+            recarregarProdutos();
         } catch (err) {
             alert(err.message);
         }
@@ -758,100 +761,6 @@
         }
     }
 
-    // ── IMPORTAR IMAGENS EM MASSA ──
-    async function importarImagensEmMassa(input) {
-        const files = Array.from(input.files);
-        if (!files.length) return;
-
-        // Filtra só as imagens primárias (_PS_01, _PS_1, - 1, -1)
-        const primarias = files.filter(f => {
-            const n = f.name.toLowerCase();
-            return n.includes('_ps_01') || n.includes('_ps_1.') ||
-                   n.endsWith('- 1.png') || n.endsWith('-1.png') ||
-                   n.endsWith('_1.png') || n.endsWith(' 1.png') ||
-                   // se só tem 1 arquivo por produto, aceita qualquer um
-                   false;
-        });
-
-        // Se nenhuma primária encontrada, usa todos (caso de 1 imagem por produto)
-        const paraProcessar = primarias.length > 0 ? primarias : files;
-
-        const progressEl = document.getElementById('importProgress');
-        progressEl.style.display = 'block';
-        progressEl.innerHTML = `<div style="font-size:11px;color:#888;margin-bottom:8px;">Importando ${paraProcessar.length} imagens...</div>`;
-
-        let ok = 0, erros = 0, naoEncontrado = 0;
-
-        for (const file of paraProcessar) {
-            const codigo = extrairCodigo(file.name);
-            const linha = document.createElement('div');
-            linha.className = 'import-item';
-
-            if (!codigo) {
-                linha.innerHTML = `<div class="import-dot skip"></div><span style="color:#555">${esc(file.name)}</span><span style="color:#555;margin-left:auto;">código não identificado</span>`;
-                progressEl.appendChild(linha);
-                naoEncontrado++;
-                continue;
-            }
-
-            // Encontra produto pelo código
-            const produto = todosProdutos.find(p =>
-                (p.codigo || '').toUpperCase() === codigo.toUpperCase()
-            );
-
-            if (!produto) {
-                linha.innerHTML = `<div class="import-dot skip"></div><span style="color:#666">${codigo}</span><span style="color:#555;margin-left:auto;">produto não encontrado</span>`;
-                progressEl.appendChild(linha);
-                naoEncontrado++;
-                continue;
-            }
-
-            linha.innerHTML = `<div class="import-dot pending"></div><span>${codigo}</span><span style="color:#555;margin-left:auto;">enviando...</span>`;
-            progressEl.appendChild(linha);
-
-            try {
-                const form = new FormData();
-                form.append('imagem', file);
-                const res = await fetch(`/api/catalogo/item/${produto.id}/imagem`, { method: 'PUT', body: form });
-                const json = await res.json();
-                if (!json.success) throw new Error(json.error);
-                linha.querySelector('.import-dot').className = 'import-dot ok';
-                linha.querySelector('span:last-child').textContent = '✓ ok';
-                linha.querySelector('span:last-child').style.color = '#4cd964';
-                ok++;
-            } catch (err) {
-                linha.querySelector('.import-dot').className = 'import-dot err';
-                linha.querySelector('span:last-child').textContent = err.message;
-                linha.querySelector('span:last-child').style.color = '#ff6060';
-                erros++;
-            }
-        }
-
-        progressEl.insertAdjacentHTML('afterbegin',
-            `<div style="font-size:12px;color:#fff;margin-bottom:8px;font-weight:700;">
-                Concluído: ${ok} ok · ${naoEncontrado} não encontrados · ${erros} erros
-                <button onclick="document.getElementById('importProgress').style.display='none'"
-                    style="float:right;background:transparent;border:none;color:#555;cursor:pointer;font-size:14px;">✕</button>
-            </div>`
-        );
-
-        input.value = '';
-        carregarDados();
-    }
-
-    function extrairCodigo(filename) {
-        // Extrai código do produto do nome do arquivo
-        // Padrões: "MFSSS 012 - ...", "MFCS 001 - ...", "MFCX-001 - ..."
-        // Remove extensão
-        const sem_ext = filename.replace(/\.[^.]+$/, '');
-        // Tenta: LETRAS ESPAÇO NÚMEROS (ex: MFSSS 012)
-        const m1 = sem_ext.match(/^([A-Z]+)\s+(\d+)/i);
-        if (m1) return `${m1[1].toUpperCase()}-${m1[2]}`;
-        // Tenta: LETRAS-NÚMEROS (ex: MFSSS-012)
-        const m2 = sem_ext.match(/^([A-Z]+-\d+)/i);
-        if (m2) return m2[1].toUpperCase();
-        return null;
-    }
 </script>
 </body>
 </html>
