@@ -134,6 +134,31 @@ router.delete('/item/:id', (req, res) => {
     }
 });
 
+// PUT /api/catalogo/categoria/renomear — renomeia categoria em todos os produtos
+router.put('/categoria/renomear', (req, res) => {
+    try {
+        const { categoria_atual, categoria_nova } = req.body;
+        if (!categoria_atual || !categoria_nova) {
+            return res.status(400).json({ success: false, error: 'categoria_atual e categoria_nova são obrigatórios' });
+        }
+        const db = lerProdutos();
+        let atualizados = 0;
+        db.produtos.forEach(p => {
+            if (p.categoria === categoria_atual) {
+                p.categoria = categoria_nova;
+                atualizados++;
+            }
+        });
+        if (atualizados === 0) {
+            return res.status(404).json({ success: false, error: `Categoria "${categoria_atual}" não encontrada` });
+        }
+        salvarProdutos(db);
+        res.json({ success: true, atualizados, categoria_nova });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ===================== MIGRAÇÃO DO TINY (API direta) =====================
 
 // POST /api/catalogo/importar-tiny — puxa todos os produtos da API do Tiny e
