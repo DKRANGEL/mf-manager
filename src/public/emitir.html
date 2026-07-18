@@ -779,6 +779,12 @@ function renderSecoes() {
     const container = document.getElementById('secoesContainer');
     if (estado.secoes.length === 0) { container.innerHTML = ''; return; }
 
+    // Limpa instâncias antigas
+    Object.keys(_sortableInstances).forEach(id => {
+        try { _sortableInstances[id].destroy(); } catch(e) {}
+        delete _sortableInstances[id];
+    });
+
     container.innerHTML = estado.secoes.map((sec, idx) => {
         const total = calcSubtotalSecao(sec);
         const meta = `${sec.itens.length} iten${sec.itens.length !== 1 ? 's' : ''} · ${sec.itens.length > 0 ? 'R$ ' + fmtN(total) : 'vazia'}`;
@@ -893,23 +899,42 @@ function renderItemCard(secId, item, idx) {
         </div>`;
 }
 
+const _sortableInstances = {};
+
 function initSortable(secId) {
     const container = document.getElementById(`itens_${secId}`);
-    if (!container || container.children.length === 0) return;
-    Sortable.create(container, {
-        animation: 150,
+    if (!container) return;
+
+    // Destrói instância anterior se existir
+    if (_sortableInstances[secId]) {
+        try { _sortableInstances[secId].destroy(); } catch(e) {}
+        delete _sortableInstances[secId];
+    }
+
+    // Só itens reais (não o div de "Nenhum item")
+    if (!container.querySelector('.item-card')) return;
+
+    _sortableInstances[secId] = new Sortable(container, {
+        animation: 200,
         handle: '.item-drag-handle',
         ghostClass: 'item-ghost',
         chosenClass: 'item-chosen',
-        delay: 100,
-        delayOnTouchOnly: true,
-        onEnd(evt) {
+        forceFallback: true,   // garante funcionamento em mobile
+        fallbackTolerance: 5,
+        onEnd() {
             const sec = estado.secoes.find(s => s.id === secId);
             if (!sec) return;
             const cards = container.querySelectorAll('.item-card');
             const novaOrdem = Array.from(cards).map(c => parseInt(c.dataset.idx));
-            sec.itens = novaOrdem.map(i => sec.itens[i]);
-            renderItensSecao(secId);
+            // Reconstrói array na nova ordem sem re-renderizar (evita loop)
+            const copia = [...sec.itens];
+            sec.itens = novaOrdem.map(i => copia[i]);
+            // Atualiza data-idx nos cards sem re-renderizar
+            cards.forEach((card, i) => card.dataset.idx = i);
+            // Atualiza meta (total/contagem) no header da seção
+            const total = calcSubtotalSecao(sec);
+            const metaEl = document.querySelector(`#secao-${secId} .secao-meta`);
+            if (metaEl) metaEl.textContent = `${sec.itens.length} iten${sec.itens.length !== 1 ? 's' : ''} · R$ ${fmtN(total)}`;
         }
     });
 }
@@ -928,7 +953,12 @@ function montarValsTexto(item) {
 
 function toggleSecao(id) {
     const card = document.getElementById(`secao-${id}`);
-    if (card) card.classList.toggle('aberta');
+    if (!card) return;
+    card.classList.toggle('aberta');
+    if (card.classList.contains('aberta')) {
+        // Inicializa sortable quando abre a seção
+        setTimeout(() => initSortable(id), 50);
+    }
 }
 
 function atualizarSecao(id, campo, valor) {
@@ -1064,7 +1094,8 @@ function renderItensSecao(secId) {
     const metaEl = document.querySelector(`#secao-${secId} .secao-meta`);
     if (metaEl) metaEl.textContent = `${sec.itens.length} iten${sec.itens.length !== 1 ? 's' : ''} · ${sec.itens.length > 0 ? 'R$ ' + fmtN(total) : 'vazia'}`;
     lucide.createIcons();
-    initSortable(secId);
+    // Reinicializa sortable após qualquer mudança na lista
+    setTimeout(() => initSortable(secId), 10);
 }
 
 // ══════════════════════════════════════════════════════════════
