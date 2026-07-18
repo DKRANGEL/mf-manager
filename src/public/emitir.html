@@ -1403,7 +1403,7 @@ async function carregarPedido(numero) {
         if (!estado.cabecalho.campos) estado.cabecalho.campos = {};
         if (!estado.cabecalho.valores) estado.cabecalho.valores = {};
         estado.secoes = (ped.secoes || []).map(s => ({ ...s, id: `sec_${++secaoIdCounter}` }));
-        estado.resumo = ped.resumo || estado.resumo;
+        estado.resumo = { ...estado.resumo, ...(ped.resumo || {}) };
 
         document.getElementById('topbarNumero').textContent = numero;
         document.getElementById('fCliente').value = estado.cabecalho.cliente;
@@ -1412,9 +1412,85 @@ async function carregarPedido(numero) {
 
         renderTipos();
         renderSecoes();
-
-        if (estado.resumo.condicao) document.getElementById('fCondicao').value = estado.resumo.condicao_valor || '';
+        restaurarEstadoUI();
     } catch (e) { console.error(e); }
+}
+
+function restaurarEstadoUI() {
+    const res = estado.resumo;
+    const cab = estado.cabecalho;
+
+    // Campos opcionais do cabeçalho
+    Object.entries(cab.campos || {}).forEach(([k, ativo]) => {
+        if (ativo) {
+            const btn = document.querySelector(`[data-campo="${k}"]`);
+            if (btn) btn.classList.add('ativo');
+        }
+    });
+    renderCamposOpcionais();
+
+    // Nº documento
+    if (cab.num_doc) {
+        const btnNum = document.querySelector('[data-campo="num_doc"]');
+        if (btnNum) btnNum.classList.add('ativo');
+        document.getElementById('campoNumDoc').style.display = '';
+        if (cab.valores?.num_doc) document.getElementById('fNumDoc').value = cab.valores.num_doc;
+    }
+
+    // Toggles do resumo
+    const mapaToggle = {
+        subtotais: { sw: 'toggleSubtotais', extra: null },
+        desconto:  { sw: 'toggleDesconto',  extra: 'extraDesconto' },
+        pagamentos:{ sw: 'togglePagamentos',extra: 'extraPagamentos' },
+        nf:        { sw: 'toggleNF',        extra: 'extraNF' },
+        kits:      { sw: 'toggleKits',      extra: 'extraKits' },
+        incluso:   { sw: 'toggleIncluso',   extra: 'extraIncluso' },
+        obs:       { sw: 'toggleObs',       extra: 'extraObs' }
+    };
+    Object.entries(mapaToggle).forEach(([campo, { sw, extra }]) => {
+        const swEl = document.getElementById(sw);
+        const ativo = !!res[campo];
+        swEl?.classList.toggle('on', ativo);
+        if (extra) document.getElementById(extra)?.classList.toggle('resumo-extra-hidden', !ativo);
+    });
+
+    // Valores dos campos
+    const g = id => document.getElementById(id);
+    if (res.desconto_valor) { g('fDescontoValor').value = fmtNEditar(res.desconto_valor); }
+    if (res.desconto_label) { g('fDescontoLabel').value = res.desconto_label; }
+    if (res.nf_percent)     { g('fNFPercent').value = res.nf_percent; }
+    if (res.incluso_texto)  { g('fIncluso').value = res.incluso_texto; }
+    if (res.obs_texto)      { g('fObs').value = res.obs_texto; }
+
+    // Pagamentos deduzidos
+    if (res.pagamentos && res.pagamentos_itens?.length) renderPagamentos();
+
+    // Pagamento
+    if (res.pag_tipo) {
+        g('fPagTipo').value = res.pag_tipo;
+        onPagTipoChange();
+        if (res.pag_tipo === 'parcelado') {
+            if (res.pag_parcelas_num)  g('fParcelasNum').value  = res.pag_parcelas_num;
+            if (res.pag_parcelas_data) g('fParcelasData').value = res.pag_parcelas_data;
+            if (res.pag_parcelas_freq) g('fParcelasFreq').value = res.pag_parcelas_freq;
+            recalcParcelas();
+        }
+        if (res.pag_tipo === 'outro' && res.pag_outro_desc) {
+            g('fPagOutroDesc').value = res.pag_outro_desc;
+        }
+    }
+
+    // Kits
+    if (res.kits) {
+        atualizarSelectKits();
+        if (res.kits_qtd)   g('fKitsQtd').value   = res.kits_qtd;
+        if (res.kits_valor) g('fKitsValor').value  = fmtNEditar(res.kits_valor);
+        if (res.kits_secao_id) {
+            g('fKitsSecao').value = res.kits_secao_id;
+            g('fKitsValor').readOnly = !!res.kits_secao_id;
+        }
+        recalcKits();
+    }
 }
 
 // ══════════════════════════════════════════════════════════════

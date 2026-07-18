@@ -242,6 +242,33 @@ router.put('/:numero/baixa', (req, res) => {
     }
 });
 
+// PUT /api/pedidos/:numero/concluir — marca pagamento como concluído (ou reabre)
+router.put('/:numero/concluir', (req, res) => {
+    try {
+        const pedido = readJSON(pedidoPath(req.params.numero), null);
+        if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+
+        const {ativar} = req.body;
+        const statusAtual = pedido.status;
+
+        if (ativar && statusAtual !== 'emitido') {
+            return res.status(400).json({success: false, error: 'Só pedidos com baixa feita podem ser concluídos'});
+        }
+        if (!ativar && statusAtual !== 'concluido') {
+            return res.status(400).json({success: false, error: 'Pedido não está concluído'});
+        }
+
+        pedido.status = ativar ? 'concluido' : 'emitido';
+        pedido.data_conclusao = ativar ? new Date().toISOString() : null;
+        pedido.data_atualizacao = new Date().toISOString();
+        writeJSONAtomic(pedidoPath(req.params.numero), pedido);
+
+        res.json({success: true, data: {status: pedido.status}});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 // DELETE /api/pedidos/:numero — exclui (só rascunho)
 router.delete('/:numero', (req, res) => {
     try {
