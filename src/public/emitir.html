@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <style>
         body { overflow: auto; background: #09090a; }
 
@@ -179,6 +180,15 @@
             flex-shrink: 0; transition: 0.15s;
         }
         .item-remove:hover { color: #ff6060; background: rgba(255,80,80,0.08); }
+
+        .item-drag-handle {
+            width: 28px; height: 28px; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; cursor: grab; color: #2a2a30;
+            touch-action: none;
+        }
+        .item-drag-handle:active { cursor: grabbing; color: #555; }
+        .item-ghost { opacity: 0.3; background: #1e1e28 !important; border-color: #4455cc !important; }
+        .item-chosen { box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
 
         /* ── BUSCA AUTOCOMPLETE ── */
         .busca-wrap { position: relative; margin-bottom: 10px; }
@@ -861,17 +871,47 @@ function renderItemCard(secId, item, idx) {
 
     const vals = montarValsTexto(item);
     return `
-        <div class="item-card" onclick="editarItem('${secId}',${idx})">
-            ${imgEl}
-            <div class="item-info">
-                <div class="item-cod">${esc(item.codigo || '')}</div>
-                <div class="item-nome">${esc(item.descricao || item.nome || '')}</div>
-                <div class="item-vals">${vals}</div>
+        <div class="item-card" data-idx="${idx}">
+            <div class="item-drag-handle" title="Arrastar para reordenar">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                    <circle cx="4" cy="3" r="1.2"/><circle cx="10" cy="3" r="1.2"/>
+                    <circle cx="4" cy="7" r="1.2"/><circle cx="10" cy="7" r="1.2"/>
+                    <circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="11" r="1.2"/>
+                </svg>
             </div>
-            <button class="item-remove" onclick="event.stopPropagation();removerItemSecao('${secId}',${idx})">
+            <div onclick="editarItem('${secId}',${idx})" style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;cursor:pointer;">
+                ${imgEl}
+                <div class="item-info">
+                    <div class="item-cod">${esc(item.codigo || '')}</div>
+                    <div class="item-nome">${esc(item.descricao || item.nome || '')}</div>
+                    <div class="item-vals">${vals}</div>
+                </div>
+            </div>
+            <button class="item-remove" onclick="removerItemSecao('${secId}',${idx})">
                 <i data-lucide="x"></i>
             </button>
         </div>`;
+}
+
+function initSortable(secId) {
+    const container = document.getElementById(`itens_${secId}`);
+    if (!container || container.children.length === 0) return;
+    Sortable.create(container, {
+        animation: 150,
+        handle: '.item-drag-handle',
+        ghostClass: 'item-ghost',
+        chosenClass: 'item-chosen',
+        delay: 100,
+        delayOnTouchOnly: true,
+        onEnd(evt) {
+            const sec = estado.secoes.find(s => s.id === secId);
+            if (!sec) return;
+            const cards = container.querySelectorAll('.item-card');
+            const novaOrdem = Array.from(cards).map(c => parseInt(c.dataset.idx));
+            sec.itens = novaOrdem.map(i => sec.itens[i]);
+            renderItensSecao(secId);
+        }
+    });
 }
 
 function montarValsTexto(item) {
@@ -1024,6 +1064,7 @@ function renderItensSecao(secId) {
     const metaEl = document.querySelector(`#secao-${secId} .secao-meta`);
     if (metaEl) metaEl.textContent = `${sec.itens.length} iten${sec.itens.length !== 1 ? 's' : ''} · ${sec.itens.length > 0 ? 'R$ ' + fmtN(total) : 'vazia'}`;
     lucide.createIcons();
+    initSortable(secId);
 }
 
 // ══════════════════════════════════════════════════════════════
