@@ -89,11 +89,19 @@
             color: #fff;
         }
 
-        .filtros {
+        /* ── FILTROS ── */
+        .filtros-wrapper {
+            margin-bottom: 20px;
             display: flex;
+            flex-direction: column;
             gap: 8px;
-            margin-bottom: 24px;
+        }
+
+        .filtros-row {
+            display: flex;
+            gap: 6px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .filtro-btn {
@@ -107,6 +115,7 @@
             color: #555;
             font-family: inherit;
             transition: .15s;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .filtro-btn.ativo {
@@ -115,10 +124,31 @@
             color: #ccc;
         }
 
-        .filtro-btn:hover {
-            border-color: #444;
-            color: #ccc;
+        .filtro-btn:hover { border-color: #444; color: #ccc; }
+
+        .filtro-btn.pendente.ativo  { background: rgba(251,191,36,.12); border-color: #fbbf24; color: #fbbf24; }
+        .filtro-btn.aberto.ativo    { background: rgba(239,68,68,.12);  border-color: #ef4444; color: #ef4444; }
+        .filtro-btn.concluido.ativo { background: rgba(74,222,128,.12); border-color: #4ade80; color: #4ade80; }
+
+        .data-input {
+            height: 32px; background: #121214; border: 1px solid #29292e;
+            border-radius: 20px; padding: 0 12px; color: #666; font-size: 11px;
+            font-family: inherit; outline: none; cursor: pointer;
         }
+        .data-input:focus { border-color: #444; color: #ccc; }
+
+        /* ── STATUS DROPDOWN no card ── */
+        .status-select {
+            width: 100%; border: none; border-top: 1px solid #1e1e22;
+            background: #0e0e10; color: #888; font-size: 12px; font-weight: 700;
+            padding: 10px 14px; font-family: inherit; cursor: pointer;
+            appearance: none; -webkit-appearance: none; text-align: center;
+            transition: .15s; outline: none;
+        }
+        .status-select:hover { background: #141416; }
+        .status-select.pendente  { color: #fbbf24; }
+        .status-select.aberto    { color: #ef4444; }
+        .status-select.concluido { color: #4ade80; }
 
         .pedidos-grid {
             display: grid;
@@ -468,11 +498,21 @@
             <a href="/emitir" class="btn btn-white"><i data-lucide="pencil"></i> Novo Pedido</a>
         </div>
     </div>
-    <div class="filtros">
-        <button class="filtro-btn ativo" data-filtro="todos" onclick="setFiltro(this)">Todos</button>
-        <button class="filtro-btn" data-filtro="hoje" onclick="setFiltro(this)">Hoje</button>
-        <button class="filtro-btn" data-filtro="semana" onclick="setFiltro(this)">Esta semana</button>
-        <button class="filtro-btn" data-filtro="mes" onclick="setFiltro(this)">Este mês</button>
+    <div class="filtros-wrapper">
+        <div class="filtros-row">
+            <button class="filtro-btn ativo"               onclick="setFiltroStatus('todos')">Todos</button>
+            <button class="filtro-btn pendente"             onclick="setFiltroStatus('pendente')">🟡 Pendente</button>
+            <button class="filtro-btn aberto"               onclick="setFiltroStatus('aberto')">🔴 Aberto</button>
+            <button class="filtro-btn concluido"            onclick="setFiltroStatus('concluido')">🟢 Concluído</button>
+        </div>
+        <div class="filtros-row">
+            <button class="filtro-btn ativo" data-periodo="todos"  onclick="setFiltroPeriodo(this)">Todos</button>
+            <button class="filtro-btn" data-periodo="hoje"         onclick="setFiltroPeriodo(this)">Hoje</button>
+            <button class="filtro-btn" data-periodo="semana"       onclick="setFiltroPeriodo(this)">Semana</button>
+            <button class="filtro-btn" data-periodo="mes"          onclick="setFiltroPeriodo(this)">Mês</button>
+            <input type="date" class="data-input" id="filtroInicio" onchange="setFiltroPeriodo(null,'custom')" title="Data início">
+            <input type="date" class="data-input" id="filtroFim"    onchange="setFiltroPeriodo(null,'custom')" title="Data fim">
+        </div>
     </div>
     <div id="pedidosGrid" class="pedidos-grid">
         <div class="loading">Carregando pedidos...</div>
@@ -481,7 +521,8 @@
 
 <script>
     let todosPedidos = [];
-    let filtroAtivo = 'todos';
+    let filtroStatus = 'todos';
+    let filtroPeriodo = 'todos';
 
     document.addEventListener('DOMContentLoaded', carregarPedidos);
 
@@ -499,28 +540,61 @@
         }
     }
 
-    function setFiltro(btn) {
-        document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        filtroAtivo = btn.dataset.filtro;
+    // ── FILTROS DE STATUS ──
+    function setFiltroStatus(status) {
+        filtroStatus = status;
+        document.querySelectorAll('.filtros-row:first-child .filtro-btn').forEach(b => b.classList.remove('ativo'));
+        const btns = document.querySelectorAll('.filtros-row:first-child .filtro-btn');
+        const idx = ['todos','pendente','aberto','concluido'].indexOf(status);
+        if (btns[idx]) btns[idx].classList.add('ativo');
         renderGrid();
     }
 
-    function filtrarPorPeriodo(pedidos) {
-        if (filtroAtivo === 'todos') return pedidos;
-        const agora = new Date();
-        const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
-        return pedidos.filter(ped => {
-            const d = new Date(ped.data_atualizacao || ped.data_emissao);
-            if (filtroAtivo === 'hoje') return d >= hoje;
-            if (filtroAtivo === 'semana') {
-                const s = new Date(hoje);
-                s.setDate(hoje.getDate() - 7);
-                return d >= s;
-            }
-            if (filtroAtivo === 'mes') return d >= new Date(agora.getFullYear(), agora.getMonth(), 1);
-            return true;
-        });
+    // ── FILTROS DE PERÍODO ──
+    function setFiltroPeriodo(btn, override) {
+        filtroPeriodo = override || btn?.dataset.periodo || 'todos';
+        document.querySelectorAll('[data-periodo]').forEach(b => b.classList.remove('ativo'));
+        if (btn) btn.classList.add('ativo');
+        renderGrid();
+    }
+
+    function filtrarPedidos(pedidos) {
+        let lista = pedidos;
+
+        // Filtro de status
+        if (filtroStatus !== 'todos') {
+            lista = lista.filter(ped => {
+                const s = ped.status || 'rascunho';
+                if (filtroStatus === 'pendente') return s === 'rascunho' || s === 'pendente';
+                if (filtroStatus === 'aberto')   return s === 'emitido'  || s === 'aberto';
+                if (filtroStatus === 'concluido') return s === 'concluido';
+                return true;
+            });
+        }
+
+        // Filtro de período
+        if (filtroPeriodo !== 'todos') {
+            const agora = new Date();
+            const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+            const ini = document.getElementById('filtroInicio')?.value;
+            const fim = document.getElementById('filtroFim')?.value;
+
+            lista = lista.filter(ped => {
+                const d = new Date(ped.data_atualizacao || ped.data_emissao);
+                if (filtroPeriodo === 'hoje')   return d >= hoje;
+                if (filtroPeriodo === 'semana') { const s = new Date(hoje); s.setDate(hoje.getDate()-7); return d >= s; }
+                if (filtroPeriodo === 'mes')    return d >= new Date(agora.getFullYear(), agora.getMonth(), 1);
+                if (filtroPeriodo === 'custom') {
+                    const dStr = d.toISOString().split('T')[0];
+                    if (ini && dStr < ini) return false;
+                    if (fim && dStr > fim) return false;
+                    return true;
+                }
+                return true;
+            });
+        }
+
+        return lista;
     }
 
     function getInitials(nome) {
@@ -530,7 +604,7 @@
 
     function renderGrid() {
         const container = document.getElementById('pedidosGrid');
-        const lista = filtrarPorPeriodo(todosPedidos);
+        const lista = filtrarPedidos(todosPedidos);
 
         if (lista.length === 0) {
             container.innerHTML = `<div class="empty">
@@ -554,26 +628,9 @@
             const isConcluido = status === 'concluido';
             const initials = getInitials(cliente);
 
-            const statusLabel = isPendente ? 'PENDENTE' : isAberto ? 'ABERTO' : 'CONCLUÍDO';
             const statusClass = isPendente ? 'status-rascunho' : isAberto ? 'status-emitido' : 'status-concluido';
-
-            // Botão baixa (pendente ↔ aberto)
-            const btnBaixa = !isConcluido ? `
-                <button class="card-btn" title="${isPendente ? 'Baixar estoque' : 'Reverter baixa'}"
-                    onclick="toggleBaixa('${esc(ped.numero)}', ${isAberto}, '${esc(cliente)}')">
-                    ${isPendente ? '<i data-lucide="circle"></i>' : '<i data-lucide="circle-check-big"></i>'}
-                </button>` : '';
-
-            // Botão concluir (aberto → concluido) ou reabrir (concluido → aberto)
-            const btnConcluir = isAberto ? `
-                <button class="card-btn" title="Confirmar pagamento" style="color:#4ade80;"
-                    onclick="concluirPedido('${esc(ped.numero)}', true)">
-                    <i data-lucide="badge-check"></i>
-                </button>` : isConcluido ? `
-                <button class="card-btn" title="Reabrir pagamento"
-                    onclick="concluirPedido('${esc(ped.numero)}', false)">
-                    <i data-lucide="undo-2"></i>
-                </button>` : '';
+            const statusLabel = isPendente ? 'PENDENTE' : isAberto ? 'ABERTO' : 'CONCLUÍDO';
+            const selectClass = isPendente ? 'pendente' : isAberto ? 'aberto' : 'concluido';
 
             const thumbImg = ped.primeira_imagem
                 ? `<img src="/data/produtos/${esc(ped.primeira_imagem)}" alt="">`
@@ -593,9 +650,12 @@
                 <div class="card-meta">${data} · ${ped.total_itens} ${ped.total_itens === 1 ? 'item' : 'itens'}</div>
                 <div class="card-total ${totalClass}">${totalStr}</div>
             </div>
+            <select class="status-select ${selectClass}" onchange="mudarStatus('${esc(ped.numero)}', this.value, this)">
+                <option value="rascunho" ${isPendente  ? 'selected' : ''}>🟡 Pendente</option>
+                <option value="emitido"  ${isAberto    ? 'selected' : ''}>🔴 Aberto</option>
+                <option value="concluido"${isConcluido ? 'selected' : ''}>🟢 Concluído</option>
+            </select>
             <div class="card-actions">
-                ${btnBaixa}
-                ${btnConcluir}
                 <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
                 <button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>
                 <button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir"><i data-lucide="trash-2"></i></button>
@@ -609,42 +669,43 @@
         window.location.href = `/emitir?numero=${encodeURIComponent(numero)}`;
     }
 
-    async function concluirPedido(numero, ativar) {
-        const msg = ativar
-            ? `Confirmar pagamento do pedido ${numero}?\n\nMarcar como CONCLUÍDO.`
-            : `Reabrir pagamento do pedido ${numero}?\n\nVolta para status ABERTO.`;
-        if (!confirm(msg)) return;
-        try {
-            const res = await fetch(`/api/pedidos/${encodeURIComponent(numero)}/concluir`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ativar})
-            });
-            const json = await res.json();
-            if (!json.success) throw new Error(json.error);
-            await carregarPedidos();
-        } catch (err) {
-            alert('Erro: ' + err.message);
-        }
-    }
+    async function mudarStatus(numero, novoStatus, selectEl) {
+        const pedido = todosPedidos.find(p => p.numero === numero);
+        const atual = pedido?.status || 'rascunho';
+        if (atual === novoStatus || (atual === 'pendente' && novoStatus === 'rascunho')) { return; }
 
-    async function toggleBaixa(numero, jaEmitido, cliente) {
-        const ativar = !jaEmitido;
-        const msg = ativar
-            ? `Baixar estoque do pedido ${numero}${cliente ? ` (${cliente})` : ''}?\n\nIsso vai descontar os itens do estoque.`
-            : `Reverter baixa do pedido ${numero}?\n\nIsso vai devolver os itens ao estoque.`;
-        if (!confirm(msg)) return;
+        const msgs = {
+            'rascunho→emitido':   `Baixar estoque do pedido ${numero}?\n\nOs itens serão descontados do estoque.`,
+            'emitido→rascunho':   `Reverter baixa do pedido ${numero}?\n\nOs itens voltam ao estoque.`,
+            'emitido→concluido':  `Confirmar pagamento do pedido ${numero}?\n\nMarcar como CONCLUÍDO.`,
+            'concluido→emitido':  `Reabrir pagamento do pedido ${numero}?\n\nVolta para ABERTO.`,
+            'rascunho→concluido': `Não é possível ir direto para Concluído sem antes baixar o estoque.`,
+            'concluido→rascunho': `Não é possível voltar para Pendente a partir de Concluído.\nPrimeiro reabra para Aberto.`,
+        };
+
+        const chave = `${atual}→${novoStatus}`;
+        const msg = msgs[chave];
+
+        if (!msg) { renderGrid(); return; }
+        if (chave.includes('Não é possível')) { alert(msg); renderGrid(); return; }
+        if (!confirm(msg)) { renderGrid(); return; }
+
+        let url, body;
+        if (chave === 'rascunho→emitido') { url = `/api/pedidos/${numero}/baixa`;    body = {ativar: true}; }
+        if (chave === 'emitido→rascunho') { url = `/api/pedidos/${numero}/baixa`;    body = {ativar: false}; }
+        if (chave === 'emitido→concluido'){ url = `/api/pedidos/${numero}/concluir`; body = {ativar: true}; }
+        if (chave === 'concluido→emitido'){ url = `/api/pedidos/${numero}/concluir`; body = {ativar: false}; }
+
         try {
-            const res = await fetch(`/api/pedidos/${encodeURIComponent(numero)}/baixa`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ativar})
+            const res = await fetch(url, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             await carregarPedidos();
         } catch (err) {
             alert('Erro: ' + err.message);
+            renderGrid();
         }
     }
 
