@@ -1586,10 +1586,15 @@ function escalarPreview() {
     const modal = document.getElementById('previewModal');
     const content = document.getElementById('previewContent');
     if (!modal || !content || !modal.classList.contains('active')) return;
-    const available = window.innerWidth - 32;
+    const available = window.innerWidth - 24;
     const scale = Math.min(1, available / 760);
+    content.style.transformOrigin = 'top center';
     content.style.transform = `scale(${scale})`;
-    content.style.marginTop = scale < 1 ? `${-(760 * (1 - scale) / 2)}px` : '0';
+    content.style.marginTop = '0';
+    // Remove espaço extra que o transform deixa no layout (a altura visual é menor que o layout box)
+    content.style.marginBottom = scale < 1
+        ? `${-(content.offsetHeight * (1 - scale))}px`
+        : '0';
 }
 
 function gerarDocumentoHTML() {

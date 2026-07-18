@@ -726,12 +726,14 @@
         const content = document.getElementById('previewContent');
         const modal = document.getElementById('previewModal');
         if (!content || !modal) return;
-        const escala = Math.min(1, modal.clientWidth / 760);
+        const escala = Math.min(1, (window.innerWidth - 24) / 760);
+        content.style.transformOrigin = 'top center';
         content.style.transform = `scale(${escala})`;
-        content.style.transformOrigin = 'top left';
-        content.style.marginBottom = `${-(content.offsetHeight * (1 - escala))}px`;
-        const offset = (modal.clientWidth - 760 * escala) / 2;
-        content.style.marginLeft = `${Math.max(0, offset)}px`;
+        content.style.marginTop = '0';
+        content.style.marginLeft = '0';
+        content.style.marginBottom = escala < 1
+            ? `${-(content.offsetHeight * (1 - escala))}px`
+            : '0';
     }
 
     window.addEventListener('resize', escalarPreview);
