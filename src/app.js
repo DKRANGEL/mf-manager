@@ -96,6 +96,48 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'estoque.html'));
     });
 
+    app.get('/etiquetas', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'etiquetas.html'));
+    });
+
+    // ─── Redirecionamento de QR Code ────────────────────────────────────────────
+    // GET /p?sku=MFSSS-001&cx=400
+    // Cliente escaneia → redireciona para YouTube do produto
+    // Operador escaneia pelo /coletor → extrai sku+cx dos params
+    app.get('/p', (req, res) => {
+        const { sku } = req.query;
+        if (!sku) return res.status(400).send('SKU não informado');
+
+        const PRODUTOS_FILE = path.join(__dirname, 'data', 'produtos.json');
+        try {
+            const db = JSON.parse(fs.readFileSync(PRODUTOS_FILE, 'utf8'));
+            const produto = db.produtos.find(p => p.codigo === sku);
+
+            if (!produto) return res.status(404).send(`Produto "${sku}" não encontrado`);
+
+            if (produto.video_id) {
+                return res.redirect(`https://www.youtube.com/watch?v=${produto.video_id}`);
+            }
+
+            // Sem vídeo: página simples com informações do produto
+            res.send(`<!DOCTYPE html><html lang="pt-BR"><head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>${produto.nome} — Magic Fireworks</title>
+                <style>body{font-family:sans-serif;text-align:center;padding:40px;background:#000;color:#fff;}
+                img{width:120px;border-radius:8px;margin-bottom:16px;}
+                h1{font-size:20px;}p{color:#888;}</style>
+            </head><body>
+                <img src="https://manager.magicfireworks.com.br/public/MagicFireworksLogo.jpeg">
+                <h1>${produto.nome}</h1>
+                <p>${produto.codigo}</p>
+                <p style="color:#555;font-size:12px;margin-top:32px;">Magic Fireworks — Produtos Pirotécnicos</p>
+            </body></html>`);
+        } catch {
+            res.status(500).send('Erro ao buscar produto');
+        }
+    });
+
     return app;
 }
 
