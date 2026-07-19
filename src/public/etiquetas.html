@@ -12,267 +12,188 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         body { overflow: auto; background: #050505; }
+        .page-container { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
 
-        .page-container { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; }
+        /* ── HEADER ── */
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+        .page-header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .page-header .sub { font-size:10px; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; display:block; }
 
-        .page-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 28px; gap: 12px; flex-wrap: wrap;
-        }
-        .page-header h1 { font-size: 22px; font-weight: 700; color: #fff; }
-        .page-header .sub { font-size: 10px; color: var(--sb-text-dim); font-weight: 600;
-            text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; display: block; }
+        /* ── BOTÕES ── */
+        .btn-ghost { background:transparent; border:1px solid #333; color:#888; padding:9px 16px; border-radius:var(--sb-radius); font-size:13px; cursor:pointer; text-decoration:none; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; }
+        .btn-ghost:hover { border-color:#555; color:#fff; }
+        .btn-primary { background:#fff; border:none; color:#000; padding:9px 20px; border-radius:var(--sb-radius); font-size:13px; font-weight:700; cursor:pointer; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; }
+        .btn-primary:hover { background:#e0e0e0; }
+        .btn-add { background:rgba(255,255,255,0.06); border:1px solid #333; color:#ccc; padding:10px 20px; border-radius:var(--sb-radius); font-size:13px; font-weight:700; cursor:pointer; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; width:100%; justify-content:center; margin-top:8px; }
+        .btn-add:hover { background:rgba(255,255,255,0.1); border-color:#555; }
+        .btn-add:disabled { opacity:0.4; cursor:not-allowed; }
 
-        .btn-back {
-            background: transparent; border: 1px solid #333; color: #888;
-            padding: 9px 16px; border-radius: var(--sb-radius); font-size: 13px;
-            cursor: pointer; text-decoration: none; transition: 0.15s; font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn-back:hover { border-color: #555; color: #fff; }
-
-        .btn-primary {
-            background: #fff; border: none; color: #000; padding: 9px 20px;
-            border-radius: var(--sb-radius); font-size: 13px; font-weight: 700;
-            cursor: pointer; transition: 0.15s; font-family: var(--font);
-            display: inline-flex; align-items: center; gap: 6px;
-        }
-        .btn-primary:hover { background: #e0e0e0; }
+        /* ── LAYOUT ── */
+        .layout { display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start; }
 
         /* ── CONFIGURADOR ── */
-        .config-card {
-            background: #121214; border: 1px solid #29292e;
-            border-radius: 12px; padding: 20px; margin-bottom: 16px;
-        }
-        .config-section-title {
-            font-size: 10px; font-weight: 700; color: #555;
-            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
-        }
-        .campo { margin-bottom: 14px; }
-        .campo:last-child { margin-bottom: 0; }
-        .campo label {
-            display: block; font-size: 10px; font-weight: 700; color: #555;
-            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
-        }
-        .campo input {
-            width: 100%; height: 42px; background: #1a1a1e; border: 1px solid #2a2a30;
-            border-radius: var(--sb-radius); padding: 0 12px; color: #fff;
-            font-size: 14px; font-family: var(--font); outline: none; transition: 0.15s;
-        }
-        .campo input:focus { border-color: #444; }
+        .config-panel { display:flex; flex-direction:column; gap:12px; }
+        .card { background:#121214; border:1px solid #29292e; border-radius:12px; padding:18px; }
+        .card-title { font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px; }
+        .campo { margin-bottom:12px; }
+        .campo:last-child { margin-bottom:0; }
+        .campo label { display:block; font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px; }
+        .campo input { width:100%; height:42px; background:#1a1a1e; border:1px solid #2a2a30; border-radius:var(--sb-radius); padding:0 12px; color:#fff; font-size:13px; font-family:var(--font); outline:none; transition:0.15s; }
+        .campo input:focus { border-color:#444; }
 
         /* ── PRODUTO SELECIONADO ── */
-        .produto-selecionado {
-            display: flex; align-items: center; gap: 12px;
-            background: #1a1a1e; border: 1px solid #333; border-radius: 8px;
-            padding: 10px 14px; margin-top: 8px;
-        }
-        .prod-img { width: 40px; height: 40px; border-radius: 6px; object-fit: contain; background: #111; flex-shrink: 0; }
-        .prod-img-ph { width: 40px; height: 40px; border-radius: 6px; background: #111; display: flex; align-items: center; justify-content: center; color: #333; flex-shrink: 0; }
-        .prod-info { flex: 1; }
-        .prod-cod { font-size: 10px; color: #555; font-family: var(--mono); }
-        .prod-nome { font-size: 13px; color: #e0e0e0; font-weight: 600; }
-        .prod-video { font-size: 11px; color: #4cd964; margin-top: 2px; }
-        .prod-video.sem { color: #555; }
+        .prod-sel { display:flex; align-items:center; gap:10px; background:#1a1a1e; border:1px solid #333; border-radius:8px; padding:10px 12px; margin-top:8px; }
+        .prod-img-sm { width:36px; height:36px; border-radius:6px; object-fit:contain; background:#111; flex-shrink:0; }
+        .prod-img-ph { width:36px; height:36px; border-radius:6px; background:#111; display:flex; align-items:center; justify-content:center; color:#333; flex-shrink:0; }
+        .prod-cod { font-size:10px; color:#555; font-family:var(--mono); }
+        .prod-nome { font-size:12px; color:#e0e0e0; font-weight:600; }
 
-        /* ── TAMANHOS DE CAIXA ── */
-        .cx-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-        .cx-chip {
-            display: flex; align-items: center; gap: 6px;
-            background: #1a1a1e; border: 1px solid #2a2a30; border-radius: 20px;
-            padding: 6px 12px; font-size: 12px; color: #888; font-family: var(--mono);
-        }
-        .cx-chip.ativo { background: rgba(255,255,255,0.08); border-color: #555; color: #fff; }
-        .cx-chip button {
-            background: none; border: none; color: #444; cursor: pointer;
-            font-size: 14px; line-height: 1; padding: 0; transition: 0.15s;
-        }
-        .cx-chip button:hover { color: #ff6060; }
-        .cx-add-row { display: flex; gap: 8px; }
-        .cx-add-row input {
-            width: 100px; height: 36px; background: #1a1a1e; border: 1px solid #2a2a30;
-            border-radius: 6px; padding: 0 10px; color: #fff; font-size: 13px;
-            font-family: var(--mono); outline: none;
-        }
-        .cx-add-btn {
-            height: 36px; padding: 0 14px; background: transparent; border: 1px solid #333;
-            color: #888; border-radius: 6px; font-size: 12px; font-family: var(--font);
-            cursor: pointer; transition: 0.15s; white-space: nowrap;
-        }
-        .cx-add-btn:hover { border-color: #555; color: #fff; }
+        /* ── TAMANHOS ── */
+        .cx-grid { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+        .cx-tag { display:flex; align-items:center; gap:4px; background:#1a1a1e; border:1px solid #333; border-radius:20px; padding:5px 10px; font-size:11px; color:#888; font-family:var(--mono); }
+        .cx-tag.on { background:rgba(255,255,255,0.08); border-color:#555; color:#fff; }
+        .cx-tag button { background:none; border:none; color:#444; cursor:pointer; font-size:12px; line-height:1; padding:0; transition:0.15s; }
+        .cx-tag button:hover { color:#ff6060; }
+        .cx-add-row { display:flex; gap:6px; }
+        .cx-add-row input { width:90px; height:34px; background:#1a1a1e; border:1px solid #2a2a30; border-radius:6px; padding:0 8px; color:#fff; font-size:12px; font-family:var(--mono); outline:none; }
+        .cx-add-btn { height:34px; padding:0 12px; background:transparent; border:1px solid #333; color:#888; border-radius:6px; font-size:11px; font-family:var(--font); cursor:pointer; transition:0.15s; white-space:nowrap; }
+        .cx-add-btn:hover { border-color:#555; color:#fff; }
 
         /* ── AUTOCOMPLETE ── */
-        .busca-wrap { position: relative; }
-        .ac-list {
-            position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
-            background: #0e0e10; border: 1px solid #333; border-radius: 8px;
-            max-height: 200px; overflow-y: auto;
-        }
-        .ac-item {
-            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-            cursor: pointer; border-bottom: 1px solid #1e1e22;
-        }
-        .ac-item:last-child { border-bottom: none; }
-        .ac-item:hover { background: rgba(255,255,255,0.04); }
-        .ac-img-sm { width: 32px; height: 32px; border-radius: 4px; object-fit: contain; background: #1e1e22; flex-shrink: 0; }
-        .ac-img-ph-sm { width: 32px; height: 32px; border-radius: 4px; background: #1e1e22; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; color: #444; flex-shrink: 0; }
-        .ac-cod { font-size: 10px; color: #555; font-family: var(--mono); }
-        .ac-nome { font-size: 13px; color: #ddd; }
+        .busca-wrap { position:relative; }
+        .ac-list { position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:200; background:#0e0e10; border:1px solid #333; border-radius:8px; max-height:200px; overflow-y:auto; }
+        .ac-item { display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; border-bottom:1px solid #1e1e22; }
+        .ac-item:last-child { border-bottom:none; }
+        .ac-item:hover { background:rgba(255,255,255,0.04); }
+        .ac-img-s { width:28px; height:28px; border-radius:4px; object-fit:contain; background:#1e1e22; flex-shrink:0; }
+        .ac-img-ph-s { width:28px; height:28px; border-radius:4px; background:#1e1e22; border:1px dashed #333; display:flex; align-items:center; justify-content:center; color:#444; flex-shrink:0; }
 
-        /* ── ETIQUETAS GERADAS ── */
-        .etiquetas-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px; margin-top: 20px;
-        }
+        /* ── FILA ── */
+        .fila-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+        .fila-titulo { font-size:13px; font-weight:700; color:#fff; }
+        .fila-count { font-size:11px; color:#555; font-family:var(--mono); }
+        .fila-empty { text-align:center; padding:40px 20px; color:#333; font-size:12px; border:1px dashed #1e1e22; border-radius:10px; }
+        .etiquetas-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:12px; }
 
-        .etiqueta-card {
-            background: #fff; border-radius: 10px; overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            font-family: 'DM Sans', sans-serif;
-        }
+        /* ── ETIQUETA ── */
+        .etiqueta-wrap { position:relative; }
+        .etiqueta-remove { position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; background:#ff4040; border:none; color:#fff; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10; transition:0.15s; }
+        .etiqueta-remove:hover { background:#ff2020; }
+        .etiqueta-card { background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.5); font-family:'DM Sans',sans-serif; }
+        .etiqueta-header-card { background:#000; padding:6px 10px; display:flex; align-items:center; gap:6px; }
+        .etiqueta-logo { width:22px; height:22px; border-radius:3px; object-fit:contain; }
+        .etiqueta-empresa { font-size:9px; font-weight:700; color:#fff; letter-spacing:0.5px; }
+        .etiqueta-body { padding:10px; display:flex; gap:8px; align-items:flex-start; }
+        .etiqueta-qr img { display:block; width:90px; height:90px; }
+        .etiqueta-info { flex:1; min-width:0; }
+        .etiqueta-cod { font-size:8px; font-weight:700; color:#888; font-family:monospace; }
+        .etiqueta-nome { font-size:9px; font-weight:700; color:#000; margin:2px 0; line-height:1.3; }
+        .etiqueta-cx { font-size:20px; font-weight:800; color:#000; font-family:monospace; line-height:1; }
+        .etiqueta-un { font-size:8px; color:#666; }
+        .etiqueta-cat { font-size:7px; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
+        .etiqueta-footer { background:#f5f5f5; padding:4px 10px; font-size:7px; color:#999; text-align:center; letter-spacing:0.3px; }
 
-        .etiqueta-header-card {
-            background: #000; padding: 8px 12px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .etiqueta-logo { width: 28px; height: 28px; border-radius: 4px; object-fit: contain; }
-        .etiqueta-empresa { font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-
-        .etiqueta-body {
-            padding: 12px; display: flex; gap: 12px; align-items: flex-start;
-        }
-        .etiqueta-qr canvas, .etiqueta-qr img { display: block; }
-
-        .etiqueta-info { flex: 1; min-width: 0; }
-        .etiqueta-cod { font-size: 10px; font-weight: 700; color: #888; font-family: monospace; }
-        .etiqueta-nome { font-size: 12px; font-weight: 700; color: #000; margin: 2px 0; line-height: 1.3; }
-        .etiqueta-cx { font-size: 18px; font-weight: 800; color: #000; font-family: monospace; }
-        .etiqueta-un { font-size: 10px; color: #666; }
-        .etiqueta-cat { font-size: 9px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
-
-        .etiqueta-footer {
-            background: #f5f5f5; padding: 5px 12px;
-            font-size: 9px; color: #888; text-align: center; letter-spacing: 0.3px;
-        }
+        /* ── VIDEO HINT ── */
+        .video-hint { font-size:10px; margin-top:3px; }
 
         /* ── PRINT ── */
         @media print {
-            body { background: #fff !important; }
-            .page-header, .config-card, .acoes-bar { display: none !important; }
-            .etiquetas-grid {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8mm;
-                margin: 0;
-                padding: 10mm;
-            }
-            .etiqueta-card { box-shadow: none; border: 1px solid #ddd; }
-            .page-container { padding: 0; max-width: 100%; }
+            body { background:#fff !important; }
+            .page-header, .config-panel, .fila-header .btn-primary, .etiqueta-remove { display:none !important; }
+            .layout { grid-template-columns:1fr; }
+            .etiquetas-grid { grid-template-columns:repeat(4, 1fr); gap:6mm; padding:8mm; }
+            .etiqueta-card { box-shadow:none; border:1px solid #eee; page-break-inside:avoid; }
+            .page-container { padding:0; max-width:100%; }
+            .fila-header { display:none !important; }
         }
 
-        /* ── ACOES BAR ── */
-        .acoes-bar {
-            display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
-        }
-
-        /* ── EMPTY ── */
-        .empty-msg {
-            text-align: center; padding: 40px 20px; color: #444; font-size: 13px;
-            border: 1px dashed #222; border-radius: 10px; margin-top: 16px;
-        }
-
-        /* ── VIDEO HELPER ── */
-        .video-hint {
-            font-size: 10px; color: #444; margin-top: 4px;
-        }
-
+        /* ── MOBILE ── */
         @media (max-width: 768px) {
-            .page-container { padding: 20px 16px 60px; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .etiquetas-grid { grid-template-columns: repeat(2, 1fr); }
+            .layout { grid-template-columns:1fr; }
+            .etiquetas-grid { grid-template-columns:repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
 <div class="page-container">
-
     <div class="page-header">
         <div>
-            <h1>Gerador de Etiquetas</h1>
-            <span class="sub">MF Manager — Magic Fireworks</span>
+            <h1>Etiquetas QR</h1>
+            <span class="sub">Magic Fireworks — Gerador de QR Codes</span>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
-        </div>
+        <a href="/" class="btn-ghost"><i data-lucide="arrow-left"></i> Início</a>
     </div>
 
-    <!-- CONFIG: PRODUTO -->
-    <div class="config-card">
-        <div class="config-section-title">1. Selecionar produto</div>
-        <div class="campo busca-wrap">
-            <label>Buscar produto</label>
-            <input type="text" id="buscaProduto" placeholder="Digite o código ou nome..." autocomplete="off" oninput="buscarProduto(this.value)">
-            <div class="ac-list" id="acList" style="display:none;"></div>
-        </div>
-        <div id="produtoSelecionado" style="display:none;" class="produto-selecionado">
-            <div class="prod-img-ph" id="prodImgWrap"><i data-lucide="box"></i></div>
-            <div class="prod-info">
-                <div class="prod-cod" id="prodCod"></div>
-                <div class="prod-nome" id="prodNome"></div>
-                <div class="prod-video sem" id="prodVideo">Sem vídeo vinculado</div>
+    <div class="layout">
+        <!-- ── CONFIGURADOR ── -->
+        <div class="config-panel">
+
+            <!-- Produto -->
+            <div class="card">
+                <div class="card-title">Produto</div>
+                <div class="campo busca-wrap">
+                    <label>Buscar</label>
+                    <input type="text" id="buscaInput" placeholder="Código ou nome..." autocomplete="off" oninput="buscarProduto(this.value)">
+                    <div class="ac-list" id="acList" style="display:none;"></div>
+                </div>
+                <div id="prodSel" style="display:none;" class="prod-sel">
+                    <div id="prodImgWrap" class="prod-img-ph"><i data-lucide="box"></i></div>
+                    <div style="flex:1;">
+                        <div class="prod-cod" id="prodCod"></div>
+                        <div class="prod-nome" id="prodNome"></div>
+                    </div>
+                    <button onclick="limparProduto()" style="background:none;border:none;color:#444;cursor:pointer;"><i data-lucide="x"></i></button>
+                </div>
             </div>
-            <button onclick="limparProduto()" style="background:none;border:none;color:#444;cursor:pointer;">
-                <i data-lucide="x"></i>
+
+            <!-- Vídeo -->
+            <div class="card" id="cardVideo" style="display:none;">
+                <div class="card-title">Vídeo YouTube (opcional)</div>
+                <div class="campo">
+                    <label>ID ou URL</label>
+                    <input type="text" id="videoInput" placeholder="Ex: dQw4w9WgXcQ" oninput="atualizarVideoHint()">
+                    <div class="video-hint" id="videoHint"></div>
+                </div>
+                <button class="btn-ghost" onclick="salvarVideo()" style="width:100%;justify-content:center;margin-top:4px;">
+                    <i data-lucide="save"></i> Salvar no produto
+                </button>
+            </div>
+
+            <!-- Tamanhos -->
+            <div class="card" id="cardCx" style="display:none;">
+                <div class="card-title">Tamanhos de caixa (CX)</div>
+                <div class="cx-grid" id="cxGrid"></div>
+                <div class="cx-add-row">
+                    <input type="number" id="cxCustom" placeholder="Ex: 400" min="1">
+                    <button class="cx-add-btn" onclick="adicionarCx()"><i data-lucide="plus"></i> Adicionar</button>
+                </div>
+            </div>
+
+            <!-- Adicionar à fila -->
+            <button class="btn-add" id="btnAdd" onclick="adicionarAFila()" style="display:none;" disabled>
+                <i data-lucide="plus-circle"></i> Adicionar à fila de impressão
             </button>
+
+        </div>
+
+        <!-- ── FILA ── -->
+        <div>
+            <div class="fila-header">
+                <div>
+                    <span class="fila-titulo">Fila de impressão</span>
+                    <span class="fila-count" id="filaCount"> · 0 etiquetas</span>
+                </div>
+                <button class="btn-primary" id="btnPrint" onclick="window.print()" style="display:none;">
+                    <i data-lucide="printer"></i> Imprimir tudo
+                </button>
+            </div>
+            <div id="filaEmpty" class="fila-empty">
+                <i data-lucide="qr-code" style="width:36px;height:36px;opacity:0.2;display:block;margin:0 auto 10px;"></i>
+                Selecione um produto e adicione à fila para ver as etiquetas aqui
+            </div>
+            <div class="etiquetas-grid" id="etiquetasGrid"></div>
         </div>
     </div>
-
-    <!-- CONFIG: VÍDEO -->
-    <div class="config-card" id="cardVideo" style="display:none;">
-        <div class="config-section-title">2. Vídeo do YouTube (opcional)</div>
-        <div class="campo">
-            <label>ID ou URL do vídeo</label>
-            <input type="text" id="videoInput" placeholder="Ex: dQw4w9WgXcQ ou https://youtube.com/watch?v=..."
-                   oninput="atualizarVideo()">
-            <div class="video-hint" id="videoHint"></div>
-        </div>
-        <button class="btn-back" onclick="salvarVideo()" style="margin-top:4px;">
-            <i data-lucide="save"></i> Salvar vídeo no produto
-        </button>
-    </div>
-
-    <!-- CONFIG: TAMANHOS -->
-    <div class="config-card" id="cardTamanhos" style="display:none;">
-        <div class="config-section-title">3. Tamanhos de caixa</div>
-        <div class="cx-grid" id="cxGrid"></div>
-        <div class="cx-add-row">
-            <input type="number" id="cxCustom" placeholder="Ex: 400" min="1">
-            <button class="cx-add-btn" onclick="adicionarCx()">
-                <i data-lucide="plus"></i> Adicionar tamanho
-            </button>
-        </div>
-    </div>
-
-    <!-- GERAR -->
-    <div id="cardGerar" style="display:none;">
-        <button class="btn-primary" onclick="gerarEtiquetas()" style="width:100%;justify-content:center;height:48px;font-size:14px;">
-            <i data-lucide="qr-code"></i> Gerar QR Codes
-        </button>
-    </div>
-
-    <!-- RESULTADO -->
-    <div id="resultadoArea">
-        <div class="empty-msg" id="emptyMsg">
-            <i data-lucide="qr-code" style="width:40px;height:40px;opacity:0.2;display:block;margin:0 auto 12px;"></i>
-            Selecione um produto para começar
-        </div>
-        <div class="etiquetas-grid" id="etiquetasGrid" style="display:none;"></div>
-        <div class="acoes-bar" id="acoesBar" style="display:none;">
-            <button class="btn-primary" onclick="window.print()">
-                <i data-lucide="printer"></i> Imprimir / Exportar PDF
-            </button>
-        </div>
-    </div>
-
 </div>
 
 <script>
@@ -280,15 +201,15 @@ const BASE_URL = 'https://manager.magicfireworks.com.br';
 
 let produtoAtual = null;
 let cxSelecionados = [];
+let fila = []; // [{ produto, cx, dataUrl }]
 let buscaTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
-
 document.addEventListener('click', e => {
     if (!e.target.closest('.busca-wrap')) document.getElementById('acList').style.display = 'none';
 });
 
-// ── BUSCA DE PRODUTO ──
+// ── BUSCA ──
 async function buscarProduto(q) {
     clearTimeout(buscaTimer);
     const list = document.getElementById('acList');
@@ -297,20 +218,15 @@ async function buscarProduto(q) {
         const res = await fetch(`/api/catalogo/buscar?q=${encodeURIComponent(q)}`);
         const json = await res.json();
         if (!json.success || !json.data.length) {
-            list.innerHTML = '<div style="padding:12px;color:#444;font-size:12px;text-align:center;">Nenhum produto</div>';
-            list.style.display = 'block';
-            return;
+            list.innerHTML = '<div style="padding:10px;color:#444;font-size:11px;text-align:center;">Nenhum produto</div>';
+            list.style.display = 'block'; return;
         }
         list.innerHTML = json.data.map(p => {
             const img = p.imagem
-                ? `<img class="ac-img-sm" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">`
-                : `<div class="ac-img-ph-sm"><i data-lucide="box"></i></div>`;
+                ? `<img class="ac-img-s" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">`
+                : `<div class="ac-img-ph-s"><i data-lucide="box"></i></div>`;
             return `<div class="ac-item" onclick="selecionarProduto(${JSON.stringify(p).replace(/"/g,'&quot;')})">
-                ${img}
-                <div>
-                    <div class="ac-cod">${esc(p.codigo)}</div>
-                    <div class="ac-nome">${esc(p.nome)}</div>
-                </div>
+                ${img}<div><div style="font-size:9px;color:#555;font-family:monospace;">${esc(p.codigo)}</div><div style="font-size:12px;color:#ddd;">${esc(p.nome)}</div></div>
             </div>`;
         }).join('');
         list.style.display = 'block';
@@ -319,207 +235,184 @@ async function buscarProduto(q) {
 }
 
 async function selecionarProduto(prod) {
-    // Busca dados completos do produto (inclui video_id)
+    document.getElementById('acList').style.display = 'none';
+    document.getElementById('buscaInput').value = '';
+
+    // Busca dados completos incluindo video_id
     try {
         const res = await fetch('/api/catalogo/catalogo');
         const json = await res.json();
         const todos = Object.values(json.data || {}).flat();
-        const completo = todos.find(p => p.codigo === prod.codigo) || prod;
-        produtoAtual = completo;
-    } catch {
-        produtoAtual = prod;
-    }
+        produtoAtual = todos.find(p => p.codigo === prod.codigo) || prod;
+    } catch { produtoAtual = prod; }
 
-    document.getElementById('acList').style.display = 'none';
-    document.getElementById('buscaProduto').value = '';
-
-    // Atualiza display do produto selecionado
+    // Mostra produto selecionado
     const wrap = document.getElementById('prodImgWrap');
     if (produtoAtual.imagem) {
-        wrap.innerHTML = `<img class="prod-img" src="/data/produtos/${esc(produtoAtual.imagem)}" onerror="this.innerHTML='<i data-lucide=\\'box\\'></i>'">`;
+        wrap.outerHTML = `<img id="prodImgWrap" class="prod-img-sm" src="/data/produtos/${esc(produtoAtual.imagem)}" onerror="this.style.display='none'">`;
     }
     document.getElementById('prodCod').textContent = produtoAtual.codigo;
     document.getElementById('prodNome').textContent = produtoAtual.nome;
-    const videoEl = document.getElementById('prodVideo');
-    if (produtoAtual.video_id) {
-        videoEl.textContent = `🎬 Vídeo: ${produtoAtual.video_id}`;
-        videoEl.classList.remove('sem');
-    } else {
-        videoEl.textContent = 'Sem vídeo vinculado';
-        videoEl.classList.add('sem');
-    }
-    document.getElementById('produtoSelecionado').style.display = 'flex';
+    document.getElementById('prodSel').style.display = 'flex';
 
     // Vídeo
     document.getElementById('cardVideo').style.display = '';
     if (produtoAtual.video_id) document.getElementById('videoInput').value = produtoAtual.video_id;
-    atualizarVideo();
+    atualizarVideoHint();
 
-    // Tamanhos padrão baseados no fator
+    // Tamanhos padrão
     const fator = produtoAtual.fator || 1;
     cxSelecionados = [];
     if (fator >= 100) cxSelecionados.push(100);
     if (fator >= 400) cxSelecionados.push(400);
     if (!cxSelecionados.length) cxSelecionados.push(fator > 1 ? fator : 1);
     renderCx();
+    document.getElementById('cardCx').style.display = '';
 
-    document.getElementById('cardTamanhos').style.display = '';
-    document.getElementById('cardGerar').style.display = '';
-    document.getElementById('emptyMsg').style.display = 'none';
+    // Habilita botão adicionar
+    document.getElementById('btnAdd').style.display = '';
+    atualizarBtnAdd();
 
     lucide.createIcons();
 }
 
 function limparProduto() {
-    produtoAtual = null;
-    cxSelecionados = [];
-    document.getElementById('produtoSelecionado').style.display = 'none';
+    produtoAtual = null; cxSelecionados = [];
+    document.getElementById('prodSel').style.display = 'none';
     document.getElementById('cardVideo').style.display = 'none';
-    document.getElementById('cardTamanhos').style.display = 'none';
-    document.getElementById('cardGerar').style.display = 'none';
-    document.getElementById('etiquetasGrid').style.display = 'none';
-    document.getElementById('acoesBar').style.display = 'none';
-    document.getElementById('emptyMsg').style.display = '';
+    document.getElementById('cardCx').style.display = 'none';
+    document.getElementById('btnAdd').style.display = 'none';
     document.getElementById('videoInput').value = '';
+    document.getElementById('videoHint').textContent = '';
 }
 
 // ── VÍDEO ──
-function extrairVideoId(input) {
-    if (!input) return '';
-    const m = input.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return m ? m[1] : (input.length === 11 ? input : '');
+function extrairVideoId(v) {
+    if (!v) return '';
+    const m = v.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : (v.length === 11 && /^[a-zA-Z0-9_-]+$/.test(v) ? v : '');
 }
-
-function atualizarVideo() {
+function atualizarVideoHint() {
     const val = document.getElementById('videoInput').value.trim();
     const id = extrairVideoId(val);
-    const hint = document.getElementById('videoHint');
-    if (id) {
-        hint.textContent = `ID identificado: ${id}`;
-        hint.style.color = '#4cd964';
-    } else if (val) {
-        hint.textContent = 'URL ou ID inválido';
-        hint.style.color = '#ff6060';
-    } else {
-        hint.textContent = '';
-    }
+    const el = document.getElementById('videoHint');
+    if (id) { el.textContent = `✓ ID: ${id}`; el.style.color = '#4cd964'; }
+    else if (val) { el.textContent = 'URL ou ID inválido'; el.style.color = '#ff6060'; }
+    else { el.textContent = ''; }
 }
-
 async function salvarVideo() {
     if (!produtoAtual) return;
-    const val = document.getElementById('videoInput').value.trim();
-    const videoId = extrairVideoId(val);
+    const id = extrairVideoId(document.getElementById('videoInput').value.trim());
     try {
         const res = await fetch(`/api/catalogo/item/${produtoAtual.id}`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ video_id: videoId })
+            method: 'PUT', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ video_id: id })
         });
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
-        produtoAtual.video_id = videoId;
-        const videoEl = document.getElementById('prodVideo');
-        if (videoId) {
-            videoEl.textContent = `🎬 Vídeo: ${videoId}`;
-            videoEl.classList.remove('sem');
-        } else {
-            videoEl.textContent = 'Sem vídeo vinculado';
-            videoEl.classList.add('sem');
-        }
-        alert('Vídeo salvo no produto!');
-    } catch (err) {
-        alert('Erro: ' + err.message);
-    }
+        produtoAtual.video_id = id;
+        alert(id ? `Vídeo ${id} salvo!` : 'Vídeo removido.');
+    } catch (err) { alert('Erro: ' + err.message); }
 }
 
-// ── TAMANHOS CX ──
+// ── TAMANHOS ──
 function renderCx() {
     const grid = document.getElementById('cxGrid');
     grid.innerHTML = cxSelecionados.map((cx, i) => `
-        <div class="cx-chip ativo">
-            CX ${cx}
+        <div class="cx-tag on">CX ${cx}
             <button onclick="removerCx(${i})"><i data-lucide="x"></i></button>
-        </div>
-    `).join('');
+        </div>`).join('');
     lucide.createIcons();
+    atualizarBtnAdd();
 }
-
 function adicionarCx() {
-    const input = document.getElementById('cxCustom');
-    const val = parseInt(input.value);
-    if (!val || val < 1) return;
-    if (!cxSelecionados.includes(val)) {
-        cxSelecionados.push(val);
-        cxSelecionados.sort((a, b) => a - b);
-        renderCx();
-    }
-    input.value = '';
+    const val = parseInt(document.getElementById('cxCustom').value);
+    if (!val || val < 1 || cxSelecionados.includes(val)) return;
+    cxSelecionados.push(val); cxSelecionados.sort((a,b)=>a-b);
+    renderCx(); document.getElementById('cxCustom').value = '';
+}
+function removerCx(idx) { cxSelecionados.splice(idx,1); renderCx(); }
+
+function atualizarBtnAdd() {
+    const btn = document.getElementById('btnAdd');
+    if (btn) btn.disabled = !produtoAtual || cxSelecionados.length === 0;
 }
 
-function removerCx(idx) {
-    cxSelecionados.splice(idx, 1);
-    renderCx();
-}
-
-// ── GERAR ETIQUETAS ──
-async function gerarEtiquetas() {
+// ── FILA ──
+async function adicionarAFila() {
     if (!produtoAtual || !cxSelecionados.length) return;
-
-    const grid = document.getElementById('etiquetasGrid');
-    grid.innerHTML = '';
-    grid.style.display = 'grid';
-    document.getElementById('acoesBar').style.display = 'flex';
+    const btn = document.getElementById('btnAdd');
+    btn.disabled = true; btn.textContent = 'Gerando...';
 
     for (const cx of cxSelecionados) {
         const url = `${BASE_URL}/p?sku=${encodeURIComponent(produtoAtual.codigo)}&cx=${cx}`;
-        const card = document.createElement('div');
-        card.className = 'etiqueta-card';
-
-        const imgHtml = produtoAtual.imagem
-            ? `<img src="/data/produtos/${esc(produtoAtual.imagem)}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#111;">`
-            : '';
-
-        card.innerHTML = `
-            <div class="etiqueta-header-card">
-                <img src="/public/MagicFireworksLogo.jpeg" class="etiqueta-logo">
-                <span class="etiqueta-empresa">MAGIC FIREWORKS</span>
-            </div>
-            <div class="etiqueta-body">
-                <div class="etiqueta-qr" id="qr_${produtoAtual.codigo}_${cx}"></div>
-                <div class="etiqueta-info">
-                    <div class="etiqueta-cod">${esc(produtoAtual.codigo)}</div>
-                    <div class="etiqueta-nome">${esc(produtoAtual.nome)}</div>
-                    <div class="etiqueta-cx">${cx} UN</div>
-                    <div class="etiqueta-un">por caixa</div>
-                    <div class="etiqueta-cat">${esc(produtoAtual.categoria || '')}</div>
-                </div>
-            </div>
-            <div class="etiqueta-footer">
-                manager.magicfireworks.com.br
-            </div>
-        `;
-        grid.appendChild(card);
-
-        // Gera QR Code
-        await QRCode.toCanvas(
-            document.createElement('canvas'),
-            url,
-            { width: 110, margin: 1, color: { dark: '#000000', light: '#ffffff' } },
-            (err, canvas) => {
-                if (!err) document.getElementById(`qr_${produtoAtual.codigo}_${cx}`).appendChild(canvas);
-            }
-        );
+        try {
+            const dataUrl = await new Promise((resolve, reject) =>
+                QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark:'#000000', light:'#ffffff' } },
+                    (err, d) => err ? reject(err) : resolve(d))
+            );
+            fila.push({ produto: { ...produtoAtual }, cx, dataUrl, url });
+        } catch (err) { console.error('QR err', err); }
     }
 
+    renderFila();
+    btn.innerHTML = '<i data-lucide="plus-circle"></i> Adicionar à fila de impressão';
+    btn.disabled = false;
     lucide.createIcons();
-    document.getElementById('etiquetasGrid').scrollIntoView({ behavior: 'smooth' });
+}
+
+function removerDaFila(idx) {
+    fila.splice(idx, 1);
+    renderFila();
+}
+
+function renderFila() {
+    const grid = document.getElementById('etiquetasGrid');
+    const empty = document.getElementById('filaEmpty');
+    const btnPrint = document.getElementById('btnPrint');
+    const count = document.getElementById('filaCount');
+
+    count.textContent = ` · ${fila.length} etiqueta${fila.length !== 1 ? 's' : ''}`;
+
+    if (fila.length === 0) {
+        empty.style.display = '';
+        grid.innerHTML = '';
+        btnPrint.style.display = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    btnPrint.style.display = '';
+
+    grid.innerHTML = fila.map((item, i) => `
+        <div class="etiqueta-wrap">
+            <button class="etiqueta-remove" onclick="removerDaFila(${i})" title="Remover">✕</button>
+            <div class="etiqueta-card">
+                <div class="etiqueta-header-card">
+                    <img src="/public/MagicFireworksLogo.jpeg" class="etiqueta-logo">
+                    <span class="etiqueta-empresa">MAGIC FIREWORKS</span>
+                </div>
+                <div class="etiqueta-body">
+                    <div class="etiqueta-qr">
+                        <img src="${item.dataUrl}" style="width:90px;height:90px;display:block;">
+                    </div>
+                    <div class="etiqueta-info">
+                        <div class="etiqueta-cod">${esc(item.produto.codigo)}</div>
+                        <div class="etiqueta-nome">${esc(item.produto.nome)}</div>
+                        <div class="etiqueta-cx">${item.cx}</div>
+                        <div class="etiqueta-un">UN por caixa</div>
+                        <div class="etiqueta-cat">${esc(item.produto.categoria || '')}</div>
+                    </div>
+                </div>
+                <div class="etiqueta-footer">manager.magicfireworks.com.br</div>
+            </div>
+        </div>
+    `).join('');
 }
 
 function esc(s) {
     if (!s) return '';
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
+    const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
 }
 </script>
 </body>
