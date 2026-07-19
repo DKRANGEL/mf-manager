@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Coletor — Magic Fireworks</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background: #09090a; color: #fff; font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            position: sticky; top: 0; z-index: 100;
+            background: #09090a; border-bottom: 1px solid #1e1e22;
+            padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+        }
+        .topbar-logo { width: 28px; height: 28px; border-radius: 4px; object-fit: contain; }
+        .topbar-title { font-size: 14px; font-weight: 700; flex: 1; }
+        .topbar-link { color: #555; font-size: 12px; text-decoration: none; }
+
+        /* ── MODOS ── */
+        .modos {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            background: #111113; border-bottom: 1px solid #1e1e22;
+        }
+        .modo-btn {
+            padding: 14px 8px; text-align: center; cursor: pointer;
+            font-size: 12px; font-weight: 700; color: #444;
+            border: none; background: transparent; font-family: inherit;
+            transition: 0.15s; border-bottom: 2px solid transparent;
+        }
+        .modo-btn .modo-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+        .modo-btn.ativo { color: #fff; border-bottom-color: #fff; background: #141416; }
+        .modo-btn.ativo.consulta { color: #60a5fa; border-bottom-color: #60a5fa; }
+        .modo-btn.ativo.saida    { color: #f87171; border-bottom-color: #f87171; }
+        .modo-btn.ativo.entrada  { color: #4ade80; border-bottom-color: #4ade80; }
+
+        /* ── CONTEÚDO ── */
+        .content { padding: 16px; max-width: 480px; margin: 0 auto; padding-bottom: 160px; }
+
+        /* ── CÂMERA ── */
+        .camera-wrap {
+            background: #000; border-radius: 14px; overflow: hidden;
+            position: relative; margin-bottom: 12px; aspect-ratio: 4/3;
+            border: 2px solid #1e1e22;
+        }
+        #reader { width: 100% !important; }
+        #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+        /* Remove botões internos do html5-qrcode */
+        #reader img, #reader button:not(.scan-toggle), #reader select { display: none !important; }
+        #reader__scan_region { width: 100% !important; }
+
+        .camera-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scan-frame {
+            width: 60%; aspect-ratio: 1;
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+        }
+        .scan-label {
+            position: absolute; bottom: 12px; left: 0; right: 0;
+            text-align: center; font-size: 11px; color: rgba(255,255,255,0.6);
+            font-weight: 600; letter-spacing: 0.5px;
+        }
+        .camera-paused {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: #888; display: none;
+        }
+
+        /* ── TOGGLE CÂMERA ── */
+        .btn-camera-toggle {
+            width: 100%; padding: 13px; border-radius: 10px;
+            border: 1px solid #29292e; background: #121214;
+            color: #ccc; font-size: 13px; font-weight: 700;
+            font-family: inherit; cursor: pointer; transition: 0.15s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .btn-camera-toggle.ativa { border-color: #fff; color: #fff; background: #1a1a1e; }
+        .btn-camera-toggle.ativa::before { content: '🟢'; }
+        .btn-camera-toggle:not(.ativa)::before { content: '⚫'; }
+
+        /* ── INPUT MANUAL ── */
+        .manual-wrap {
+            display: flex; gap: 8px; margin-bottom: 16px;
+        }
+        .manual-input {
+            flex: 1; height: 44px; background: #1a1a1e; border: 1px solid #2a2a30;
+            border-radius: 8px; padding: 0 12px; color: #fff; font-size: 13px;
+            font-family: 'JetBrains Mono', monospace; outline: none;
+        }
+        .manual-input:focus { border-color: #444; }
+        .manual-btn {
+            height: 44px; padding: 0 16px; background: #222; border: 1px solid #333;
+            color: #ccc; border-radius: 8px; font-size: 13px; font-weight: 700;
+            font-family: inherit; cursor: pointer; white-space: nowrap;
+        }
+        .manual-btn:hover { background: #2a2a2a; }
+
+        /* ── CONFIRMAÇÃO DE BIPE ── */
+        .confirm-card {
+            background: #121214; border: 1px solid #29292e; border-radius: 14px;
+            padding: 16px; margin-bottom: 12px; display: none;
+        }
+        .confirm-card.visivel { display: block; }
+        .confirm-produto { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .confirm-img { width: 48px; height: 48px; border-radius: 8px; object-fit: contain; background: #1a1a1e; flex-shrink: 0; }
+        .confirm-img-ph { width: 48px; height: 48px; border-radius: 8px; background: #1a1a1e; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .confirm-cod { font-size: 10px; color: #555; font-family: monospace; }
+        .confirm-nome { font-size: 14px; font-weight: 700; color: #fff; }
+        .confirm-cx { font-size: 28px; font-weight: 800; font-family: monospace; }
+        .confirm-cx.saida  { color: #f87171; }
+        .confirm-cx.entrada{ color: #4ade80; }
+        .confirm-cx.consulta{ color: #60a5fa; }
+        .confirm-un { font-size: 11px; color: #666; margin-top: -2px; }
+        .confirm-saldo { font-size: 12px; color: #888; margin-top: 6px; padding: 8px; background: #0e0e10; border-radius: 6px; }
+        .confirm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-confirmar {
+            padding: 13px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-confirmar.ok.saida  { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+        .btn-confirmar.ok.entrada{ background: rgba(74,222,128,0.15);  color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+        .btn-confirmar.ok.consulta{ background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+        .btn-confirmar.cancelar  { background: #1a1a1e; color: #666; border: 1px solid #333; }
+
+        /* ── BATCH (itens bipados) ── */
+        .batch-wrap { margin-bottom: 8px; }
+        .batch-title {
+            font-size: 10px; font-weight: 700; color: #555;
+            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+        }
+        .batch-item {
+            display: flex; align-items: center; gap: 10px;
+            background: #121214; border: 1px solid #1e1e22; border-radius: 8px;
+            padding: 10px 12px; margin-bottom: 6px;
+        }
+        .batch-cod { font-size: 10px; color: #555; font-family: monospace; }
+        .batch-nome { font-size: 12px; color: #ccc; font-weight: 600; }
+        .batch-qtd { font-size: 14px; font-weight: 800; font-family: monospace; margin-left: auto; }
+        .batch-qtd.saida  { color: #f87171; }
+        .batch-qtd.entrada{ color: #4ade80; }
+        .batch-remove { background: none; border: none; color: #333; cursor: pointer; font-size: 16px; padding: 0 0 0 8px; }
+        .batch-remove:hover { color: #ff6060; }
+
+        /* ── BOTTOM BAR ── */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background: #09090a; border-top: 1px solid #1e1e22;
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+        .btn-finalizar {
+            width: 100%; padding: 15px; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.15s;
+        }
+        .btn-finalizar.saida  { background: #f87171; color: #000; }
+        .btn-finalizar.saida:hover { background: #ff5a5a; }
+        .btn-finalizar.entrada{ background: #4ade80; color: #000; }
+        .btn-finalizar.entrada:hover { background: #22c55e; }
+        .btn-finalizar:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── SUCESSO ── */
+        .sucesso-overlay {
+            display: none; position: fixed; inset: 0; z-index: 999;
+            background: #09090a; flex-direction: column;
+            align-items: center; justify-content: center; padding: 32px;
+        }
+        .sucesso-overlay.visivel { display: flex; }
+        .sucesso-icon { font-size: 64px; margin-bottom: 16px; }
+        .sucesso-titulo { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .sucesso-desc { font-size: 14px; color: #555; text-align: center; margin-bottom: 32px; }
+        .btn-novo { padding: 14px 32px; background: #fff; color: #000; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+    <img src="/public/MagicFireworksLogo.jpeg" class="topbar-logo">
+    <span class="topbar-title">Coletor</span>
+    <a href="/" class="topbar-link">← Início</a>
+</div>
+
+<!-- MODOS -->
+<div class="modos">
+    <button class="modo-btn consulta" onclick="setModo('consulta')">
+        <span class="modo-icon">🔍</span>Consulta
+    </button>
+    <button class="modo-btn saida ativo" onclick="setModo('saida')">
+        <span class="modo-icon">📤</span>Saída
+    </button>
+    <button class="modo-btn entrada" onclick="setModo('entrada')">
+        <span class="modo-icon">📥</span>Entrada
+    </button>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content">
+
+    <!-- Câmera -->
+    <div class="camera-wrap">
+        <div id="reader"></div>
+        <div class="camera-overlay">
+            <div class="scan-frame"></div>
+            <span class="scan-label">APONTE PARA O QR CODE DA CAIXA</span>
+        </div>
+        <div class="camera-paused" id="cameraPaused">Câmera pausada</div>
+    </div>
+
+    <button class="btn-camera-toggle" id="btnCamera" onclick="toggleCamera()">
+        Ativar câmera
+    </button>
+
+    <!-- Input manual -->
+    <div class="manual-wrap">
+        <input type="text" class="manual-input" id="manualInput"
+               placeholder="Código manual: ex MFSS-001 cx=100"
+               onkeydown="if(event.key==='Enter')processarManual()">
+        <button class="manual-btn" onclick="processarManual()">→</button>
+    </div>
+
+    <!-- Card de confirmação do bipe -->
+    <div class="confirm-card" id="confirmCard">
+        <div class="confirm-produto">
+            <div id="confirmImgWrap" class="confirm-img-ph">📦</div>
+            <div>
+                <div class="confirm-cod" id="confirmCod"></div>
+                <div class="confirm-nome" id="confirmNome"></div>
+            </div>
+        </div>
+        <div style="text-align:center;margin-bottom:12px;">
+            <div class="confirm-cx" id="confirmCx"></div>
+            <div class="confirm-un" id="confirmUn"></div>
+        </div>
+        <div class="confirm-saldo" id="confirmSaldo" style="display:none;"></div>
+        <div class="confirm-btns" style="margin-top:12px;">
+            <button class="btn-confirmar ok saida" id="btnConfOk" onclick="confirmarItem()">
+                ✓ Confirmar
+            </button>
+            <button class="btn-confirmar cancelar" onclick="cancelarItem()">
+                ✕ Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Batch acumulado -->
+    <div class="batch-wrap" id="batchWrap" style="display:none;">
+        <div class="batch-title" id="batchTitle">Itens bipados</div>
+        <div id="batchList"></div>
+    </div>
+
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottomBar" style="display:none;">
+    <button class="btn-finalizar saida" id="btnFinalizar" onclick="finalizar()">
+        Confirmar saída
+    </button>
+</div>
+
+<!-- OVERLAY DE SUCESSO -->
+<div class="sucesso-overlay" id="sucessoOverlay">
+    <div class="sucesso-icon" id="sucessoIcon">✅</div>
+    <div class="sucesso-titulo" id="sucessoTitulo">Registrado!</div>
+    <div class="sucesso-desc" id="sucessoDesc"></div>
+    <button class="btn-novo" onclick="reiniciar()">Nova operação</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════
+let modo = 'saida';
+let scanner = null;
+let cameraAtiva = false;
+let itemPendente = null;  // produto + cx aguardando confirmação
+let batch = [];           // itens confirmados
+let catalogo = {};        // cache do catálogo {codigo: produto}
+
+const MODO_CORES = { consulta: '#60a5fa', saida: '#f87171', entrada: '#4ade80' };
+const MODO_LABELS = { consulta: 'Consulta', saida: 'Saída', entrada: 'Entrada' };
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+    setModo('saida');
+    await carregarCatalogo();
+});
+
+async function carregarCatalogo() {
+    try {
+        const res = await fetch('/api/catalogo/catalogo');
+        const json = await res.json();
+        catalogo = {};
+        Object.values(json.data || {}).flat().forEach(p => { catalogo[p.codigo] = p; });
+    } catch (e) { console.error('Catalogo err', e); }
+}
+
+// ══════════════════════════════════════════════════════════
+// MODOS
+// ══════════════════════════════════════════════════════════
+function setModo(novoModo) {
+    modo = novoModo;
+    document.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('ativo'));
+    document.querySelector(`.modo-btn.${novoModo}`).classList.add('ativo');
+
+    // Atualiza botão confirmar
+    const btnOk = document.getElementById('btnConfOk');
+    btnOk.className = `btn-confirmar ok ${novoModo}`;
+    const labels = { consulta: '🔍 Ver saldo', saida: '✓ Registrar saída', entrada: '✓ Registrar entrada' };
+    btnOk.textContent = labels[novoModo];
+
+    // Atualiza botão finalizar
+    const btnFin = document.getElementById('btnFinalizar');
+    btnFin.className = `btn-finalizar ${novoModo}`;
+    btnFin.textContent = novoModo === 'saida' ? '📤 Confirmar saída' : '📥 Confirmar entrada';
+
+    // Limpa se trocar de modo
+    cancelarItem();
+    batch = [];
+    renderBatch();
+}
+
+// ══════════════════════════════════════════════════════════
+// CÂMERA
+// ══════════════════════════════════════════════════════════
+async function toggleCamera() {
+    if (cameraAtiva) {
+        await pararCamera();
+    } else {
+        await iniciarCamera();
+    }
+}
+
+async function iniciarCamera() {
+    if (cameraAtiva) return;
+    const btn = document.getElementById('btnCamera');
+    btn.textContent = 'Iniciando câmera...';
+    try {
+        scanner = new Html5Qrcode('reader');
+        await scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.333 },
+            onQRScan,
+            () => {}
+        );
+        cameraAtiva = true;
+        btn.textContent = 'Câmera ativa — toque para desligar';
+        btn.classList.add('ativa');
+    } catch (err) {
+        btn.textContent = 'Ativar câmera';
+        alert('Não foi possível acessar a câmera. Verifique as permissões do browser.');
+        console.error(err);
+    }
+}
+
+async function pararCamera() {
+    if (scanner && cameraAtiva) {
+        try { await scanner.stop(); } catch(e) {}
+        cameraAtiva = false;
+    }
+    const btn = document.getElementById('btnCamera');
+    btn.textContent = 'Ativar câmera';
+    btn.classList.remove('ativa');
+}
+
+function pausarCamera() {
+    if (scanner && cameraAtiva) { try { scanner.pause(); } catch(e) {} }
+    document.getElementById('cameraPaused').style.display = 'flex';
+}
+
+function resumirCamera() {
+    if (scanner && cameraAtiva) { try { scanner.resume(); } catch(e) {} }
+    document.getElementById('cameraPaused').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// PROCESSAMENTO DO QR
+// ══════════════════════════════════════════════════════════
+function onQRScan(texto) {
+    if (itemPendente) return; // já tem item aguardando confirmação
+    processarTextoQR(texto);
+}
+
+function processarManual() {
+    const input = document.getElementById('manualInput');
+    const txt = input.value.trim();
+    if (!txt) return;
+    processarTextoQR(txt);
+    input.value = '';
+}
+
+function processarTextoQR(texto) {
+    // Tenta extrair sku e cx da URL ou do texto direto
+    let sku = '', cx = 0;
+
+    try {
+        const url = new URL(texto);
+        sku = url.searchParams.get('sku') || '';
+        cx  = parseInt(url.searchParams.get('cx')) || 0;
+    } catch {
+        // Não é URL — tenta formato "MFSS-001 cx=100" ou "MFSS-001 100"
+        const m1 = texto.match(/([A-Z0-9.\-]+)\s+(?:cx=)?(\d+)/i);
+        if (m1) { sku = m1[1].toUpperCase(); cx = parseInt(m1[2]); }
+        else { sku = texto.toUpperCase().trim(); cx = 0; }
+    }
+
+    if (!sku) { alert('Código não reconhecido'); return; }
+
+    const produto = catalogo[sku];
+    if (!produto) {
+        alert(`Produto "${sku}" não encontrado no catálogo`);
+        return;
+    }
+
+    // Se cx não veio, usa o fator do produto
+    if (!cx) cx = produto.fator || 1;
+
+    mostrarConfirmacao(produto, cx);
+    pausarCamera();
+}
+
+// ══════════════════════════════════════════════════════════
+// CONFIRMAÇÃO
+// ══════════════════════════════════════════════════════════
+async function mostrarConfirmacao(produto, cx) {
+    itemPendente = { produto, cx };
+
+    // Imagem
+    const imgWrap = document.getElementById('confirmImgWrap');
+    if (produto.imagem) {
+        imgWrap.outerHTML = `<img id="confirmImgWrap" class="confirm-img" src="/data/produtos/${esc(produto.imagem)}" onerror="this.style.display='none'">`;
+    }
+
+    document.getElementById('confirmCod').textContent = produto.codigo;
+    document.getElementById('confirmNome').textContent = produto.nome;
+
+    const cor = MODO_CORES[modo];
+    const sinalStr = modo === 'saida' ? '- ' : modo === 'entrada' ? '+ ' : '';
+    document.getElementById('confirmCx').style.color = cor;
+    document.getElementById('confirmCx').textContent = `${sinalStr}${cx} UN`;
+    document.getElementById('confirmUn').textContent = `1 caixa de ${cx} unidades`;
+
+    // No modo consulta mostra saldo atual
+    const saldoEl = document.getElementById('confirmSaldo');
+    if (modo === 'consulta') {
+        saldoEl.style.display = '';
+        saldoEl.textContent = 'Carregando saldo...';
+        try {
+            const res = await fetch('/api/estoque/atual');
+            const json = await res.json();
+            const p = json.produtos?.find(x => x.codigo === produto.codigo);
+            if (p) {
+                const cor = p.saldo_negativo ? '#f87171' : '#4ade80';
+                saldoEl.innerHTML = `Saldo atual: <strong style="color:${cor}">${p.saldo_un} UN</strong>${p.saldo_cx_estimado !== null ? ` (≈ ${p.saldo_cx_estimado} CX)` : ''}`;
+            } else {
+                saldoEl.textContent = 'Sem dados de estoque';
+            }
+        } catch { saldoEl.textContent = 'Erro ao buscar saldo'; }
+    } else {
+        saldoEl.style.display = 'none';
+    }
+
+    document.getElementById('confirmCard').classList.add('visivel');
+}
+
+function confirmarItem() {
+    if (!itemPendente) return;
+
+    if (modo !== 'consulta') {
+        // Acumula no batch
+        const existe = batch.find(b => b.produto.codigo === itemPendente.produto.codigo && b.cx === itemPendente.cx);
+        if (existe) {
+            existe.qtd += 1;
+            existe.qtd_un += itemPendente.cx;
+        } else {
+            batch.push({ produto: itemPendente.produto, cx: itemPendente.cx, qtd: 1, qtd_un: itemPendente.cx });
+        }
+        renderBatch();
+    }
+
+    cancelarItem();
+}
+
+function cancelarItem() {
+    itemPendente = null;
+    document.getElementById('confirmCard').classList.remove('visivel');
+    resumirCamera();
+}
+
+// ══════════════════════════════════════════════════════════
+// BATCH
+// ══════════════════════════════════════════════════════════
+function renderBatch() {
+    const wrap = document.getElementById('batchWrap');
+    const bar = document.getElementById('bottomBar');
+    const list = document.getElementById('batchList');
+
+    if (batch.length === 0) {
+        wrap.style.display = 'none';
+        bar.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = '';
+    bar.style.display = '';
+    const titulo = modo === 'saida' ? '📤 Saídas a confirmar' : '📥 Entradas a confirmar';
+    document.getElementById('batchTitle').textContent = titulo;
+
+    const cor = modo === 'saida' ? 'saida' : 'entrada';
+    list.innerHTML = batch.map((b, i) => `
+        <div class="batch-item">
+            <div>
+                <div class="batch-cod">${esc(b.produto.codigo)}</div>
+                <div class="batch-nome">${esc(b.produto.nome)}</div>
+            </div>
+            <div style="text-align:right;">
+                <div class="batch-qtd ${cor}">${modo === 'saida' ? '-' : '+'}${b.qtd_un} UN</div>
+                <div style="font-size:10px;color:#444;">${b.qtd} cx × ${b.cx} UN</div>
+            </div>
+            <button class="batch-remove" onclick="removerBatch(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+function removerBatch(idx) {
+    batch.splice(idx, 1);
+    renderBatch();
+}
+
+// ══════════════════════════════════════════════════════════
+// FINALIZAR
+// ══════════════════════════════════════════════════════════
+async function finalizar() {
+    if (!batch.length) return;
+    const tipo = modo === 'saida' ? 'saida' : 'entrada';
+    const total = batch.reduce((s, b) => s + b.qtd_un, 0);
+
+    if (!confirm(`Confirmar ${tipo} de ${total} UN em ${batch.length} produto(s)?`)) return;
+
+    await pararCamera();
+
+    const movimentos = batch.map(b => ({
+        codigo:    b.produto.codigo,
+        descricao: b.produto.nome,
+        qtd_un:    b.qtd_un,
+        tipo,
+    }));
+
+    try {
+        const res = await fetch('/api/movimentos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ movimentos, modo: 'coletor', operador: 'Operador' })
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error);
+
+        // Sucesso
+        const icon = tipo === 'saida' ? '📤' : '📥';
+        document.getElementById('sucessoIcon').textContent = icon;
+        document.getElementById('sucessoTitulo').textContent = tipo === 'saida' ? 'Saída registrada!' : 'Entrada registrada!';
+        document.getElementById('sucessoDesc').textContent = `${json.registrados} produto(s) · ${total} UN registradas no estoque`;
+        document.getElementById('sucessoOverlay').classList.add('visivel');
+    } catch (err) {
+        alert('Erro ao registrar: ' + err.message);
+    }
+}
+
+// ══════════════════════════════════════════════════════════
+// REINICIAR
+// ══════════════════════════════════════════════════════════
+function reiniciar() {
+    batch = [];
+    itemPendente = null;
+    document.getElementById('sucessoOverlay').classList.remove('visivel');
+    document.getElementById('confirmCard').classList.remove('visivel');
+    renderBatch();
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+}
+</script>
+</body>
+</html>

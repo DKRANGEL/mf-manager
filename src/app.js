@@ -10,6 +10,7 @@ const catalogoRoutes = require('./routes/catalogo');
 const pedidosRoutes = require('./routes/pedidos');
 const contagensRoutes = require('./routes/contagens');
 const estoqueRoutes = require('./routes/estoque');
+const movimentosRoutes = require('./routes/movimentos');
 
 function createApp() {
     const app = express();
@@ -63,6 +64,7 @@ function createApp() {
     app.use('/api/catalogo', catalogoRoutes);
     app.use('/api/contagens', contagensRoutes);
     app.use('/api/estoque', estoqueRoutes);
+    app.use('/api/movimentos', movimentosRoutes);
 
     // ─── Rotas Bot (protegidas) ──────────────────────────────────────────────────
     app.use('/bot', botRoutes);
@@ -98,6 +100,10 @@ function createApp() {
 
     app.get('/etiquetas', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'etiquetas.html'));
+    });
+
+    app.get('/coletor', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'coletor.html'));
     });
 
     // ─── Redirecionamento de QR Code ────────────────────────────────────────────
