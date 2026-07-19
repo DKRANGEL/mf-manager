@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         body { overflow: auto; background: #050505; }
         .page-container { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -339,25 +338,17 @@ function atualizarBtnAdd() {
 }
 
 // ── FILA ──
-async function adicionarAFila() {
+function adicionarAFila() {
     if (!produtoAtual || !cxSelecionados.length) return;
     const btn = document.getElementById('btnAdd');
-    btn.disabled = true; btn.textContent = 'Gerando...';
 
     for (const cx of cxSelecionados) {
         const url = `${BASE_URL}/p?sku=${encodeURIComponent(produtoAtual.codigo)}&cx=${cx}`;
-        try {
-            const dataUrl = await new Promise((resolve, reject) =>
-                QRCode.toDataURL(url, { width: 200, margin: 1, color: { dark:'#000000', light:'#ffffff' } },
-                    (err, d) => err ? reject(err) : resolve(d))
-            );
-            fila.push({ produto: { ...produtoAtual }, cx, dataUrl, url });
-        } catch (err) { console.error('QR err', err); }
+        const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&format=png&data=${encodeURIComponent(url)}`;
+        fila.push({ produto: { ...produtoAtual }, cx, qrSrc, url });
     }
 
     renderFila();
-    btn.innerHTML = '<i data-lucide="plus-circle"></i> Adicionar à fila de impressão';
-    btn.disabled = false;
     lucide.createIcons();
 }
 
@@ -394,7 +385,7 @@ function renderFila() {
                 </div>
                 <div class="etiqueta-body">
                     <div class="etiqueta-qr">
-                        <img src="${item.dataUrl}" style="width:90px;height:90px;display:block;">
+                        <img src="${item.qrSrc}" style="width:90px;height:90px;display:block;" loading="eager">
                     </div>
                     <div class="etiqueta-info">
                         <div class="etiqueta-cod">${esc(item.produto.codigo)}</div>
