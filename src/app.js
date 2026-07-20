@@ -28,7 +28,11 @@ function createApp() {
 
     // ─── Static ─────────────────────────────────────────────────────────────────
     app.use('/public', express.static(path.join(__dirname, 'public')));
-    app.use('/data/produtos', express.static(path.join(__dirname, 'data', 'produtos')));
+    app.use('/data/produtos', express.static(path.join(__dirname, 'data', 'produtos'), {
+        setHeaders: (res) => {
+            res.setHeader('Cache-Control', 'no-store');
+        }
+    }));
 
     // ─── Config pública ─────────────────────────────────────────────────────────
     app.get('/config', (req, res) => {

@@ -570,8 +570,9 @@
             </td></tr>`;
 
             itens.forEach(p => {
+                const v = Date.now();
                 const imgTag = p.imagem
-                    ? `<img src="/data/produtos/${esc(p.imagem)}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;">`
+                    ? `<img src="/data/produtos/${esc(p.imagem)}?v=${v}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;">`
                     : `<div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;color:#444;"><i data-lucide="image"></i></div>`;
 
                 html += `<tr>
@@ -714,6 +715,12 @@
     async function uploadImagem(input) {
         const id = input.dataset.id;
         if (!input.files[0]) return;
+
+        // Feedback visual: mostra spinner na célula da imagem
+        const label = input.closest('label');
+        const originalContent = label ? label.innerHTML : '';
+        if (label) label.innerHTML = '<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#666;font-size:18px;">⏳</div>';
+
         const form = new FormData();
         form.append('imagem', input.files[0]);
         try {
@@ -722,6 +729,7 @@
             if (!json.success) throw new Error(json.error);
             recarregarProdutos();
         } catch (err) {
+            if (label) label.innerHTML = originalContent;
             alert(err.message);
         }
     }
