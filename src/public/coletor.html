@@ -56,17 +56,24 @@
 
         .camera-overlay {
             position: absolute; inset: 0; pointer-events: none;
-            display: flex; align-items: center; justify-content: center;
         }
-        .scan-frame {
-            width: 60%; aspect-ratio: 1;
-            border: 2px solid rgba(255,255,255,0.6);
-            border-radius: 12px;
-            box-shadow: 0 0 0 9999px rgba(0,0,0,0.4);
+        /* 4 quadrantes escuros em volta do quadrado de leitura */
+        .overlay-top    { position:absolute; top:0; left:0; right:0; height:20%; background:rgba(0,0,0,0.45); }
+        .overlay-bottom { position:absolute; bottom:0; left:0; right:0; height:20%; background:rgba(0,0,0,0.45); }
+        .overlay-left   { position:absolute; top:20%; bottom:20%; left:0; width:10%; background:rgba(0,0,0,0.45); }
+        .overlay-right  { position:absolute; top:20%; bottom:20%; right:0; width:10%; background:rgba(0,0,0,0.45); }
+        /* Cantos do quadrado de leitura (estilo scanner) */
+        .scan-corner {
+            position: absolute; width: 22px; height: 22px;
+            border-color: #fff; border-style: solid; border-width: 0;
         }
+        .scan-corner.tl { top:20%; left:10%; border-top-width:3px; border-left-width:3px; border-top-left-radius:4px; }
+        .scan-corner.tr { top:20%; right:10%; border-top-width:3px; border-right-width:3px; border-top-right-radius:4px; }
+        .scan-corner.bl { bottom:20%; left:10%; border-bottom-width:3px; border-left-width:3px; border-bottom-left-radius:4px; }
+        .scan-corner.br { bottom:20%; right:10%; border-bottom-width:3px; border-right-width:3px; border-bottom-right-radius:4px; }
         .scan-label {
-            position: absolute; bottom: 12px; left: 0; right: 0;
-            text-align: center; font-size: 11px; color: rgba(255,255,255,0.6);
+            position: absolute; bottom: 8%; left: 0; right: 0;
+            text-align: center; font-size: 11px; color: rgba(255,255,255,0.7);
             font-weight: 600; letter-spacing: 0.5px;
         }
         .camera-paused {
@@ -213,8 +220,15 @@
     <div class="camera-wrap">
         <div id="reader"></div>
         <div class="camera-overlay">
-            <div class="scan-frame"></div>
-            <span class="scan-label">APONTE PARA O QR CODE DA CAIXA</span>
+            <div class="overlay-top"></div>
+            <div class="overlay-bottom"></div>
+            <div class="overlay-left"></div>
+            <div class="overlay-right"></div>
+            <div class="scan-corner tl"></div>
+            <div class="scan-corner tr"></div>
+            <div class="scan-corner bl"></div>
+            <div class="scan-corner br"></div>
+            <span class="scan-label">APONTE O QR CODE DA CAIXA PARA O QUADRO</span>
         </div>
         <div class="camera-paused" id="cameraPaused">Câmera pausada</div>
     </div>
@@ -418,13 +432,16 @@ function processarTextoQR(texto) {
         else { sku = texto.toUpperCase().trim(); cx = 0; }
     }
 
-    if (!sku) { alert('Código não reconhecido'); return; }
+    if (!sku) { bip(false); alert('Código não reconhecido'); return; }
 
     const produto = catalogo[sku];
     if (!produto) {
+        bip(false);
         alert(`Produto "${sku}" não encontrado no catálogo`);
         return;
     }
+
+    bip(true); // bip de sucesso
 
     // Se cx não veio, usa o fator do produto
     if (!cx) cx = produto.fator || 1;
@@ -594,6 +611,25 @@ function reiniciar() {
 // ══════════════════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+// SOM DE BIP
+// ══════════════════════════════════════════════════════════
+function bip(ok = true) {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = ok ? 1046 : 440; // Dó alto = ok, Lá = erro
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (ok ? 0.12 : 0.25));
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + (ok ? 0.12 : 0.25));
+    } catch(e) {}
+}
+
 function esc(s) {
     if (!s) return '';
     const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
