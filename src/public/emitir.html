@@ -399,6 +399,7 @@
             <div id="camposOpcionais"></div>
             <div class="tags-wrap">
                 <span style="font-size:10px;color:#444;align-self:center;">+ campo:</span>
+                <button class="tag-campo" data-campo="escritorio" onclick="toggleCampoOpc(this)">Escritório</button>
                 <button class="tag-campo" data-campo="cidade" onclick="toggleCampoOpc(this)">Cidade</button>
                 <button class="tag-campo" data-campo="evento" onclick="toggleCampoOpc(this)">Evento</button>
                 <button class="tag-campo" data-campo="local" onclick="toggleCampoOpc(this)">Local</button>
@@ -654,7 +655,7 @@ let estado = {
     tipo: 'PEDIDO DE VENDA',
     cabecalho: {
         cliente: '', data: hoje(),
-        campos: { cidade: false, evento: false, local: false, condicao: false },
+        campos: { escritorio: false, cidade: false, evento: false, local: false, condicao: false },
         num_doc: false,
         valores: {}
     },
@@ -719,7 +720,7 @@ function selecionarTipo(tipo) {
 // CAMPOS OPCIONAIS DO CABEÇALHO
 // ══════════════════════════════════════════════════════════════
 const CAMPO_LABELS = {
-    cidade: 'Cidade', evento: 'Evento', local: 'Local', condicao: 'Cond. de Pagamento'
+    escritorio: 'Escritório', cidade: 'Cidade', evento: 'Evento', local: 'Local', condicao: 'Cond. de Pagamento'
 };
 
 function toggleCampoOpc(btn) {
