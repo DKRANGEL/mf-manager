@@ -196,30 +196,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            gap: 6px;
+            background: linear-gradient(135deg, #141416 0%, #1e1e24 100%);
         }
 
         .card-thumb-initials {
-            font-size: 28px;
+            font-size: 52px;
             font-weight: 800;
-            color: #333;
-            letter-spacing: -1px;
+            color: #2a2a32;
+            letter-spacing: -2px;
             line-height: 1;
-        }
-
-        .card-thumb-icon {
-            font-size: 32px;
-            opacity: .3;
+            user-select: none;
         }
 
         .card-thumb-num {
             font-family: var(--mono);
-            font-size: 10px;
-            color: #3a3a3f;
+            font-size: 11px;
+            font-weight: 700;
+            color: #e0e0e0;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(4px);
             position: absolute;
-            bottom: 6px;
+            top: 8px;
             right: 8px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
         }
 
         .card-status {
@@ -636,14 +637,13 @@
                 ? `<img src="/data/produtos/${esc(ped.primeira_imagem)}" alt="">`
                 : `<div class="card-thumb-placeholder">
                 <div class="card-thumb-initials">${esc(initials)}</div>
-                <div class="card-thumb-icon"><i data-lucide="file-text"></i></div>
                </div>`;
 
             return `<div class="pedido-card">
             <div class="card-thumb" onclick="abrirEditar('${esc(ped.numero)}')">
                 ${thumbImg}
                 <span class="card-status ${statusClass}">${statusLabel}</span>
-                <span class="card-thumb-num">${esc(ped.numero)}</span>
+                <span class="card-thumb-num">${esc(ped.numero.replace(/^PED-\d{4}-0*/, ''))}</span>
             </div>
             <div class="card-info" onclick="abrirEditar('${esc(ped.numero)}')">
                 <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
