@@ -221,52 +221,81 @@ router.post('/importar-tiny', async (req, res) => {
 });
 
 const multer = require('multer');
+const os = require('os');
 const PRODUTOS_IMG_DIR = path.join(__dirname, '..', 'data', 'produtos');
 
+// Temp dir separado — evita arquivos temporários poluindo a pasta de imagens
 const upload = multer({
-    dest: PRODUTOS_IMG_DIR,
-    limits: {fileSize: 5 * 1024 * 1024}, // 5MB
+    dest: os.tmpdir(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB (Nginx já limita a 10m)
     fileFilter: (req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-            return cb(new Error('Apenas imagens são aceitas'));
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowed.includes(file.mimetype)) {
+            return cb(new Error('Formato inválido. Use JPG, PNG ou WEBP.'));
         }
         cb(null, true);
     }
 });
 
+function limparTemp(filepath) {
+    try { if (filepath && fs.existsSync(filepath)) fs.unlinkSync(filepath); } catch {}
+}
+
 // PUT /api/catalogo/item/:id/imagem
 router.put('/item/:id/imagem', upload.single('imagem'), (req, res) => {
+    const tempPath = req.file?.path;
     try {
-        if (!req.file) return res.status(400).json({success: false, error: 'Nenhum arquivo enviado'});
+        if (!req.file || !tempPath) {
+            return res.status(400).json({ success: false, error: 'Nenhum arquivo enviado' });
+        }
 
         const db = lerProdutos();
         const id = parseInt(req.params.id);
         const idx = db.produtos.findIndex(p => p.id === id);
+
         if (idx === -1) {
-            fs.unlinkSync(req.file.path); // limpa o arquivo se produto não existir
-            return res.status(404).json({success: false, error: 'Produto não encontrado'});
+            limparTemp(tempPath);
+            return res.status(404).json({ success: false, error: 'Produto não encontrado' });
         }
 
-        // Renomeia pro nome final: CODIGO.ext (ex: MFSSS-001.jpg)
-        const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
-        const nomeArquivo = `${db.produtos[idx].codigo.replace(/[^a-zA-Z0-9_\-.]/g, '_')}${ext}`;
+        if (!fs.existsSync(PRODUTOS_IMG_DIR)) fs.mkdirSync(PRODUTOS_IMG_DIR, { recursive: true });
+
+        // Determina extensão — prioriza mimetype (mais seguro que o nome original)
+        const mimeToExt = { 'image/jpeg': '.jpg', 'image/jpg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+        const ext = mimeToExt[req.file.mimetype] || path.extname(req.file.originalname).toLowerCase() || '.jpg';
+
+        const codigoSafe = db.produtos[idx].codigo.replace(/[^a-zA-Z0-9_\-.]/g, '_');
+        const nomeArquivo = `${codigoSafe}${ext}`;
         const destFinal = path.join(PRODUTOS_IMG_DIR, nomeArquivo);
 
-        // Remove imagem anterior se existir e for diferente
+        // Remove imagem anterior de extensão diferente (evita duplicatas .jpg e .png)
         const imagemAnterior = db.produtos[idx].imagem;
         if (imagemAnterior && imagemAnterior !== nomeArquivo) {
-            const pathAnterior = path.join(PRODUTOS_IMG_DIR, imagemAnterior);
-            if (fs.existsSync(pathAnterior)) fs.unlinkSync(pathAnterior);
+            limparTemp(path.join(PRODUTOS_IMG_DIR, imagemAnterior));
+        }
+        // Remove também qualquer versão antiga com extensão diferente
+        ['.jpg', '.jpeg', '.png', '.webp', '.gif'].forEach(e => {
+            if (e !== ext) limparTemp(path.join(PRODUTOS_IMG_DIR, `${codigoSafe}${e}`));
+        });
+
+        // Copia do temp para destino (copyFile é seguro cross-filesystem, ao contrário de rename)
+        fs.copyFileSync(tempPath, destFinal);
+        limparTemp(tempPath);
+
+        // Verifica que o arquivo final existe e tem tamanho > 0
+        const stat = fs.statSync(destFinal);
+        if (stat.size === 0) {
+            limparTemp(destFinal);
+            return res.status(500).json({ success: false, error: 'Arquivo salvo corrompido (tamanho 0)' });
         }
 
-        fs.renameSync(req.file.path, destFinal);
         db.produtos[idx].imagem = nomeArquivo;
         salvarProdutos(db);
 
-        res.json({success: true, data: {imagem: nomeArquivo, url: `/public/produtos/${nomeArquivo}`}});
+        res.json({ success: true, data: { imagem: nomeArquivo, url: `/data/produtos/${nomeArquivo}` } });
     } catch (err) {
-        if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-        res.status(500).json({success: false, error: err.message});
+        limparTemp(tempPath);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

@@ -570,9 +570,10 @@
             </td></tr>`;
 
             itens.forEach(p => {
-                const v = Date.now();
+                // cache-bust por produto: muda quando a imagem muda (id + nome arquivo)
+                const v = `${p.id}-${(p.imagem || '').replace(/\./g, '')}`;
                 const imgTag = p.imagem
-                    ? `<img src="/data/produtos/${esc(p.imagem)}?v=${v}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;">`
+                    ? `<img src="/data/produtos/${esc(p.imagem)}?v=${v}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #555;display:none;align-items:center;justify-content:center;color:#555;font-size:10px;">?</div>`
                     : `<div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;color:#444;"><i data-lucide="image"></i></div>`;
 
                 html += `<tr>
