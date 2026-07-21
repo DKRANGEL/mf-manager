@@ -42,6 +42,11 @@
         /* ── CONTEÚDO ── */
         .content { padding: 16px; max-width: 480px; margin: 0 auto; padding-bottom: 160px; }
 
+        @media (min-width: 900px) {
+            .content { max-width: 960px; display: grid; grid-template-columns: 480px 1fr; gap: 20px; align-items: start; }
+            .bottom-bar { max-width: 960px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+        }
+
         /* ── CÂMERA ── */
         .camera-wrap {
             background: #000; border-radius: 14px; overflow: hidden;
