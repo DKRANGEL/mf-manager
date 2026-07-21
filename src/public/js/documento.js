@@ -733,7 +733,7 @@ function _mfGerarSecaoHTML(sec) {
         if (cols?.total_kit) tds += `<td style="${tdR}">${item.total_kit != null ? 'R$ '+_mfFmt(item.total_kit) : '-'}</td>`;
         tds += `<td style="${tdR}font-weight:700;">${item.sem_valor ? '—' : 'R$ '+_mfFmt(total)}</td>`;
 
-        const bg = num % 2 === 1 ? 'background:#f5f5f5;' : '';
+        const bg = i % 2 === 0 ? 'background:#f5f5f5;' : '';
         return `<tr style="${bg}">${tds}</tr>`;
     }).join('');
 
