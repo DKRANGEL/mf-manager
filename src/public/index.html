@@ -6,668 +6,190 @@
     <title>MF Manager — Magic Fireworks</title>
     <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
-    <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .progress-box {
-            background: #111113;
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 12px 14px;
-            display: none;
-        }
+        body { overflow: auto; background: #09090a; min-height: 100vh; }
 
-        .progress-box.active {
-            display: block;
-        }
-
-        .progress-header {
+        /* ── HEADER ── */
+        .header {
+            padding: 24px 32px 0;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            gap: 14px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .header-logo {
+            width: 44px; height: 44px; border-radius: 8px; object-fit: contain;
+        }
+        .header-title { font-size: 20px; font-weight: 700; color: #fff; }
+        .header-sub {
+            font-size: 10px; color: #444; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-top: 1px;
         }
 
-        .progress-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--sb-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
+        /* ── GRID ── */
+        .nav-grid {
+            max-width: 1100px;
+            margin: 32px auto 40px;
+            padding: 0 32px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
         }
 
-        .progress-counter {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: #fff;
-        }
-
-        .progress-track {
-            height: 3px;
-            background: #1e1e22;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #fff;
-            border-radius: 2px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
-        .progress-fill.done {
-            background: #4cd964;
-        }
-
-        .progress-sku {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: #3a3a3f;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .progress-sku.ratelimit {
-            color: #e67e22;
-        }
-
-        .progress-sku.error {
-            color: #ff5555;
-        }
-
-        .btn-logs {
-            width: 100%;
-            margin-top: 8px;
-            background: transparent;
-            border: 1px solid var(--sb-border);
-            color: #444;
-            padding: 6px;
-            border-radius: var(--sb-radius);
-            font-size: 11px;
-            cursor: pointer;
-            transition: 0.15s;
-            text-align: center;
-            font-family: var(--font);
-        }
-
-        .btn-logs:hover {
-            color: #aaa;
-            border-color: #444;
-        }
-
-        .modal-logs-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(3px);
-        }
-
-        .modal-logs-overlay.active {
-            display: flex;
-        }
-
-        .modal-logs {
-            background: #0a0a0c;
-            border: 1px solid var(--sb-border);
-            border-radius: 12px;
-            width: 700px;
-            max-width: 95vw;
-            max-height: 80vh;
+        /* ── CARDS ── */
+        .nav-card {
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 14px;
+            padding: 24px 20px;
+            text-decoration: none;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
-        }
-
-        .modal-logs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--sb-border);
-        }
-
-        .modal-logs-header h2 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .modal-logs-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn-clear-logs {
-            background: transparent;
-            border: 1px solid #222;
-            color: #555;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
+            gap: 12px;
             cursor: pointer;
-            transition: 0.15s;
-            font-family: var(--font);
+            transition: border-color .15s, background .15s, transform .15s;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        .btn-clear-logs:hover {
-            color: #aaa;
+        .nav-card:hover {
             border-color: #444;
+            background: #17171a;
+            transform: translateY(-2px);
         }
+        .nav-card:active { transform: translateY(0); }
 
-        .modal-logs-close {
-            background: transparent;
-            border: none;
-            color: #555;
-            font-size: 18px;
-            cursor: pointer;
-            line-height: 1;
-            padding: 2px 6px;
-            transition: 0.15s;
+        /* Destaque — ocupa 2 colunas */
+        .nav-card.destaque {
+            grid-column: span 2;
+            background: #fff;
+            border-color: #fff;
+            flex-direction: row;
+            align-items: center;
         }
+        .nav-card.destaque:hover { background: #e8e8e8; border-color: #e8e8e8; }
 
-        .modal-logs-close:hover {
-            color: #fff;
-        }
-
-        .modal-logs-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 20px;
-            font-family: var(--mono);
-            font-size: 11px;
-            line-height: 1.7;
-        }
-
-        .modal-logs-body::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .modal-logs-body::-webkit-scrollbar-thumb {
-            background: #222;
-            border-radius: 3px;
-        }
-
-        .log-line {
-            display: flex;
-            gap: 10px;
-        }
-
-        .log-time {
-            color: #333;
+        .card-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
+        .card-icon .lucide { width: 22px; height: 22px; }
 
-        .log-msg {
-            color: #555;
+        .nav-card.destaque .card-icon {
+            background: rgba(0,0,0,0.08);
+        }
+        .nav-card.destaque .card-icon .lucide { color: #000; }
+
+        .card-body { flex: 1; }
+        .card-label {
+            font-size: 14px; font-weight: 700; color: #fff;
+            margin-bottom: 3px;
+        }
+        .card-sub { font-size: 12px; color: #555; }
+
+        .nav-card.destaque .card-label { color: #000; font-size: 16px; }
+        .nav-card.destaque .card-sub   { color: #666; }
+
+        /* ── MOBILE ── */
+        @media (max-width: 900px) {
+            .nav-grid { grid-template-columns: repeat(2, 1fr); padding: 0 16px; gap: 10px; }
+            .nav-card.destaque { grid-column: span 2; }
         }
 
-        .log-msg.ok {
-            color: #4cd964;
-        }
-
-        .log-msg.ratelimit {
-            color: #e67e22;
-        }
-
-        .log-msg.error {
-            color: #ff5555;
-        }
-
-        .log-msg.info {
-            color: #5599ff;
-        }
-
-        .log-msg.done {
-            color: #4cd964;
-            font-weight: 700;
-        }
-
-        .log-msg.cached {
-            color: #9b59b6;
-        }
-
-        .modal-logs-footer {
-            padding: 12px 20px;
-            border-top: 1px solid var(--sb-border);
-            font-size: 10px;
-            color: #333;
-            font-family: var(--mono);
-        }
-
-        /* Esconde os cards mobile no desktop */
-        .mobile-nav {
-            display: none;
-        }
-
-        /* ── MOBILE HOME ── */
-        @media (max-width: 768px) {
-            body {
-                overflow: auto;
-            }
-
-            .app {
-                display: block;
-                height: auto;
-                min-height: 100vh;
-            }
-
-            /* Sidebar vira topo fixo compacto */
-            .sidebar {
-                width: 100%;
-                min-width: 0;
-                border-right: none;
-                border-bottom: 1px solid var(--sb-border);
-                box-shadow: none;
-                flex-direction: row;
-                align-items: center;
-                display: flex;
-                padding: 0;
-            }
-
-            .sidebar-header {
-                padding: 14px 20px;
-                border-bottom: none;
-                flex: 1;
-            }
-
-            .brand h1 {
-                font-size: 15px;
-            }
-
-            .brand-sub {
-                font-size: 10px;
-            }
-
-            .brand-logo img {
-                width: 32px;
-                height: 32px;
-            }
-
-            .brand-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
-            }
-
-            /* Esconde o conteúdo da sidebar no mobile — vira cards abaixo */
-            .sidebar-content {
-                display: none;
-            }
-
-            .sidebar-footer {
-                display: none;
-            }
-
-            /* Preview area vira área de cards de navegação */
-            .preview-area {
-                padding: 24px 20px 40px;
-                justify-content: flex-start;
-                align-items: stretch;
-                display: block;
-                background: #09090a;
-                min-height: calc(100vh - 65px);
-            }
-
-            /* Esconde o empty state de desktop */
-            .empty-state {
-                display: none !important;
-            }
-
-            .recibo-wrapper {
-                display: none !important;
-            }
-
-            /* Grid de cards de navegação */
-            .mobile-nav {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .mobile-nav-card {
-                background: #121214;
-                border: 1px solid #29292e;
-                border-radius: 12px;
-                padding: 20px 24px;
-                text-decoration: none;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 16px;
-                cursor: pointer;
-                transition: border-color .15s, background .15s;
-                -webkit-tap-highlight-color: transparent;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .mobile-nav-card:hover, .mobile-nav-card:active {
-                border-color: #444;
-                background: #1a1a1e;
-            }
-
-            .mobile-nav-card.destaque {
-                grid-column: unset;
-                background: #fff;
-                border-color: #fff;
-            }
-
-            .mobile-nav-card.destaque:hover {
-                background: #e8e8e8;
-                border-color: #e8e8e8;
-            }
-
-            .mobile-nav-card .card-icon {
-                font-size: 28px;
-                line-height: 1;
-                flex-shrink: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .mobile-nav-card .card-icon .lucide {
-                width: 28px;
-                height: 28px;
-                vertical-align: 0;
-            }
-
-            .mobile-nav-card.destaque .card-icon .lucide {
-                color: #000;
-            }
-
-            .mobile-nav-card .card-label {
-                font-size: 15px;
-                font-weight: 700;
-                color: #fff;
-            }
-
-            .mobile-nav-card .card-sub {
-                font-size: 12px;
-                color: #555;
-                margin-top: 2px;
-            }
-
-            .mobile-nav-card.destaque .card-label {
-                color: #000;
-            }
-
-            .mobile-nav-card.destaque .card-sub {
-                color: #666;
-            }
+        @media (max-width: 500px) {
+            .header { padding: 20px 16px 0; }
+            .nav-grid { grid-template-columns: 1fr; }
+            .nav-card.destaque { grid-column: span 1; flex-direction: row; }
+            .nav-card { flex-direction: row; align-items: center; padding: 18px 16px; }
+            .card-icon { width: 38px; height: 38px; }
         }
     </style>
 </head>
 <body>
-<div class="app">
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="brand">
-                <div class="brand-logo">
-                    <img src="/public/MagicFireworksLogo.jpeg" alt="Magic Fireworks">
-                </div>
-                <div>
-                    <h1>MF MANAGER</h1>
-                    <span class="brand-sub">Magic Fireworks</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="sidebar-content">
-
-            <div class="input-group">
-                <label>Tipo de Documento</label>
-                <div class="toggle-group">
-                    <button class="toggle active" data-mode="pedido" onclick="setModo(this)">Pedido de Venda</button>
-                    <button class="toggle" data-mode="equipamento" onclick="setModo(this)">Ordem Equipamento</button>
-                </div>
-            </div>
-
-            <!-- MODO: PEDIDO DE VENDA -->
-            <div id="modoPedido">
-                <div class="input-group">
-                    <label>Emitir Pedido</label>
-                    <a href="/emitir" class="btn-export"
-                       style="background:#fff;color:#000;font-weight:700;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i data-lucide="pencil"></i> Novo Pedido de Venda
-                    </a>
-                </div>
-            </div>
-            <!-- MODO: ORDEM DE EQUIPAMENTO -->
-            <div id="modoEquipamento" style="display:none;">
-                <div class="sidebar-section">
-                    <span class="section-label">Ordens de Serviço</span>
-                    <button class="btn-menu btn-menu-accent" onclick="abrirModalNovaOS()">
-                        <span class="btn-menu-icon"><i data-lucide="plus"></i></span>Nova Ordem de Equipamento
-                    </button>
-                    <button class="btn-menu" onclick="abrirModalBuscarOS()">
-                        <span class="btn-menu-icon"><i data-lucide="search"></i></span>Buscar OS Existente
-                    </button>
-                </div>
-                <div class="sidebar-section">
-                    <span class="section-label">Cadastro</span>
-                    <a href="/equipamentos" class="btn-menu">
-                        <span class="btn-menu-icon"><i data-lucide="box"></i></span>Gerenciar Equipamentos
-                    </a>
-                </div>
-                <div class="sidebar-section">
-                    <span class="section-label">Relatórios</span>
-                    <button class="btn-menu" onclick="gerarInventario()">
-                        <span class="btn-menu-icon"><i data-lucide="clipboard-list"></i></span>Inventário de Equipamentos
-                    </button>
-                </div>
-            </div>
-
-            <div id="errorBox" class="error-box" style="display:none;"></div>
-            <div id="successBox" class="success-box" style="display:none;"></div>
-
-            <div id="exportActions" class="export-actions" style="display:none;">
-                <button class="btn-export" onclick="exportarPDF()">
-                    <i data-lucide="printer"></i> Salvar PDF / Imprimir
-                </button>
-            </div>
-
-        </div>
-
-        <div class="sidebar-footer">
-            <span>MF Manager v1.0 • Magic Fireworks</span>
-        </div>
-    </aside>
-
-    <main class="preview-area">
-        <div class="mobile-nav">
-            <a href="/pedidos" class="mobile-nav-card destaque">
-                <div class="card-icon"><i data-lucide="file-text"></i></div>
-                <div>
-                    <div class="card-label">Pedidos</div>
-                    <div class="card-sub">Ver, criar e emitir pedidos</div>
-                </div>
-            </a>
-            <a href="/produtos" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="sparkles"></i></div>
-                <div>
-                    <div class="card-label">Produtos</div>
-                    <div class="card-sub">Catálogo de efeitos</div>
-                </div>
-            </a>
-            <a href="/estoque" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="bar-chart-2"></i></div>
-                <div>
-                    <div class="card-label">Estoque</div>
-                    <div class="card-sub">Saldo atual em tempo real</div>
-                </div>
-            </a>
-            <a href="/coletor" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="scan-line"></i></div>
-                <div>
-                    <div class="card-label">Coletor</div>
-                    <div class="card-sub">Bipar caixas — saída e entrada</div>
-                </div>
-            </a>
-            <a href="/etiquetas" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="qr-code"></i></div>
-                <div>
-                    <div class="card-label">Etiquetas</div>
-                    <div class="card-sub">Gerar QR Codes para caixas</div>
-                </div>
-            </a>
-            <a href="/contagem" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
-                <div>
-                    <div class="card-label">Contagem</div>
-                    <div class="card-sub">Registrar contagem física</div>
-                </div>
-            </a>
-            <a href="/equipamentos" class="mobile-nav-card">
-                <div class="card-icon"><i data-lucide="box"></i></div>
-                <div>
-                    <div class="card-label">Equipamentos</div>
-                    <div class="card-sub">Gerenciar cadastro</div>
-                </div>
-            </a>
-            <button class="mobile-nav-card"
-                    onclick="setModo(document.querySelector('[data-mode=equipamento]'));window.scrollTo(0,0);">
-                <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
-                <div>
-                    <div class="card-label">Nova OS</div>
-                    <div class="card-sub">Ordem de equipamento</div>
-                </div>
-            </button>
-        </div>
-
-        <div id="emptyState" class="empty-state">
-            <div class="empty-icon"><i data-lucide="clipboard-list"></i></div>
-            <h2>Pronto para gerar</h2>
-            <p>Escolha o tipo de documento e preencha os dados</p>
-        </div>
-        <div id="reciboWrapper" class="recibo-wrapper" style="display:none;">
-            <div id="recibo" class="recibo"></div>
-        </div>
-    </main>
-</div>
-
-<!-- MODAL: NOVA / EDITAR OS -->
-<div class="modal-overlay" id="modalOS">
-    <div class="modal-os">
-        <div class="modal-header">
-            <h2 id="modalOSTitulo">Nova Ordem de Equipamento</h2>
-            <button class="modal-close" onclick="fecharModalOS()"><i data-lucide="x"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="modal-cols">
-                <div class="modal-col">
-                    <div class="modal-field">
-                        <label>Nome do Evento</label>
-                        <input type="text" id="osEvento" class="modal-input" placeholder="Ex: Show Henrique & Juliano"
-                               list="listaEventos">
-                        <datalist id="listaEventos"></datalist>
-                    </div>
-                    <div class="modal-field">
-                        <label>Local</label>
-                        <input type="text" id="osLocal" class="modal-input" placeholder="Ex: Arena BRB Mané Garrincha"
-                               list="listaLocais">
-                        <datalist id="listaLocais"></datalist>
-                    </div>
-                    <div class="modal-field-row">
-                        <div class="modal-field">
-                            <label>Data de Saída</label>
-                            <input type="date" id="osDataSaida" class="modal-input">
-                        </div>
-                        <div class="modal-field">
-                            <label>Data de Retorno</label>
-                            <input type="date" id="osDataRetorno" class="modal-input">
-                        </div>
-                    </div>
-                    <div class="modal-field">
-                        <label>Responsável pela Entrega</label>
-                        <input type="text" id="osRespEntrega" class="modal-input" placeholder="Nome do responsável"
-                               list="listaRespEntrega">
-                        <datalist id="listaRespEntrega"></datalist>
-                    </div>
-                    <div class="modal-field">
-                        <label>Responsável pelo Equipamento</label>
-                        <input type="text" id="osRespEquip" class="modal-input" placeholder="Nome do responsável"
-                               list="listaRespEquip">
-                        <datalist id="listaRespEquip"></datalist>
-                    </div>
-                    <div class="modal-field">
-                        <label>Observações</label>
-                        <textarea id="osObs" class="modal-input modal-textarea" placeholder="Observações opcionais..."
-                                  rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-col">
-                    <div class="modal-field">
-                        <label>Adicionar Equipamentos</label>
-                        <div class="modal-search-row">
-                            <input type="text" id="osBuscaProduto" class="modal-input"
-                                   placeholder="Buscar por nome ou código...">
-                            <button class="btn-modal-search" onclick="buscarProdutos()"><i data-lucide="search"></i></button>
-                        </div>
-                        <div id="resultadosProdutos" class="search-results" style="display:none;"></div>
-                    </div>
-                    <div id="osItensLista" class="os-itens-lista"></div>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-modal-cancel" onclick="fecharModalOS()">Cancelar</button>
-            <button class="btn-modal-gerar" onclick="gerarOrdemEquipamento()"><i data-lucide="clipboard-list"></i> Gerar Ordem de Equipamento</button>
-        </div>
+<div class="header">
+    <img src="/public/MagicFireworksLogo.jpeg" class="header-logo" alt="Magic Fireworks">
+    <div>
+        <div class="header-title">MF Manager</div>
+        <span class="header-sub">Magic Fireworks — Sistema interno</span>
     </div>
 </div>
 
-<!-- MODAL: BUSCAR OS -->
-<div class="modal-overlay" id="modalBuscarOS">
-    <div class="modal-sm">
-        <div class="modal-header">
-            <h2>Buscar Ordem de Equipamento</h2>
-            <button class="modal-close" onclick="fecharModalBuscarOS()"><i data-lucide="x"></i></button>
+<div class="nav-grid">
+
+    <a href="/pedidos" class="nav-card destaque">
+        <div class="card-icon"><i data-lucide="file-text"></i></div>
+        <div class="card-body">
+            <div class="card-label">Pedidos</div>
+            <div class="card-sub">Ver, criar e emitir pedidos de venda</div>
         </div>
-        <div class="modal-body" style="padding: 24px;">
-            <div class="modal-field">
-                <label>Número da OS</label>
-                <div class="modal-search-row">
-                    <input type="text" id="osBusca" class="modal-input" placeholder="Ex: 1, 2, 15..."
-                           autocomplete="off">
-                    <button class="btn-modal-search" onclick="buscarOS()">IR</button>
-                </div>
-                <p style="font-size:11px;color:#444;margin-top:8px;">Digite apenas o número (ex: 5) ou o código completo
-                    (ex: OS-2026-005)</p>
-            </div>
+    </a>
+
+    <a href="/estoque" class="nav-card">
+        <div class="card-icon"><i data-lucide="bar-chart-2"></i></div>
+        <div class="card-body">
+            <div class="card-label">Estoque</div>
+            <div class="card-sub">Saldo em tempo real</div>
         </div>
-    </div>
+    </a>
+
+    <a href="/coletor" class="nav-card">
+        <div class="card-icon"><i data-lucide="scan-line"></i></div>
+        <div class="card-body">
+            <div class="card-label">Coletor</div>
+            <div class="card-sub">Bipar caixas — saída e entrada</div>
+        </div>
+    </a>
+
+    <a href="/contagem" class="nav-card">
+        <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
+        <div class="card-body">
+            <div class="card-label">Contagem</div>
+            <div class="card-sub">Contagem física de estoque</div>
+        </div>
+    </a>
+
+    <a href="/produtos" class="nav-card">
+        <div class="card-icon"><i data-lucide="sparkles"></i></div>
+        <div class="card-body">
+            <div class="card-label">Produtos</div>
+            <div class="card-sub">Catálogo de efeitos</div>
+        </div>
+    </a>
+
+    <a href="/equipamentos" class="nav-card">
+        <div class="card-icon"><i data-lucide="box"></i></div>
+        <div class="card-body">
+            <div class="card-label">Equipamentos</div>
+            <div class="card-sub">Cadastro de equipamentos</div>
+        </div>
+    </a>
+
+    <a href="/etiquetas" class="nav-card">
+        <div class="card-icon"><i data-lucide="qr-code"></i></div>
+        <div class="card-body">
+            <div class="card-label">Etiquetas</div>
+            <div class="card-sub">Gerar QR Codes para caixas</div>
+        </div>
+    </a>
+
+    <a href="/emitir" class="nav-card">
+        <div class="card-icon"><i data-lucide="pencil"></i></div>
+        <div class="card-body">
+            <div class="card-label">Novo Pedido</div>
+            <div class="card-sub">Criar pedido de venda</div>
+        </div>
+    </a>
+
 </div>
 
-<!-- MODAL: LOGS -->
-<div class="modal-logs-overlay" id="modalLogs">
-    <div class="modal-logs">
-        <div class="modal-logs-header">
-            <h2>Logs de Sincronização</h2>
-            <div class="modal-logs-actions">
-                <button class="btn-clear-logs" onclick="limparLogs()">Limpar</button>
-                <button class="modal-logs-close" onclick="fecharModalLogs()"><i data-lucide="x"></i></button>
-            </div>
-        </div>
-        <div class="modal-logs-body" id="logsBody"></div>
-        <div class="modal-logs-footer" id="logsFooter">Nenhum log ainda.</div>
-    </div>
-</div>
-
-<script src="/public/js/documento.js"></script>
-<script src="/public/js/app.js"></script>
-<script>lucide.createIcons();</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+</script>
 </body>
 </html>
