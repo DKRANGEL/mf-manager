@@ -796,45 +796,42 @@ function _mfGerarResumoHTML(pedido) {
         </tr>`;
     }
 
+    // Kits — dentro do RESUMO, antes do total final
+    const comKits = res.kits && res.kits_qtd > 0 && res.kits_valor > 0;
+    const totalKits = comKits ? res.kits_qtd * res.kits_valor : 0;
+    const totalFinal = comKits ? totalKits : total;
+
+    if (comKits) {
+        linhas += `<tr style="background:#f5f5f5;">
+            <td style="padding:8px 16px;font-size:11px;color:#333;">
+                ${res.kits_qtd} KIT${res.kits_qtd > 1 ? 'S' : ''} × R$ ${_mfFmt(res.kits_valor)} / kit
+            </td>
+            <td style="padding:8px 16px;text-align:right;font-size:11px;font-family:monospace;font-weight:700;color:#333;">R$ ${_mfFmt(totalKits)}</td>
+        </tr>`;
+    }
+
     linhas += `<tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <td style="padding:12px 16px;font-size:14px;font-weight:700;color:#fff;">VALOR TOTAL DO PEDIDO</td>
-        <td style="padding:12px 16px;text-align:right;font-size:16px;font-weight:700;color:#fff;font-family:monospace;">R$ ${_mfFmt(total)}</td>
+        <td style="padding:12px 16px;text-align:right;font-size:16px;font-weight:700;color:#fff;font-family:monospace;">R$ ${_mfFmt(totalFinal)}</td>
     </tr>`;
 
     let extras = '';
 
-    // NF Fiscal
+    // NF Fiscal — calculada sobre o total final
     if (res.nf && res.nf_percent > 0) {
-        const nfVal = total * (res.nf_percent / 100);
+        const nfVal = totalFinal * (res.nf_percent / 100);
         extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
-            <strong>VALOR SEM NF:</strong> R$ ${_mfFmt(total)} &nbsp;|&nbsp;
+            <strong>VALOR SEM NF:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
             <strong>NF FISCAL (${res.nf_percent}%):</strong> + R$ ${_mfFmt(nfVal)} &nbsp;|&nbsp;
-            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(total + nfVal)}
+            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(totalFinal + nfVal)}
         </div>`;
     }
     // Compatibilidade NF antigo
     if (!res.nf && blocos.nf?.ativo) {
-        const nfVal = total * ((blocos.nf.percent || 18) / 100);
+        const nfVal = totalFinal * ((blocos.nf.percent || 18) / 100);
         extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
             <strong>NF FISCAL (${blocos.nf.percent || 18}%):</strong> + R$ ${_mfFmt(nfVal)}
         </div>`;
-    }
-
-    // Kits
-    if (res.kits && res.kits_qtd > 0 && res.kits_valor > 0) {
-        const totalKits = res.kits_qtd * res.kits_valor;
-        extras += `<table style="width:100%;border-collapse:collapse;margin-top:10px;">
-            <tr style="background:#f5f5f5;">
-                <td style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;">QTD. DE KITS</td>
-                <td style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;">VALOR POR KIT</td>
-                <td style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;">VALOR TOTAL DO PEDIDO</td>
-            </tr>
-            <tr>
-                <td style="padding:10px 14px;font-size:14px;font-weight:700;">${res.kits_qtd} KIT${res.kits_qtd > 1 ? 'S' : ''}</td>
-                <td style="padding:10px 14px;font-size:14px;font-weight:700;font-family:monospace;">R$ ${_mfFmt(res.kits_valor)}</td>
-                <td style="padding:10px 14px;font-size:16px;font-weight:700;color:#c0392b;font-family:monospace;">R$ ${_mfFmt(totalKits)}</td>
-            </tr>
-        </table>`;
     }
 
     // Condição / Pagamento
