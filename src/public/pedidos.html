@@ -156,77 +156,50 @@
             gap: 14px;
         }
 
+        /* ── CARD DOCUMENTO ── */
         .pedido-card {
-            background: #121214;
+            background: #111113;
             border: 1px solid #29292e;
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            transition: border-color .15s, transform .15s;
+            transition: border-color .15s, box-shadow .15s, transform .15s;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
+        /* Barra lateral de cor por status */
+        .pedido-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            border-radius: 10px 0 0 10px;
+        }
+        .pedido-card.s-pendente::before  { background: #fbbf24; }
+        .pedido-card.s-aberto::before    { background: #ef4444; }
+        .pedido-card.s-concluido::before { background: #4ade80; }
 
         .pedido-card:hover {
-            border-color: #444;
+            border-color: #3a3a42;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.4);
             transform: translateY(-2px);
         }
 
-        .card-thumb {
-            width: 100%;
-            aspect-ratio: 4/3;
-            background: #1a1a1e;
+        /* Topo do card: número + status */
+        .card-head {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-            border-bottom: 1px solid #1e1e22;
-            cursor: pointer;
+            padding: 12px 14px 0 16px;
         }
-
-        .card-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .card-thumb-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #141416 0%, #1e1e24 100%);
-        }
-
-        .card-thumb-initials {
-            font-size: 52px;
-            font-weight: 800;
-            color: #2a2a32;
-            letter-spacing: -2px;
-            line-height: 1;
-            user-select: none;
-        }
-
-        .card-thumb-num {
+        .card-num {
             font-family: var(--mono);
             font-size: 11px;
             font-weight: 700;
-            color: #e0e0e0;
-            background: rgba(0,0,0,0.55);
-            backdrop-filter: blur(4px);
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            padding: 3px 8px;
-            border-radius: 6px;
+            color: #444;
             letter-spacing: 0.5px;
         }
-
         .card-status {
-            position: absolute;
-            top: 8px;
-            left: 8px;
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
@@ -234,60 +207,51 @@
             padding: 2px 7px;
             border-radius: 4px;
         }
-
         .status-rascunho, .status-pendente {
-            background: rgba(251, 191, 36, .15);
-            color: #fbbf24;
+            background: rgba(251,191,36,.12); color: #fbbf24;
         }
-
         .status-emitido, .status-aberto {
-            background: rgba(239, 68, 68, .15);
-            color: #ef4444;
+            background: rgba(239,68,68,.12); color: #ef4444;
         }
-
         .status-concluido {
-            background: rgba(74, 222, 128, .15);
-            color: #4ade80;
+            background: rgba(74,222,128,.12); color: #4ade80;
         }
 
+        /* Corpo clicável */
         .card-info {
-            padding: 12px 14px;
+            padding: 10px 14px 14px 16px;
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
             cursor: pointer;
         }
-
         .card-cliente {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
             color: #fff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 3px;
         }
-
         .card-meta {
             font-size: 11px;
             color: #555;
+            margin-bottom: 10px;
         }
-
         .card-total {
             font-family: var(--mono);
-            font-size: 13px;
-            font-weight: 700;
-            color: #ccc;
-            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #e0e0e0;
+            letter-spacing: -0.5px;
         }
+        .card-total.zero { color: #333; }
 
-        .card-total.zero {
-            color: #444;
-        }
+        /* Linha separadora */
+        .card-divider { height: 1px; background: #1e1e22; margin: 0 0; }
 
         .card-actions {
             display: flex;
-            border-top: 1px solid #1e1e22;
+            border-top: 1px solid #1a1a1e;
         }
 
         .card-btn {
@@ -632,18 +596,13 @@
             const statusClass = isPendente ? 'status-rascunho' : isAberto ? 'status-emitido' : 'status-concluido';
             const statusLabel = isPendente ? 'PENDENTE' : isAberto ? 'ABERTO' : 'CONCLUÍDO';
             const selectClass = isPendente ? 'pendente' : isAberto ? 'aberto' : 'concluido';
+            const sClass      = isPendente ? 's-pendente' : isAberto ? 's-aberto' : 's-concluido';
+            const numCurto    = ped.numero.replace(/^PED-\d{4}-/, ''); // mantém zeros: 001, 002
 
-            const thumbImg = ped.primeira_imagem
-                ? `<img src="/data/produtos/${esc(ped.primeira_imagem)}" alt="">`
-                : `<div class="card-thumb-placeholder">
-                <div class="card-thumb-initials">${esc(initials)}</div>
-               </div>`;
-
-            return `<div class="pedido-card">
-            <div class="card-thumb" onclick="abrirEditar('${esc(ped.numero)}')">
-                ${thumbImg}
+            return `<div class="pedido-card ${sClass}">
+            <div class="card-head">
+                <span class="card-num">#${numCurto}</span>
                 <span class="card-status ${statusClass}">${statusLabel}</span>
-                <span class="card-thumb-num">${esc(ped.numero.replace(/^PED-\d{4}-0*/, ''))}</span>
             </div>
             <div class="card-info" onclick="abrirEditar('${esc(ped.numero)}')">
                 <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
