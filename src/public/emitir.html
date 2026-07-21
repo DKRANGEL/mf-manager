@@ -1477,8 +1477,32 @@ async function carregarPedido(numero) {
         estado.cabecalho = ped.cabecalho || { cliente: ped.cliente || '', data: ped.data_emissao || hoje(), campos: {}, valores: {} };
         if (!estado.cabecalho.campos) estado.cabecalho.campos = {};
         if (!estado.cabecalho.valores) estado.cabecalho.valores = {};
-        estado.secoes = (ped.secoes || []).map(s => ({ ...s, id: `sec_${++secaoIdCounter}` }));
         estado.resumo = { ...estado.resumo, ...(ped.resumo || {}) };
+
+        // Busca catálogo para sincronizar imagens — se o produto teve imagem
+        // atualizada no catálogo, o pedido reflete a versão atual sem re-adicionar
+        let catalogoImagem = {};
+        try {
+            const catRes = await fetch('/api/catalogo/catalogo');
+            const catJson = await catRes.json();
+            if (catJson.success) {
+                Object.values(catJson.data || {}).flat().forEach(p => {
+                    catalogoImagem[p.codigo] = p.imagem || null;
+                });
+            }
+        } catch {}
+
+        estado.secoes = (ped.secoes || []).map(s => ({
+            ...s,
+            id: `sec_${++secaoIdCounter}`,
+            itens: (s.itens || []).map(item => ({
+                ...item,
+                // Usa imagem do catálogo atual; mantém a salva se produto não encontrado
+                imagem: catalogoImagem.hasOwnProperty(item.codigo)
+                    ? catalogoImagem[item.codigo]
+                    : item.imagem || null
+            }))
+        }));
 
         document.getElementById('topbarNumero').textContent = numero;
         document.getElementById('fCliente').value = estado.cabecalho.cliente;
