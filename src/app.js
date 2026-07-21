@@ -110,6 +110,10 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'coletor.html'));
     });
 
+    app.get('/logs', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'logs.html'));
+    });
+
     // ─── Redirecionamento de QR Code ────────────────────────────────────────────
     // GET /p?sku=MFSSS-001&cx=400
     // Cliente escaneia → redireciona para YouTube do produto

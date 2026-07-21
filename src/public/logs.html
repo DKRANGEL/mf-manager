@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log de Movimentos — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { overflow: auto; background: #050505; }
+        .page-container { max-width: 1300px; margin: 0 auto; padding: 32px 24px 60px; }
+
+        /* ── HEADER ── */
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+        .page-header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .page-header .sub { font-size:10px; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; display:block; }
+        .btn-back { background:transparent; border:1px solid #333; color:#888; padding:9px 16px; border-radius:var(--sb-radius); font-size:13px; cursor:pointer; text-decoration:none; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; }
+        .btn-back:hover { border-color:#555; color:#fff; }
+
+        /* ── CARDS DE TOTAIS ── */
+        .totais { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+        .total-card { background:#121214; border:1px solid #29292e; border-radius:10px; padding:14px 18px; }
+        .total-label { font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+        .total-valor { font-size:22px; font-weight:800; font-family:var(--mono); }
+        .total-valor.saida   { color:#ef4444; }
+        .total-valor.entrada { color:#4ade80; }
+        .total-valor.saldo   { color:#fff; }
+        .total-sub { font-size:10px; color:#444; margin-top:2px; }
+
+        /* ── FILTROS ── */
+        .filtros-bar { background:#121214; border:1px solid #29292e; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+        .filtro-group { display:flex; flex-direction:column; gap:4px; }
+        .filtro-group label { font-size:9px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; }
+        .filtro-input {
+            height:36px; background:#1a1a1e; border:1px solid #2a2a30; border-radius:6px;
+            padding:0 10px; color:#fff; font-size:12px; font-family:var(--font); outline:none; min-width:140px;
+        }
+        .filtro-input:focus { border-color:#444; }
+        .filtro-input.mono { font-family:var(--mono); }
+        select.filtro-input { appearance:none; }
+        .btn-filtrar {
+            height:36px; padding:0 16px; background:#fff; border:none; color:#000;
+            border-radius:6px; font-size:12px; font-weight:700; font-family:var(--font);
+            cursor:pointer; transition:0.15s; white-space:nowrap; align-self:flex-end;
+        }
+        .btn-filtrar:hover { background:#e0e0e0; }
+        .btn-limpar {
+            height:36px; padding:0 14px; background:transparent; border:1px solid #333; color:#666;
+            border-radius:6px; font-size:12px; font-family:var(--font); cursor:pointer; white-space:nowrap; align-self:flex-end;
+        }
+        .btn-limpar:hover { border-color:#555; color:#ccc; }
+
+        /* ── TABELA ── */
+        #tabelaContainer { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+
+        .log-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+        .log-table thead th {
+            background:#0e0e10; color:#555; font-size:10px; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.8px; padding:10px 12px; text-align:left;
+            border-bottom:1px solid #1e1e22; position:sticky; top:0; z-index:10;
+            white-space:nowrap;
+        }
+        .log-table tbody td { padding:10px 12px; border-bottom:1px solid #1a1a1e; vertical-align:middle; }
+        .log-table tbody tr:hover { background:rgba(255,255,255,0.02); }
+
+        .td-data  { font-family:var(--mono); font-size:11px; color:#666; white-space:nowrap; }
+        .td-cod   { font-family:var(--mono); font-weight:700; color:#e0e0e0; white-space:nowrap; }
+        .td-nome  { color:#ccc; }
+        .td-qtd   { font-family:var(--mono); font-weight:700; text-align:right; white-space:nowrap; }
+        .td-qtd.saida   { color:#ef4444; }
+        .td-qtd.entrada { color:#4ade80; }
+        .td-tipo  { text-align:center; white-space:nowrap; }
+        .td-orig  { color:#555; font-size:11px; }
+
+        /* Badges */
+        .badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; }
+        .badge-saida   { background:rgba(239,68,68,.12);  color:#ef4444; }
+        .badge-entrada { background:rgba(74,222,128,.12); color:#4ade80; }
+
+        /* Link pedido */
+        .link-pedido { color:#60a5fa; text-decoration:none; font-family:var(--mono); font-size:11px; }
+        .link-pedido:hover { text-decoration:underline; }
+
+        .empty-msg { text-align:center; padding:60px 20px; color:#333; }
+        .stats-bar { font-size:11px; color:#444; margin-bottom:8px; }
+
+        @media (max-width:768px) {
+            .page-container { padding:20px 16px 60px; }
+            .totais { grid-template-columns:1fr; }
+            .filtros-bar { flex-direction:column; }
+            .filtro-input { min-width:0; width:100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Log de Movimentos</h1>
+            <span class="sub">Entradas e saídas de estoque</span>
+        </div>
+        <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+    </div>
+
+    <!-- Totais -->
+    <div class="totais">
+        <div class="total-card">
+            <div class="total-label">Total Saídas</div>
+            <div class="total-valor saida" id="totalSaida">—</div>
+            <div class="total-sub" id="subSaida">UN no período</div>
+        </div>
+        <div class="total-card">
+            <div class="total-label">Total Entradas</div>
+            <div class="total-valor entrada" id="totalEntrada">—</div>
+            <div class="total-sub" id="subEntrada">UN no período</div>
+        </div>
+        <div class="total-card">
+            <div class="total-label">Saldo do período</div>
+            <div class="total-valor saldo" id="totalSaldo">—</div>
+            <div class="total-sub">Entradas − Saídas</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros-bar">
+        <div class="filtro-group">
+            <label>De</label>
+            <input type="date" class="filtro-input" id="fDe">
+        </div>
+        <div class="filtro-group">
+            <label>Até</label>
+            <input type="date" class="filtro-input" id="fAte">
+        </div>
+        <div class="filtro-group">
+            <label>Produto (código ou nome)</label>
+            <input type="text" class="filtro-input mono" id="fProduto" placeholder="Ex: MFSSS-001">
+        </div>
+        <div class="filtro-group">
+            <label>Pedido</label>
+            <input type="text" class="filtro-input mono" id="fPedido" placeholder="Ex: PED-2026-001">
+        </div>
+        <div class="filtro-group">
+            <label>Tipo</label>
+            <select class="filtro-input" id="fTipo">
+                <option value="">Todos</option>
+                <option value="saida">Saída</option>
+                <option value="entrada">Entrada</option>
+            </select>
+        </div>
+        <button class="btn-filtrar" onclick="buscar()"><i data-lucide="search" style="width:13px;height:13px;vertical-align:-2px;"></i> Filtrar</button>
+        <button class="btn-limpar" onclick="limpar()">Limpar</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- Tabela -->
+    <div id="tabelaContainer">
+        <div class="empty-msg">Aplique os filtros para ver os movimentos</div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Define período padrão: últimos 30 dias
+        const hoje = new Date();
+        const h30 = new Date(hoje); h30.setDate(hoje.getDate() - 30);
+        document.getElementById('fAte').value = hoje.toISOString().split('T')[0];
+        document.getElementById('fDe').value  = h30.toISOString().split('T')[0];
+        buscar();
+        lucide.createIcons();
+    });
+
+    // Enter nos inputs dispara busca
+    document.querySelectorAll && document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') buscar();
+    });
+
+    async function buscar() {
+        const de      = document.getElementById('fDe').value;
+        const ate     = document.getElementById('fAte').value;
+        const produto = document.getElementById('fProduto').value.trim();
+        const pedido  = document.getElementById('fPedido').value.trim();
+        const tipo    = document.getElementById('fTipo').value;
+
+        const params = new URLSearchParams();
+        if (de)      params.set('de', de);
+        if (ate)     params.set('ate', ate);
+        if (produto) params.set('produto', produto);
+        if (pedido)  params.set('pedido', pedido);
+        if (tipo)    params.set('tipo', tipo);
+
+        document.getElementById('tabelaContainer').innerHTML =
+            '<div class="empty-msg" style="color:#444;">Carregando...</div>';
+
+        try {
+            const res  = await fetch(`/api/movimentos?${params}`);
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            renderTabela(json.data, json.totalSaida, json.totalEntrada);
+        } catch (err) {
+            document.getElementById('tabelaContainer').innerHTML =
+                `<div class="empty-msg">Erro: ${err.message}</div>`;
+        }
+    }
+
+    function limpar() {
+        document.getElementById('fProduto').value = '';
+        document.getElementById('fPedido').value  = '';
+        document.getElementById('fTipo').value    = '';
+        const hoje = new Date();
+        const h30  = new Date(hoje); h30.setDate(hoje.getDate() - 30);
+        document.getElementById('fAte').value = hoje.toISOString().split('T')[0];
+        document.getElementById('fDe').value  = h30.toISOString().split('T')[0];
+        buscar();
+    }
+
+    function renderTabela(lista, totalSaida, totalEntrada) {
+        // Totais
+        const saldo = totalEntrada - totalSaida;
+        document.getElementById('totalSaida').textContent   = fmtN(totalSaida) + ' UN';
+        document.getElementById('totalEntrada').textContent = fmtN(totalEntrada) + ' UN';
+        document.getElementById('totalSaldo').textContent   = (saldo >= 0 ? '+' : '') + fmtN(saldo) + ' UN';
+        document.getElementById('totalSaldo').style.color   = saldo < 0 ? '#ef4444' : saldo > 0 ? '#4ade80' : '#fff';
+
+        // Stats bar
+        document.getElementById('statsBar').textContent = `${lista.length} movimento${lista.length !== 1 ? 's' : ''} encontrado${lista.length !== 1 ? 's' : ''}`;
+
+        if (lista.length === 0) {
+            document.getElementById('tabelaContainer').innerHTML =
+                '<div class="empty-msg">Nenhum movimento encontrado para os filtros aplicados.</div>';
+            lucide.createIcons();
+            return;
+        }
+
+        const rows = lista.map(m => {
+            const data   = m.data ? new Date(m.data).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+            const sinal  = m.tipo === 'saida' ? '−' : '+';
+            const qtdCls = m.tipo === 'saida' ? 'saida' : 'entrada';
+            const badge  = m.tipo === 'saida'
+                ? '<span class="badge badge-saida">Saída</span>'
+                : '<span class="badge badge-entrada">Entrada</span>';
+
+            let origem = m.origem === 'pedido' ? 'Pedido' : m.origem === 'coletor' ? 'Coletor' : (m.origem || '—');
+            if (m.numero_pedido) {
+                origem = `<a href="/emitir?numero=${esc(m.numero_pedido)}" class="link-pedido">${esc(m.numero_pedido)}</a>`;
+            }
+
+            return `<tr>
+                <td class="td-data">${data}</td>
+                <td class="td-cod">${esc(m.codigo || '—')}</td>
+                <td class="td-nome">${esc(m.descricao || '—')}</td>
+                <td class="td-qtd ${qtdCls}">${sinal}${fmtN(m.qtd_un || 0)} UN</td>
+                <td class="td-tipo">${badge}</td>
+                <td class="td-orig">${origem}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('tabelaContainer').innerHTML = `
+            <table class="log-table">
+                <thead><tr>
+                    <th>Data/Hora</th>
+                    <th>Código</th>
+                    <th>Produto</th>
+                    <th style="text-align:right;">Quantidade</th>
+                    <th style="text-align:center;">Tipo</th>
+                    <th>Origem</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        lucide.createIcons();
+    }
+
+    function fmtN(v) {
+        return (parseFloat(v) || 0).toLocaleString('pt-BR');
+    }
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>
