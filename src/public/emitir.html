@@ -872,8 +872,9 @@ function renderSecaoBody(sec) {
 }
 
 function renderItemCard(secId, item, idx) {
+    const v = Date.now();
     const imgEl = item.imagem
-        ? `<img class="item-img-sm" src="/data/produtos/${esc(item.imagem)}" onerror="this.style.display='none'">`
+        ? `<img class="item-img-sm" src="/data/produtos/${esc(item.imagem)}?v=${v}" onerror="this.style.display='none'">`
         : `<div class="item-img-ph"><i data-lucide="box"></i></div>`;
 
     const vals = montarValsTexto(item);
@@ -1012,7 +1013,7 @@ function buscarProduto(q, secId) {
         }
         list.innerHTML = json.data.map(p => {
             const imgEl = p.imagem
-                ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}" onerror="this.style.display='none'">`
+                ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}?v=${Date.now()}" onerror="this.style.display='none'">`
                 : `<div class="ac-img-ph"><i data-lucide="box"></i></div>`;
             return `<div class="ac-item" onclick="adicionarItemDoAC('${secId}',${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 ${imgEl}
