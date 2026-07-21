@@ -670,29 +670,9 @@
 
     async function abrirPreview(numero, cliente) {
         try {
-            const [resP, catRes] = await Promise.all([
-                fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json()),
-                fetch('/api/catalogo/catalogo').then(r => r.json())
-            ]);
+            const resP = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json());
             if (!resP.success) throw new Error(resP.error);
-
-            // Sincroniza imagens com catálogo atual antes de renderizar
-            const catalogoImagem = {};
-            if (catRes.success) {
-                Object.values(catRes.data || {}).flat().forEach(p => {
-                    catalogoImagem[p.codigo] = p.imagem || null;
-                });
-            }
-            const pedido = resP.data;
-            (pedido.secoes || []).forEach(sec => {
-                (sec.itens || []).forEach(item => {
-                    if (catalogoImagem.hasOwnProperty(item.codigo)) {
-                        item.imagem = catalogoImagem[item.codigo];
-                    }
-                });
-            });
-
-            document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(pedido);
+            document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(resP.data);
             document.getElementById('nomeArquivo').value = cliente ? `Pedido ${cliente}` : numero;
             document.getElementById('previewModal').classList.add('ativo');
             setTimeout(escalarPreview, 50);
