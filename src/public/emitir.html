@@ -384,6 +384,10 @@
         </div>
         <div class="bloco-body">
             <div class="campo">
+                <label>Nome do pedido (aparece na listagem)</label>
+                <input type="text" id="fNomePedido" placeholder="Ex: Show Chicote de Luxo — BSB 25/07" autocomplete="off">
+            </div>
+            <div class="campo">
                 <label>Cliente *</label>
                 <input type="text" id="fCliente" placeholder="Ex: Marcio Santana, AGF..." autocomplete="off">
             </div>
@@ -404,6 +408,7 @@
                 <button class="tag-campo" data-campo="cidade" onclick="toggleCampoOpc(this)">Cidade</button>
                 <button class="tag-campo" data-campo="evento" onclick="toggleCampoOpc(this)">Evento</button>
                 <button class="tag-campo" data-campo="local" onclick="toggleCampoOpc(this)">Local</button>
+                <button class="tag-campo" data-campo="datas_shows" onclick="toggleCampoOpc(this)">Datas dos Shows</button>
                 <button class="tag-campo" data-campo="num_doc" onclick="toggleCampoOpcNum(this)">Nº Documento</button>
             </div>
         </div>
@@ -604,7 +609,7 @@
     <div class="preview-toolbar">
         <input type="text" id="nomeArquivo" placeholder="Nome do arquivo...">
         <div class="preview-btns">
-            <button onclick="window.print()"
+            <button onclick="imprimirDoc()"
                 style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
                 <i data-lucide="printer"></i> Imprimir
             </button>
@@ -656,7 +661,7 @@ let estado = {
     tipo: 'PEDIDO DE VENDA',
     cabecalho: {
         cliente: '', data: hoje(),
-        campos: { escritorio: false, cidade: false, evento: false, local: false, condicao: false },
+        campos: { escritorio: false, cidade: false, evento: false, local: false, condicao: false, datas_shows: false },
         num_doc: false,
         valores: {}
     },
@@ -721,7 +726,8 @@ function selecionarTipo(tipo) {
 // CAMPOS OPCIONAIS DO CABEÇALHO
 // ══════════════════════════════════════════════════════════════
 const CAMPO_LABELS = {
-    escritorio: 'Escritório', cidade: 'Cidade', evento: 'Evento', local: 'Local', condicao: 'Cond. de Pagamento'
+    escritorio: 'Escritório', cidade: 'Cidade', evento: 'Evento',
+    local: 'Local', condicao: 'Cond. de Pagamento', datas_shows: 'Datas dos Shows'
 };
 
 function toggleCampoOpc(btn) {
@@ -880,7 +886,7 @@ function renderItemCard(secId, item, idx) {
 
     const vals = montarValsTexto(item);
     return `
-        <div class="item-card" data-idx="${idx}">
+        <div class="item-card" data-idx="${idx}" data-sec="${secId}">
             <div class="item-drag-handle" title="Arrastar para reordenar">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
                     <circle cx="4" cy="3" r="1.2"/><circle cx="10" cy="3" r="1.2"/>
@@ -888,7 +894,7 @@ function renderItemCard(secId, item, idx) {
                     <circle cx="4" cy="11" r="1.2"/><circle cx="10" cy="11" r="1.2"/>
                 </svg>
             </div>
-            <div onclick="editarItem('${secId}',${idx})" style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;cursor:pointer;">
+            <div onclick="editarItemCard(this)" style="display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0;cursor:pointer;">
                 ${imgEl}
                 <div class="item-info">
                     <div class="item-cod">${esc(item.codigo || '')}</div>
@@ -896,13 +902,27 @@ function renderItemCard(secId, item, idx) {
                     <div class="item-vals">${vals}</div>
                 </div>
             </div>
-            <button class="item-remove" onclick="removerItemSecao('${secId}',${idx})">
+            <button class="item-remove" onclick="removerItemCard(this)">
                 <i data-lucide="x"></i>
             </button>
         </div>`;
 }
 
 const _sortableInstances = {};
+
+// Lê data-idx e data-sec do card no momento do clique — correto mesmo após drag
+function editarItemCard(el) {
+    const card = el.closest('.item-card');
+    const secId = card.dataset.sec;
+    const idx   = parseInt(card.dataset.idx);
+    editarItem(secId, idx);
+}
+function removerItemCard(btn) {
+    const card = btn.closest('.item-card');
+    const secId = card.dataset.sec;
+    const idx   = parseInt(card.dataset.idx);
+    removerItemSecao(secId, idx);
+}
 
 function initSortable(secId) {
     const container = document.getElementById(`itens_${secId}`);
@@ -1405,6 +1425,7 @@ function toggleBloco(header) {
 // SALVAR / CARREGAR
 // ══════════════════════════════════════════════════════════════
 function coletarEstado() {
+    estado.nome = document.getElementById('fNomePedido').value.trim();
     estado.cabecalho.cliente = document.getElementById('fCliente').value.trim();
     estado.cabecalho.data = document.getElementById('fData').value;
     if (estado.cabecalho.num_doc) {
@@ -1485,6 +1506,7 @@ async function carregarPedido(numero) {
         }));
 
         document.getElementById('topbarNumero').textContent = numero;
+        document.getElementById('fNomePedido').value = ped.nome || '';
         document.getElementById('fCliente').value = estado.cabecalho.cliente;
         document.getElementById('fData').value = estado.cabecalho.data;
         document.getElementById('btnPreview').style.display = '';
@@ -1575,9 +1597,23 @@ function restaurarEstadoUI() {
 // ══════════════════════════════════════════════════════════════
 // PREVIEW / DOCUMENT RENDER
 // ══════════════════════════════════════════════════════════════
+function imprimirDoc() {
+    const nome = document.getElementById('nomeArquivo')?.value.trim()
+        || document.getElementById('fNomePedido')?.value.trim()
+        || (estado.numero ? `Pedido ${estado.numero}` : 'Pedido');
+    const tituloAnterior = document.title;
+    document.title = nome;
+    window.print();
+    setTimeout(() => { document.title = tituloAnterior; }, 1500);
+}
+
 function abrirPreview() {
     coletarEstado();
     document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(estado);
+    // Pre-preenche nome do arquivo com nome do pedido
+    const nomePedido = estado.nome || estado.cabecalho.cliente || '';
+    const nomeArq = document.getElementById('nomeArquivo');
+    if (nomeArq && !nomeArq.value && nomePedido) nomeArq.value = `Pedido ${nomePedido}`;
     document.getElementById('previewModal').classList.add('active');
     escalarPreview();
     lucide.createIcons();

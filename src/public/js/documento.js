@@ -578,7 +578,7 @@ function gerarPedidoMFHTML(pedido) {
         <td class="bg-gray-title" style="width:140px;">CLIENTE</td>
         <td class="data-cell highlight" colspan="3">${esc((cab.cliente || '').toUpperCase())}</td>
     </tr>`;
-    const LABEL_MAP = { escritorio:'ESCRITÓRIO', cidade:'CIDADE', evento:'EVENTO', local:'LOCAL', condicao:'COND. PAGAMENTO' };
+    const LABEL_MAP = { escritorio:'ESCRITÓRIO', cidade:'CIDADE', evento:'EVENTO', local:'LOCAL', condicao:'COND. PAGAMENTO', datas_shows:'DATAS DOS SHOWS' };
     Object.entries(cab.campos || {}).forEach(([k, ativo]) => {
         if (ativo && cab.valores?.[k]) {
             camposHTML += `<tr>

@@ -69,6 +69,7 @@ router.post('/', (req, res) => {
         const numero = proximoNumero();
         const pedido = {
             numero,
+            nome: req.body.nome || '',
             tipo: tipo || 'PEDIDO DE VENDA',
             status: 'rascunho',
             data_emissao: data_emissao || new Date().toISOString(),
@@ -104,7 +105,8 @@ router.get('/', (req, res) => {
             try {
                 const pedido = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
                 // suporta novo schema (cabecalho.cliente) e antigo (blocos.cliente.nome)
-                const cliente = pedido.cabecalho?.cliente || pedido.blocos?.cliente?.nome || pedido.cliente || '';
+                const clienteRaw = pedido.cabecalho?.cliente || pedido.blocos?.cliente?.nome || pedido.cliente || '';
+                const cliente = pedido.nome || clienteRaw;
                 const secoes = pedido.secoes || [];
                 const itens = secoes.flatMap(s => s.itens || []);
                 const subtotal = pedido.total_valor ||
@@ -169,6 +171,7 @@ router.put('/:numero', (req, res) => {
 
         const {tipo, cabecalho, secoes, resumo, total_valor, total_itens, data_emissao, blocos, cliente} = req.body;
 
+        if (req.body.nome !== undefined) pedido.nome = req.body.nome || '';
         if (tipo !== undefined) pedido.tipo = tipo;
         if (cabecalho !== undefined) { pedido.cabecalho = cabecalho; pedido.cliente = cabecalho.cliente || pedido.cliente; }
         if (cliente !== undefined && !cabecalho) pedido.cliente = cliente;
