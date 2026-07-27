@@ -1465,6 +1465,7 @@ async function salvarRascunho() {
     const totalItens = estado.secoes.reduce((s, sec) => s + sec.itens.length, 0);
 
     const payload = {
+        nome: estado.nome || '',
         cliente: estado.cabecalho.cliente,
         tipo: estado.tipo,
         cabecalho: estado.cabecalho,
