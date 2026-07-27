@@ -92,27 +92,49 @@ const MF = (() => {
         .mf-popup {
             background: #121214 !important;
             border: 1px solid #29292e !important;
-            border-radius: 14px !important;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8) !important;
             font-family: 'DM Sans', sans-serif !important;
+            padding: 32px 28px 24px !important;
+            width: auto !important;
+            min-width: 340px !important;
+            max-width: 480px !important;
         }
         .mf-title {
             color: #fff !important;
-            font-size: 16px !important;
+            font-size: 17px !important;
             font-weight: 700 !important;
+            padding: 0 0 4px !important;
+            margin-bottom: 4px !important;
         }
         .mf-html {
-            color: #999 !important;
+            color: #777 !important;
             font-size: 13px !important;
+            padding: 0 !important;
+            margin-top: 4px !important;
+        }
+        /* Área dos botões */
+        .mf-popup .swal2-actions {
+            margin-top: 24px !important;
+            gap: 10px !important;
+            padding: 0 !important;
+            width: 100% !important;
+            justify-content: flex-end !important;
+        }
+        /* Área do input */
+        .mf-popup .swal2-input-label { display: none !important; }
+        .mf-popup .swal2-input {
+            margin-top: 16px !important;
         }
         .mf-btn-confirm {
             background: #fff !important;
             color: #000 !important;
             font-weight: 700 !important;
             border-radius: 8px !important;
-            padding: 10px 24px !important;
+            padding: 10px 22px !important;
             font-size: 13px !important;
             box-shadow: none !important;
+            font-family: 'DM Sans', sans-serif !important;
         }
         .mf-btn-confirm:hover { background: #e0e0e0 !important; }
         .mf-btn-danger {
@@ -120,31 +142,37 @@ const MF = (() => {
             color: #fff !important;
             font-weight: 700 !important;
             border-radius: 8px !important;
-            padding: 10px 24px !important;
+            padding: 10px 22px !important;
             font-size: 13px !important;
             box-shadow: none !important;
+            font-family: 'DM Sans', sans-serif !important;
         }
         .mf-btn-danger:hover { background: #dc2626 !important; }
         .mf-btn-cancel {
             background: transparent !important;
-            color: #888 !important;
-            border: 1px solid #333 !important;
+            color: #777 !important;
+            border: 1px solid #2a2a30 !important;
             font-weight: 600 !important;
             border-radius: 8px !important;
-            padding: 10px 24px !important;
+            padding: 10px 22px !important;
             font-size: 13px !important;
             box-shadow: none !important;
+            font-family: 'DM Sans', sans-serif !important;
         }
-        .mf-btn-cancel:hover { color: #ccc !important; border-color: #555 !important; }
+        .mf-btn-cancel:hover { color: #ccc !important; border-color: #555 !important; background: #1a1a1e !important; }
         .mf-input {
             background: #1a1a1e !important;
-            border: 1px solid #333 !important;
+            border: 1px solid #2a2a30 !important;
             border-radius: 8px !important;
             color: #fff !important;
-            font-size: 13px !important;
-            padding: 10px 14px !important;
+            font-size: 14px !important;
+            font-family: 'DM Sans', sans-serif !important;
+            padding: 11px 14px !important;
+            height: auto !important;
+            width: 100% !important;
+            margin: 0 !important;
         }
-        .mf-input:focus { border-color: #555 !important; box-shadow: none !important; }
+        .mf-input:focus { border-color: #555 !important; box-shadow: none !important; outline: none !important; }
 
         /* Toast */
         .mf-toast {
