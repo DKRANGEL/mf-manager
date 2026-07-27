@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
         body {
             overflow: auto;
@@ -811,7 +813,7 @@
     async function salvarContagem() {
         const data = document.getElementById('dataContagem').value;
         if (!data) {
-            alert('Preencha a data da contagem');
+            MF.alert('Preencha a data da contagem', 'warning', 'Campo obrigatório');
             return;
         }
 
@@ -848,10 +850,10 @@
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            alert(`Contagem salva: ${json.data.numero}`);
+            MF.toast(`Contagem salva: ${json.data.numero}`);
             carregarUltimaContagem();
         } catch (err) {
-            alert('Erro ao salvar: ' + err.message);
+            MF.alert('Erro ao salvar: ' + err.message);
         }
     }
 

@@ -10,6 +10,8 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
         body {
             overflow: auto;
@@ -659,11 +661,11 @@
             observacoes: document.getElementById('modalObs').value.trim()
         };
         if (!dados.nome) {
-            alert('Preencha o nome');
+            MF.alert('Preencha o nome', 'warning', 'Campo obrigatório');
             return;
         }
         if (!dados.codigo) {
-            alert('Preencha o código');
+            MF.alert('Preencha o código', 'warning', 'Campo obrigatório');
             return;
         }
 
@@ -679,24 +681,26 @@
             fecharModal();
             recarregarProdutos();
         } catch (err) {
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
     async function deletarProduto(id, nome) {
-        if (!confirm(`Remover "${nome}" do catálogo?`)) return;
+        const _ok = await MF.confirm(`Remover "${nome}" do catálogo?`, { title: 'Remover produto', confirmText: 'Remover', danger: true });
+        if (!_ok) return;
         try {
             const res = await fetch(`/api/catalogo/item/${id}`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             recarregarProdutos();
         } catch (err) {
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
     async function importarTiny() {
-        if (!confirm('Importar todos os produtos direto da API do Tiny?\n\nAtualiza nome, categoria e unidade dos existentes. Adiciona os que ainda não estão cadastrados.\n\nPreço e estoque NÃO vêm do Tiny — são geridos aqui.\n\nIsso pode levar alguns segundos.')) return;
+        const _ok = await MF.confirm('Atualiza nome, categoria e unidade dos existentes. Adiciona os que ainda não estão cadastrados.\n\nPreço e estoque NÃO vêm do Tiny — são geridos aqui.\n\nIsso pode levar alguns segundos.', { title: 'Importar do Tiny?', confirmText: 'Importar' });
+        if (!_ok) return;
         const btn = document.querySelector('[onclick="importarTiny()"]');
         if (btn) btn.disabled = true;
         try {
@@ -704,10 +708,10 @@
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             const ignorados = json.ignorados > 0 ? `, ${json.ignorados} ignorados (sem código)` : '';
-            alert(`Importação concluída!\n\n${json.novos} novos • ${json.atualizados} atualizados${ignorados}\nTotal no catálogo: ${json.total} produtos`);
+            MF.toast(`Importação concluída!\n\n${json.novos} novos • ${json.atualizados} atualizados${ignorados}\nTotal no catálogo: ${json.total} produtos`);
             carregarDados();
         } catch (err) {
-            alert('Erro na importação: ' + err.message);
+            MF.alert('Erro na importação: ' + err.message);
         } finally {
             if (btn) btn.disabled = false;
         }
@@ -731,19 +735,20 @@
             recarregarProdutos();
         } catch (err) {
             if (label) label.innerHTML = originalContent;
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
     async function removerImagem(id) {
-        if (!confirm('Remover imagem deste produto?')) return;
+        const _ok = await MF.confirm('Remover imagem deste produto?', { title: 'Remover imagem', confirmText: 'Remover', danger: true });
+        if (!_ok) return;
         try {
             const res = await fetch(`/api/catalogo/item/${id}/imagem`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             recarregarProdutos();
         } catch (err) {
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
@@ -753,7 +758,7 @@
 
     // ── RENOMEAR CATEGORIA ──
     async function renomearCategoria(categoriaAtual) {
-        const nova = prompt(`Renomear categoria "${categoriaAtual}" para:`, categoriaAtual);
+        const nova = await MF.prompt(`Renomear categoria "${categoriaAtual}" para:`, categoriaAtual);
         if (!nova || nova.trim() === categoriaAtual) return;
         try {
             const res = await fetch('/api/catalogo/categoria/renomear', {
@@ -763,10 +768,10 @@
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            alert(`Categoria renomeada! ${json.atualizados} produto(s) atualizado(s).`);
+            MF.toast(`Categoria renomeada! ${json.atualizados} produto(s) atualizado(s).`);
             carregarDados();
         } catch (err) {
-            alert('Erro: ' + err.message);
+            MF.alert('Erro: ' + err.message);
         }
     }
 

@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background: #09090a; color: #fff; font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
@@ -364,7 +366,7 @@ async function iniciarCamera() {
         btn.classList.add('ativa');
     } catch (err) {
         btn.textContent = 'Ativar câmera';
-        alert('Não foi possível acessar a câmera. Verifique as permissões do browser.');
+        MF.alert('Não foi possível acessar a câmera. Verifique as permissões do browser.', 'warning', 'Câmera indisponível');
         console.error(err);
     }
 }
@@ -420,12 +422,12 @@ function processarTextoQR(texto) {
         else { sku = texto.toUpperCase().trim(); cx = 0; }
     }
 
-    if (!sku) { bip(false); alert('Código não reconhecido'); return; }
+    if (!sku) { bip(false); MF.alert('Código não reconhecido', 'warning', 'QR inválido'); return; }
 
     const produto = catalogo[sku];
     if (!produto) {
         bip(false);
-        alert(`Produto "${sku}" não encontrado no catálogo`);
+        MF.alert(`Produto "${sku}" não encontrado no catálogo`, 'warning', 'Produto não encontrado');
         return;
     }
 
@@ -554,7 +556,8 @@ async function finalizar() {
     const tipo = modo === 'saida' ? 'saida' : 'entrada';
     const total = batch.reduce((s, b) => s + b.qtd_un, 0);
 
-    if (!confirm(`Confirmar ${tipo} de ${total} UN em ${batch.length} produto(s)?`)) return;
+    const _ok = await MF.confirm(`Confirmar ${tipo} de ${total} UN em ${batch.length} produto(s)?`, { confirmText: tipo === 'saida' ? 'Confirmar saída' : 'Confirmar entrada' });
+    if (!_ok) return;
 
     await pararCamera();
 
@@ -581,7 +584,7 @@ async function finalizar() {
         document.getElementById('sucessoDesc').textContent = `${json.registrados} produto(s) · ${total} UN registradas no estoque`;
         document.getElementById('sucessoOverlay').classList.add('visivel');
     } catch (err) {
-        alert('Erro ao registrar: ' + err.message);
+        MF.alert('Erro ao registrar: ' + err.message);
     }
 }
 

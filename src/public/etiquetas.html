@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
         body { overflow: auto; background: #050505; }
         .page-container { max-width: 1280px; margin: 0 auto; padding: 32px 28px 60px; }
@@ -310,8 +312,8 @@ async function salvarVideo() {
         const json = await res.json();
         if (!json.success) throw new Error(json.error);
         produtoAtual.video_id = id;
-        alert(id ? `Vídeo ${id} salvo!` : 'Vídeo removido.');
-    } catch (err) { alert('Erro: ' + err.message); }
+        MF.toast(id ? `Vídeo ${id} salvo!` : 'Vídeo removido.');
+    } catch (err) { MF.alert('Erro: ' + err.message); }
 }
 
 // ── TAMANHOS ──

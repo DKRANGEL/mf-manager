@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
         body { overflow: auto; background: #09090a; }
 
@@ -777,8 +779,9 @@ function adicionarSecao(dados) {
     }, 50);
 }
 
-function removerSecao(id) {
-    if (!confirm('Remover esta seção?')) return;
+async function removerSecao(id) {
+    const _ok = await MF.confirm('Remover esta seção?', { title: 'Remover seção', confirmText: 'Remover', danger: true });
+    if (!_ok) return;
     estado.secoes = estado.secoes.filter(s => s.id !== id);
     renderSecoes();
 }
@@ -1456,7 +1459,7 @@ function coletarEstado() {
 
 async function salvarRascunho() {
     coletarEstado();
-    if (!estado.cabecalho.cliente) { alert('Preencha o nome do cliente'); return; }
+    if (!estado.cabecalho.cliente) { MF.alert('Preencha o nome do cliente', 'warning', 'Campo obrigatório'); return; }
 
     const totalGeral = calcTotalGeral();
     const totalItens = estado.secoes.reduce((s, sec) => s + sec.itens.length, 0);
@@ -1483,7 +1486,7 @@ async function salvarRascunho() {
         if (!json.success) throw new Error(json.error);
         window.location.href = '/pedidos';
     } catch (err) {
-        alert('Erro: ' + err.message);
+        MF.alert('Erro: ' + err.message);
     }
 }
 
