@@ -171,8 +171,18 @@ const MF = (() => {
         .swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(74,222,128,0.3) !important; }
         .swal2-icon.swal2-question { border-color: #60a5fa !important; color: #60a5fa !important; }
 
+        /* Container — garante centralização em qualquer tela */
+        .swal2-container {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            padding: 20px !important;
+        }
         /* Backdrop */
-        .swal2-backdrop-show { backdrop-filter: blur(4px) !important; background: rgba(0,0,0,0.7) !important; }
+        .swal2-backdrop-show { backdrop-filter: blur(4px) !important; background: rgba(0,0,0,0.75) !important; }
     `;
     const style = document.createElement('style');
     style.textContent = css;
