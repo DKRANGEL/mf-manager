@@ -44,17 +44,22 @@ src/
 │   ├── produtos.html       # CRUD do catálogo de produtos
 │   └── equipamentos.html   # CRUD de equipamentos
 ├── routes/
-│   ├── catalogo.js         # /api/catalogo — CRUD produtos + importar-tiny
+│   ├── catalogo.js         # /api/catalogo — CRUD produtos
 │   ├── pedidos.js          # /api/pedidos — CRUD + baixa de estoque
 │   ├── contagens.js        # /api/contagens — salvar e listar contagens
 │   ├── estoque.js          # /api/estoque — saldo em tempo real
-│   ├── equipamentos.js     # /api/equipamentos — CRUD equipamentos + OS
-│   ├── api.js              # /api — rotas legadas (Tiny proxy, imagem)
+│   ├── equipamentos.js     # /api/equipamentos — CRUD equipamentos
+│   ├── movimentos.js       # /api/movimentos — coletor + log
+│   ├── auth.js             # /api/auth — login, usuários, senhas
+│   ├── auditoria.js        # /api/auditoria — trilha de ações (admin)
 │   └── bot.js              # /bot — catálogo para FastZap (autenticado)
+├── middleware/
+│   ├── sessao.js           # cookie HMAC + requireAuth
+│   ├── auditoria.js        # registro automático de ações
+│   └── auth.js             # requireApiKey (bot)
 └── utils/
     ├── storage.js          # readJSON, writeJSONAtomic, listJSON
-    ├── tinyClient.js       # TinyClient — API v2 do Tiny ERP
-    ├── catalogoCache.js    # cache de produtos Tiny em memória (TTL 10 min)
+    ├── catalogoCache.js    # catálogo do bot — 100% local (produtos + saldo)
     ├── initData.js         # cria arquivos/diretórios na inicialização
     ├── parserPedido.js     # parser de texto → itens de pedido
     ├── validadorCatalogo.js
@@ -74,7 +79,6 @@ src/
 | DELETE | `/api/catalogo/item/:id` | Remove produto |
 | PUT | `/api/catalogo/item/:id/imagem` | Upload de imagem |
 | DELETE | `/api/catalogo/item/:id/imagem` | Remove imagem |
-| **POST** | `/api/catalogo/importar-tiny` | **Puxa todos os produtos da API do Tiny e mescla com produtos.json** |
 | GET | `/api/pedidos` | Lista pedidos |
 | POST | `/api/pedidos` | Salva rascunho |
 | PUT | `/api/pedidos/:numero` | Atualiza pedido |
@@ -225,6 +229,9 @@ systemctl status nginx          # status do Nginx
 
 ---
 
-## Sobre o Tiny ERP
+## Independência do Tiny ERP
 
-O sistema foi migrado para ser **independente do Tiny**. O Tiny é usado apenas como fonte de importação inicial de produtos via `POST /api/catalogo/importar-tiny`. Todo o controle de estoque, pedidos e preços é feito neste sistema. A variável `TINY_API_TOKEN` no `.env` é usada pelo `TinyClient` (API v2).
+O sistema é **100% independente do Tiny** desde julho/2026. Todo o código relacionado
+(TinyClient, rotas proxy, importação, cache remoto) foi removido. Catálogo, estoque,
+pedidos e preços são geridos exclusivamente neste sistema. A variável `TINY_API_TOKEN`
+pode ser removida do `.env`.

@@ -13,7 +13,7 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 - **Pedidos de venda** — criar, emitir e controlar baixa de estoque bidirecional
 - **Estoque em tempo real** — saldo por produto calculado a partir da última contagem + movimentos
 - **Contagem física** — registrar contagens por categoria com exportação em PDF
-- **Catálogo de produtos** — CRUD com upload de imagem, autocomplete e importação do Tiny ERP
+- **Catálogo de produtos** — CRUD com upload de imagem e autocomplete
 - **Equipamentos** — cadastro e ordens de serviço
 - **Mobile-first** — interface otimizada para uso no celular pelo Mateus (usuário principal)
 
@@ -36,7 +36,6 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 ### Pré-requisitos
 
 - Node.js 18+
-- Token da API do Tiny ERP (para importação de produtos)
 
 ### Instalação
 
@@ -51,7 +50,6 @@ npm run dev
 ### Variáveis de ambiente
 
 ```env
-TINY_API_TOKEN=seu_token_aqui   # API v2 do Tiny ERP
 BOT_API_KEY=chave_do_fastzap    # autenticação do endpoint /bot
 PORT=3003                        # porta local (produção usa 8080)
 NODE_ENV=production
@@ -70,7 +68,7 @@ Acesse `http://localhost:3003`.
 | `/emitir` | Criar ou editar pedido de venda |
 | `/estoque` | Saldo em tempo real por produto |
 | `/contagem` | Registrar contagem física de estoque |
-| `/produtos` | Catálogo de produtos (CRUD + importar do Tiny) |
+| `/produtos` | Catálogo de produtos (CRUD) |
 | `/equipamentos` | Cadastro de equipamentos e ordens de serviço |
 
 ---
@@ -81,7 +79,6 @@ Acesse `http://localhost:3003`.
 |--------|------|-----------|
 | GET | `/api/catalogo/catalogo` | Lista produtos por categoria |
 | GET | `/api/catalogo/buscar?q=` | Autocomplete de produtos |
-| POST | `/api/catalogo/importar-tiny` | Importa todos os produtos da API do Tiny |
 | GET | `/api/pedidos` | Lista pedidos |
 | PUT | `/api/pedidos/:numero/baixa` | Ativa/reverte baixa de estoque |
 | POST | `/api/contagens` | Salva contagem física |

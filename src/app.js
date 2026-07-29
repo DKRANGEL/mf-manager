@@ -3,7 +3,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const apiRoutes = require('./routes/api');
 const equipamentosRoutes = require('./routes/equipamentos');
 const botRoutes = require('./routes/bot');
 const catalogoRoutes = require('./routes/catalogo');
@@ -53,37 +52,9 @@ function createApp() {
         }
     }));
 
-    // ─── Config pública ─────────────────────────────────────────────────────────
-    app.get('/config', (req, res) => {
-        const config = require(path.join(__dirname, '..', 'config.json'));
-        res.json(config);
-    });
-
-    // ─── Upload de imagens ───────────────────────────────────────────────────────
-    app.post('/upload/produto', express.raw({type: 'image/*', limit: '5mb'}), (req, res) => {
-        const sku = req.query.sku;
-        const ext = req.query.ext || '.png';
-
-        if (!sku) return res.status(400).json({error: 'SKU obrigatório'});
-
-        const filePath = path.join(produtosDir, `${sku}${ext}`);
-        fs.writeFileSync(filePath, req.body);
-
-        fetch(`http://localhost:${process.env.PORT || 3003}/api/invalidate-image-cache`, {method: 'POST'}).catch(() => {
-        });
-
-        res.json({success: true, path: `/public/produtos/${sku}${ext}`});
-    });
-
-    app.get('/upload/produtos', (req, res) => {
-        const files = fs.readdirSync(produtosDir);
-        res.json({success: true, files});
-    });
-
     // ─── Rotas API ───────────────────────────────────────────────────────────────
     app.use('/api/equipamentos', equipamentosRoutes);
     app.use('/api/pedidos', pedidosRoutes);
-    app.use('/api', apiRoutes);
     app.use('/api/catalogo', catalogoRoutes);
     app.use('/api/contagens', contagensRoutes);
     app.use('/api/estoque', estoqueRoutes);

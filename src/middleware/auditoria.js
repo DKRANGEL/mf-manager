@@ -37,7 +37,6 @@ const REGRAS = [
     ['DELETE', /^\/api\/catalogo\/item\/(\d+)\/imagem$/,  (req, m) => ({ acao: 'Removeu imagem de produto', detalhe: `id ${m[1]}` })],
     ['PUT',    /^\/api\/catalogo\/item\/(\d+)$/,          (req, m) => ({ acao: 'Editou produto', detalhe: `${req.body?.codigo || 'id ' + m[1]}` })],
     ['DELETE', /^\/api\/catalogo\/item\/(\d+)$/,          (req, m) => ({ acao: 'Excluiu produto', detalhe: `id ${m[1]}` })],
-    ['POST',   /^\/api\/catalogo\/importar-tiny$/,        () => ({ acao: 'Importou produtos do Tiny', detalhe: '' })],
     ['PUT',    /^\/api\/catalogo\/categoria\/renomear$/,  (req) => ({ acao: 'Renomeou categoria', detalhe: `${req.body?.categoria_atual || ''} → ${req.body?.categoria_nova || ''}` })],
 
     ['POST',   /^\/api\/contagens\/?$/,                   (req) => ({ acao: 'Registrou contagem de estoque', detalhe: `${(req.body?.itens || []).length} itens` })],

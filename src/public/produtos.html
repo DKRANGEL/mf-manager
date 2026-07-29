@@ -415,7 +415,6 @@
             <span class="brand-sub">Magic Fireworks — Catálogo</span>
         </div>
         <div class="header-actions">
-            <button class="btn-back" onclick="importarTiny()" style="border-color: #555; color: #fff;"><i data-lucide="download"></i> Importar do Tiny</button>
             <a href="/" class="btn-back">← Voltar</a>
             <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Produto</button>
         </div>
@@ -541,7 +540,7 @@
         document.getElementById('stats').textContent = `${lista.length} produtos • ${categorias.length} categorias`;
 
         if (lista.length === 0) {
-            container.innerHTML = '<div class="empty-msg">Nenhum produto encontrado. Use "Importar do Tiny" ou "+ Novo Produto".</div>';
+            container.innerHTML = '<div class="empty-msg">Nenhum produto encontrado. Use "+ Novo Produto" para cadastrar.</div>';
             return;
         }
 
@@ -695,25 +694,6 @@
             recarregarProdutos();
         } catch (err) {
             MF.alert(err.message);
-        }
-    }
-
-    async function importarTiny() {
-        const _ok = await MF.confirm('Atualiza nome, categoria e unidade dos existentes. Adiciona os que ainda não estão cadastrados.\n\nPreço e estoque NÃO vêm do Tiny — são geridos aqui.\n\nIsso pode levar alguns segundos.', { title: 'Importar do Tiny?', confirmText: 'Importar' });
-        if (!_ok) return;
-        const btn = document.querySelector('[onclick="importarTiny()"]');
-        if (btn) btn.disabled = true;
-        try {
-            const res = await fetch('/api/catalogo/importar-tiny', {method: 'POST'});
-            const json = await res.json();
-            if (!json.success) throw new Error(json.error);
-            const ignorados = json.ignorados > 0 ? `, ${json.ignorados} ignorados (sem código)` : '';
-            MF.toast(`Importação concluída!\n\n${json.novos} novos • ${json.atualizados} atualizados${ignorados}\nTotal no catálogo: ${json.total} produtos`);
-            carregarDados();
-        } catch (err) {
-            MF.alert('Erro na importação: ' + err.message);
-        } finally {
-            if (btn) btn.disabled = false;
         }
     }
 

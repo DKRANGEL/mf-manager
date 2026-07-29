@@ -1,6 +1,6 @@
 ﻿// ===================== ROTAS: CATÁLOGO DE PRODUTOS PRÓPRIO =====================
 // CRUD de produtos salvos em data/produtos.json (storage atômico)
-// + seed read-only a partir do catalogo-cache.json (Tiny).
+// Catálogo 100% gerido neste sistema.
 //
 // Montado em /api/catalogo — NÃO em /api/produtos, pra não colidir com
 // /api/produtos/estoque que vive no routes/api.js.
@@ -15,7 +15,6 @@ const router = express.Router();
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const PRODUTOS_FILE = path.join(DATA_DIR, 'produtos.json');
-const CACHE_FILE = path.join(DATA_DIR, 'catalogo-cache.json');
 
 // ---- Helpers ----
 
@@ -158,65 +157,6 @@ router.put('/categoria/renomear', (req, res) => {
         res.json({ success: true, atualizados, categoria_nova });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// ===================== MIGRAÇÃO DO TINY (API direta) =====================
-
-// POST /api/catalogo/importar-tiny — puxa todos os produtos da API do Tiny e
-// mescla com produtos.json. Atualiza nome/categoria/unidade dos existentes e
-// adiciona os novos. Preço e estoque NÃO vêm do Tiny — são geridos aqui.
-const TinyClient = require('../utils/tinyClient');
-
-router.post('/importar-tiny', async (req, res) => {
-    try {
-        const token = process.env.TINY_API_TOKEN;
-        if (!token) {
-            return res.status(500).json({success: false, error: 'TINY_API_TOKEN não configurado no ambiente'});
-        }
-
-        const client = new TinyClient(token);
-        const tinyProdutos = await client.pesquisarTodosProdutos('');
-
-        if (tinyProdutos.length === 0) {
-            return res.status(400).json({success: false, error: 'Nenhum produto encontrado no Tiny'});
-        }
-
-        const db = lerProdutos();
-        const porCodigo = new Map(db.produtos.map(p => [p.codigo, p]));
-        let novos = 0, atualizados = 0, ignorados = 0;
-
-        for (const t of tinyProdutos) {
-            const codigo = (t.codigo || '').trim();
-            if (!codigo) { ignorados++; continue; }
-
-            if (porCodigo.has(codigo)) {
-                const p = porCodigo.get(codigo);
-                p.nome = t.nome || p.nome;
-                p.categoria = categoriaDoCodigo(codigo);
-                p.unidade = t.unidade || p.unidade;
-                atualizados++;
-            } else {
-                const novo = {
-                    id: db.proximo_id++,
-                    codigo,
-                    nome: t.nome || '',
-                    categoria: categoriaDoCodigo(codigo),
-                    preco: 0,
-                    unidade: t.unidade || 'UN',
-                    observacoes: '',
-                    data_cadastro: new Date().toISOString().split('T')[0]
-                };
-                db.produtos.push(novo);
-                porCodigo.set(codigo, novo);
-                novos++;
-            }
-        }
-
-        salvarProdutos(db);
-        res.json({success: true, novos, atualizados, ignorados, total: db.produtos.length});
-    } catch (err) {
-        res.status(500).json({success: false, error: err.message});
     }
 });
 
