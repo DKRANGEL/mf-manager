@@ -171,7 +171,7 @@ function _mfGerarSecaoHTML(sec) {
 
         let tds = `<td style="${tdC}font-weight:700;">${i+1}</td>`;
         if (cols?.imagem) {
-            tds += `<td style="${tdC}padding:4px 6px;">${item.imagem ? `<img src="/data/produtos/${esc(item.imagem)}" style="width:56px;height:56px;object-fit:contain;border-radius:4px;" onerror="this.style.visibility='hidden'">` : ''}</td>`;
+            tds += `<td style="${tdC}padding:4px 6px;">${item.imagem ? `<img src="/data/produtos/${esc(item.imagem)}?v=${item.imagem_v || 1}" style="width:56px;height:56px;object-fit:contain;border-radius:4px;" onerror="this.style.visibility='hidden'">` : ''}</td>`;
         }
         if (cols?.codigo) tds += `<td style="${td}font-family:monospace;font-weight:700;">${esc(item.codigo || '-')}</td>`;
         tds += `<td style="${td}">${esc(item.descricao || item.nome || '-')}</td>`;

@@ -882,9 +882,8 @@ function renderSecaoBody(sec) {
 }
 
 function renderItemCard(secId, item, idx) {
-    const v = Date.now();
     const imgEl = item.imagem
-        ? `<img class="item-img-sm" src="/data/produtos/${esc(item.imagem)}?v=${v}" onerror="this.style.display='none'">`
+        ? `<img class="item-img-sm" src="/data/produtos/${esc(item.imagem)}?v=${item.imagem_v || 1}" onerror="this.style.display='none'">`
         : `<div class="item-img-ph"><i data-lucide="box"></i></div>`;
 
     const vals = montarValsTexto(item);
@@ -1037,7 +1036,7 @@ function buscarProduto(q, secId) {
         }
         list.innerHTML = json.data.map(p => {
             const imgEl = p.imagem
-                ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}?v=${Date.now()}" onerror="this.style.display='none'">`
+                ? `<img class="ac-img" src="/data/produtos/${esc(p.imagem)}?v=${p.imagem_v || 1}" onerror="this.style.display='none'">`
                 : `<div class="ac-img-ph"><i data-lucide="box"></i></div>`;
             return `<div class="ac-item" onclick="adicionarItemDoAC('${secId}',${JSON.stringify(p).replace(/"/g, '&quot;')})">
                 ${imgEl}
@@ -1078,6 +1077,7 @@ function adicionarItemDoAC(secId, prod) {
     }
     sec.itens.push({
         codigo: prod.codigo, descricao: prod.nome, imagem: prod.imagem || null,
+        imagem_v: prod.imagem_v || 1,
         qtd: 1, unidade: prod.unidade || 'UN', v_unit: prod.preco || 0,
         total: prod.preco || 0, fator: prod.fator || 1,
         cx_master: null, cx_100: null, qtd_un: null,

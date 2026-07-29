@@ -230,6 +230,7 @@ router.put('/item/:id/imagem', upload.single('imagem'), (req, res) => {
         }
 
         db.produtos[idx].imagem = nomeArquivo;
+        db.produtos[idx].imagem_v = Date.now(); // versão p/ cache-bust
         salvarProdutos(db);
 
         res.json({ success: true, data: { imagem: nomeArquivo, url: `/data/produtos/${nomeArquivo}` } });
@@ -252,6 +253,7 @@ router.delete('/item/:id/imagem', (req, res) => {
             const filePath = path.join(PRODUTOS_IMG_DIR, nomeArquivo);
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             db.produtos[idx].imagem = null;
+            db.produtos[idx].imagem_v = Date.now();
             salvarProdutos(db);
         }
 
@@ -286,6 +288,7 @@ router.get('/buscar', (req, res) => {
             preco: p.preco,
             unidade: p.unidade,
             imagem: p.imagem || null,
+            imagem_v: p.imagem_v || 1,
             fator: p.fator || 1
         }));
 

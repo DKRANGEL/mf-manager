@@ -41,14 +41,13 @@ function createApp() {
 
     // ─── Static ─────────────────────────────────────────────────────────────────
     app.use('/public', express.static(path.join(__dirname, 'public')));
-    // Imagens: cache com revalidação — browser guarda a imagem mas confirma via
-    // ETag/Last-Modified a cada uso (304 = não rebaixa). O cache-bust ?v= nas
-    // telas garante URL nova quando a imagem muda.
+    // Imagens: cache longo — a URL leva ?v=imagem_v que muda quando a imagem
+    // muda, então o browser pode guardar por 30 dias sem revalidar nada.
     app.use('/data/produtos', express.static(path.join(__dirname, 'data', 'produtos'), {
         etag: true,
         lastModified: true,
         setHeaders: (res) => {
-            res.setHeader('Cache-Control', 'private, no-cache');
+            res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
         }
     }));
 
