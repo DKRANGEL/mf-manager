@@ -21,6 +21,44 @@ function hashSenha(senha, salt = null) {
     return `${salt}:${hash}`;
 }
 
+// ── Cifra reversível AES-256-GCM (chave SENHA_CRYPT_KEY no .env) ──
+// Permite ao admin visualizar senhas. Sem a chave no env, o recurso fica off
+// e o arquivo de usuários permanece ilegível.
+function chaveCrypt() {
+    const k = process.env.SENHA_CRYPT_KEY;
+    if (!k) return null;
+    return crypto.createHash('sha256').update(k).digest(); // 32 bytes
+}
+
+function cifrarSenha(senha) {
+    const key = chaveCrypt();
+    if (!key) return null;
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const enc = Buffer.concat([cipher.update(senha, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return `${iv.toString('base64')}:${tag.toString('base64')}:${enc.toString('base64')}`;
+}
+
+function decifrarSenha(cifrada) {
+    const key = chaveCrypt();
+    if (!key || !cifrada) return null;
+    try {
+        const [ivB, tagB, encB] = cifrada.split(':');
+        const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(ivB, 'base64'));
+        decipher.setAuthTag(Buffer.from(tagB, 'base64'));
+        return Buffer.concat([decipher.update(Buffer.from(encB, 'base64')), decipher.final()]).toString('utf8');
+    } catch {
+        return null;
+    }
+}
+
+// Define hash + cópia cifrada de uma vez
+function armazenarSenha(u, senha) {
+    u.senha_hash = hashSenha(senha);
+    u.senha_cifrada = cifrarSenha(senha);
+}
+
 function verificarSenha(senha, hashArmazenado) {
     const [salt, hashEsperado] = (hashArmazenado || '').split(':');
     if (!salt || !hashEsperado) return false;
@@ -68,6 +106,16 @@ router.post('/login', (req, res) => {
 
         // Reset rate limit em sucesso
         tentativas.delete(ip);
+
+        // Backfill: se ainda não há cópia cifrada e a chave existe, grava agora
+        if (!u.senha_cifrada && chaveCrypt()) {
+            const dbAtual = lerUsuarios();
+            const idxU = dbAtual.usuarios.findIndex(x => x.usuario === u.usuario);
+            if (idxU !== -1) {
+                dbAtual.usuarios[idxU].senha_cifrada = cifrarSenha(senha);
+                writeJSONAtomic(USUARIOS_FILE, dbAtual);
+            }
+        }
 
         const token = criarToken(u.usuario);
         setCookie(res, token);
@@ -125,7 +173,7 @@ router.put('/senha', (req, res) => {
 
         const db = lerUsuarios();
         const idx = db.usuarios.findIndex(x => x.usuario === logado.usuario);
-        db.usuarios[idx].senha_hash = hashSenha(senha_nova);
+        armazenarSenha(db.usuarios[idx], senha_nova);
         db.usuarios[idx].senha_alterada_em = new Date().toISOString();
         writeJSONAtomic(USUARIOS_FILE, db);
 
@@ -170,16 +218,46 @@ router.post('/usuarios', (req, res) => {
             return res.status(400).json({ success: false, error: `Usuário "${usuario}" já existe` });
         }
 
-        db.usuarios.push({
+        const novoUsuario = {
             usuario,
             nome,
-            senha_hash: hashSenha(SENHA_PADRAO),
             admin: !!req.body.admin,
             criado_em: new Date().toISOString(),
-        });
+        };
+        armazenarSenha(novoUsuario, SENHA_PADRAO);
+        db.usuarios.push(novoUsuario);
         writeJSONAtomic(USUARIOS_FILE, db);
 
         res.json({ success: true, usuario, senha_padrao: SENHA_PADRAO });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/auth/usuarios/:usuario/senha — revela a senha do usuário (admin)
+// Requer SENHA_CRYPT_KEY no .env. Sem a chave, retorna indisponível.
+router.get('/usuarios/:usuario/senha', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        if (!chaveCrypt()) {
+            return res.status(503).json({ success: false, error: 'SENHA_CRYPT_KEY não configurada no servidor' });
+        }
+
+        const db = lerUsuarios();
+        const u = db.usuarios.find(x => x.usuario === req.params.usuario);
+        if (!u) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+
+        const senha = decifrarSenha(u.senha_cifrada);
+        if (senha === null) {
+            return res.status(404).json({
+                success: false,
+                error: 'Senha não disponível — será registrada no próximo login ou troca de senha deste usuário'
+            });
+        }
+
+        res.json({ success: true, senha });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -232,7 +310,7 @@ router.put('/usuarios/:usuario', (req, res) => {
             if (senha.length < 6) {
                 return res.status(400).json({ success: false, error: 'A senha precisa de pelo menos 6 caracteres' });
             }
-            u.senha_hash = hashSenha(senha);
+            armazenarSenha(u, senha);
             u.senha_alterada_em = new Date().toISOString();
         }
 
@@ -253,7 +331,7 @@ router.put('/usuarios/:usuario/reset-senha', (req, res) => {
         const idx = db.usuarios.findIndex(x => x.usuario === req.params.usuario);
         if (idx === -1) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
 
-        db.usuarios[idx].senha_hash = hashSenha(SENHA_PADRAO);
+        armazenarSenha(db.usuarios[idx], SENHA_PADRAO);
         db.usuarios[idx].senha_alterada_em = null;
         writeJSONAtomic(USUARIOS_FILE, db);
 
@@ -291,12 +369,13 @@ function initUsuarios() {
     const db = lerUsuarios();
     if (db.usuarios.length === 0) {
         const senhaInicial = process.env.ADMIN_SENHA || 'magic2026';
-        db.usuarios.push({
+        const adminUser = {
             usuario: 'admin',
             nome: 'Administrador',
-            senha_hash: hashSenha(senhaInicial),
             criado_em: new Date().toISOString(),
-        });
+        };
+        armazenarSenha(adminUser, senhaInicial);
+        db.usuarios.push(adminUser);
         writeJSONAtomic(USUARIOS_FILE, db);
         console.log('[auth] Usuário admin criado (senha via ADMIN_SENHA no .env ou padrão)');
     }

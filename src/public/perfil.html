@@ -301,6 +301,9 @@
                         <div class="user-login">@${esc(u.usuario)}${u.senha_alterada_em ? '' : ' · senha padrão'}</div>
                     </div>
                     <div class="user-actions">
+                        <button class="btn-icon" onclick="verSenha('${esc(u.usuario)}')" title="Ver senha">
+                            <i data-lucide="eye"></i>
+                        </button>
                         <button class="btn-icon" onclick="abrirModalEditar('${esc(u.usuario)}','${esc(u.nome)}',${u.admin})" title="Editar usuário">
                             <i data-lucide="pencil"></i>
                         </button>
@@ -374,6 +377,26 @@
             carregarUsuarios();
         } catch (err) {
             MF.alert(err.message);
+        }
+    }
+
+    // ── VER SENHA ──
+    async function verSenha(usuario) {
+        try {
+            const res = await fetch(`/api/auth/usuarios/${encodeURIComponent(usuario)}/senha`);
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            Swal.fire({
+                background: '#121214',
+                color: '#e0e0e0',
+                title: `Senha de @${usuario}`,
+                html: `<div style="font-family:monospace;font-size:20px;font-weight:700;color:#4ade80;background:#1a1a1e;border:1px solid #2a2a30;border-radius:8px;padding:14px 20px;margin-top:8px;user-select:all;">${json.senha.replace(/</g,'&lt;')}</div>
+                       <div style="font-size:11px;color:#555;margin-top:12px;">Toque na senha para selecionar</div>`,
+                confirmButtonText: 'Fechar',
+                customClass: { popup: 'mf-popup', title: 'mf-title', confirmButton: 'mf-btn-confirm' },
+            });
+        } catch (err) {
+            MF.alert(err.message, 'warning', 'Senha indisponível');
         }
     }
 
