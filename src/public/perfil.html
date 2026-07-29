@@ -86,6 +86,22 @@
         .form-novo { display:none; margin-top:16px; padding-top:16px; border-top:1px solid #1e1e22; }
         .form-novo.visivel { display:block; }
 
+        /* Modal de edição */
+        .modal-overlay {
+            display:none; position:fixed; inset:0; z-index:500;
+            background:rgba(0,0,0,0.75); backdrop-filter:blur(4px);
+            align-items:center; justify-content:center; padding:20px;
+        }
+        .modal-overlay.visivel { display:flex; }
+        .modal-box {
+            width:100%; max-width:420px; background:#121214;
+            border:1px solid #29292e; border-radius:16px; padding:28px;
+            box-shadow:0 24px 80px rgba(0,0,0,0.8);
+        }
+        .modal-titulo { font-size:16px; font-weight:700; color:#fff; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+        .modal-fechar { background:none; border:none; color:#555; cursor:pointer; font-size:18px; padding:4px; }
+        .modal-fechar:hover { color:#fff; }
+
         @media (max-width:600px) {
             .campo-row { grid-template-columns:1fr; }
         }
@@ -178,6 +194,36 @@
 
 </div>
 
+<!-- MODAL EDITAR USUÁRIO -->
+<div class="modal-overlay" id="modalEditar">
+    <div class="modal-box">
+        <div class="modal-titulo">
+            Editar usuário
+            <button class="modal-fechar" onclick="fecharModalEditar()">✕</button>
+        </div>
+        <input type="hidden" id="editUsuarioOriginal">
+        <div class="campo">
+            <label>Login</label>
+            <input type="text" id="editUsuario" autocomplete="off">
+        </div>
+        <div class="campo">
+            <label>Nome</label>
+            <input type="text" id="editNome" autocomplete="off">
+        </div>
+        <div class="campo">
+            <label>Nova senha (deixe em branco para manter)</label>
+            <input type="text" id="editSenha" autocomplete="off" placeholder="Mín. 6 caracteres">
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+            <input type="checkbox" id="editAdmin" style="accent-color:#fff;">
+            <label for="editAdmin" style="font-size:12px;color:#888;cursor:pointer;">Administrador</label>
+        </div>
+        <button class="btn-primary" onclick="salvarEdicao()" style="width:100%;justify-content:center;">
+            Salvar alterações
+        </button>
+    </div>
+</div>
+
 <script>
     let me = null;
 
@@ -255,6 +301,9 @@
                         <div class="user-login">@${esc(u.usuario)}${u.senha_alterada_em ? '' : ' · senha padrão'}</div>
                     </div>
                     <div class="user-actions">
+                        <button class="btn-icon" onclick="abrirModalEditar('${esc(u.usuario)}','${esc(u.nome)}',${u.admin})" title="Editar usuário">
+                            <i data-lucide="pencil"></i>
+                        </button>
                         <button class="btn-icon" onclick="resetarSenha('${esc(u.usuario)}')" title="Resetar senha para padrão">
                             <i data-lucide="key-round"></i>
                         </button>
@@ -322,6 +371,51 @@
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             MF.toast(`Usuário @${usuario} excluído`);
+            carregarUsuarios();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    // ── EDITAR USUÁRIO ──
+    function abrirModalEditar(usuario, nome, admin) {
+        document.getElementById('editUsuarioOriginal').value = usuario;
+        document.getElementById('editUsuario').value = usuario;
+        document.getElementById('editUsuario').disabled = (usuario === 'admin');
+        document.getElementById('editNome').value = nome;
+        document.getElementById('editSenha').value = '';
+        document.getElementById('editAdmin').checked = admin;
+        document.getElementById('editAdmin').disabled = (usuario === 'admin' || usuario === me.usuario);
+        document.getElementById('modalEditar').classList.add('visivel');
+    }
+
+    function fecharModalEditar() {
+        document.getElementById('modalEditar').classList.remove('visivel');
+    }
+
+    document.getElementById('modalEditar').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalEditar();
+    });
+
+    async function salvarEdicao() {
+        const original = document.getElementById('editUsuarioOriginal').value;
+        const payload = {
+            novo_usuario: document.getElementById('editUsuario').value.trim(),
+            nome: document.getElementById('editNome').value.trim(),
+            admin: document.getElementById('editAdmin').checked,
+            senha: document.getElementById('editSenha').value,
+        };
+
+        try {
+            const res = await fetch(`/api/auth/usuarios/${encodeURIComponent(original)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast('Usuário atualizado!');
+            fecharModalEditar();
             carregarUsuarios();
         } catch (err) {
             MF.alert(err.message);

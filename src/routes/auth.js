@@ -185,6 +185,64 @@ router.post('/usuarios', (req, res) => {
     }
 });
 
+// PUT /api/auth/usuarios/:usuario — edita usuário: nome, login, admin, senha (admin)
+router.put('/usuarios/:usuario', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        const db = lerUsuarios();
+        const idx = db.usuarios.findIndex(x => x.usuario === req.params.usuario);
+        if (idx === -1) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+
+        const u = db.usuarios[idx];
+        const { nome, novo_usuario, admin, senha } = req.body;
+
+        // Renomear login
+        if (novo_usuario !== undefined && novo_usuario !== u.usuario) {
+            const novoLogin = novo_usuario.toLowerCase().trim().replace(/\s+/g, '');
+            if (u.usuario === 'admin') {
+                return res.status(400).json({ success: false, error: 'O login do usuário admin não pode ser alterado' });
+            }
+            if (!/^[a-z0-9._-]{3,20}$/.test(novoLogin)) {
+                return res.status(400).json({ success: false, error: 'Login inválido: 3-20 caracteres, letras minúsculas, números, ponto, hífen' });
+            }
+            if (db.usuarios.find(x => x.usuario === novoLogin)) {
+                return res.status(400).json({ success: false, error: `Login "${novoLogin}" já existe` });
+            }
+            u.usuario = novoLogin;
+        }
+
+        // Nome
+        if (nome !== undefined && nome.trim()) u.nome = nome.trim();
+
+        // Flag admin (não pode remover admin do usuário 'admin' nem de si mesmo)
+        if (admin !== undefined) {
+            if (u.usuario === 'admin' && !admin) {
+                return res.status(400).json({ success: false, error: 'O usuário admin não pode perder privilégios' });
+            }
+            if (u.usuario === logado.usuario && !admin) {
+                return res.status(400).json({ success: false, error: 'Você não pode remover seus próprios privilégios' });
+            }
+            u.admin = !!admin;
+        }
+
+        // Nova senha (opcional — em branco mantém a atual)
+        if (senha !== undefined && senha !== '') {
+            if (senha.length < 6) {
+                return res.status(400).json({ success: false, error: 'A senha precisa de pelo menos 6 caracteres' });
+            }
+            u.senha_hash = hashSenha(senha);
+            u.senha_alterada_em = new Date().toISOString();
+        }
+
+        writeJSONAtomic(USUARIOS_FILE, db);
+        res.json({ success: true, usuario: u.usuario });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // PUT /api/auth/usuarios/:usuario/reset-senha — reseta para senha padrão (admin)
 router.put('/usuarios/:usuario/reset-senha', (req, res) => {
     try {
