@@ -11,6 +11,8 @@ const pedidosRoutes = require('./routes/pedidos');
 const contagensRoutes = require('./routes/contagens');
 const estoqueRoutes = require('./routes/estoque');
 const movimentosRoutes = require('./routes/movimentos');
+const authRoutes = require('./routes/auth');
+const { requireAuth } = require('./middleware/sessao');
 
 function createApp() {
     const app = express();
@@ -25,6 +27,14 @@ function createApp() {
     // ─── Middleware ─────────────────────────────────────────────────────────────
     app.use(express.json());
     app.use(express.urlencoded({extended: true}));
+
+    // ─── Autenticação ────────────────────────────────────────────────────────────
+    // Protege tudo exceto /login, /api/auth/login, /p (QR clientes), /bot, /public
+    app.use('/api/auth', authRoutes);
+    app.get('/login', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    });
+    app.use(requireAuth);
 
     // ─── Static ─────────────────────────────────────────────────────────────────
     app.use('/public', express.static(path.join(__dirname, 'public')));

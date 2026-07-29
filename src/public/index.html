@@ -114,11 +114,23 @@
 
 <div class="header">
     <img src="/public/MagicFireworksLogo.jpeg" class="header-logo" alt="Magic Fireworks">
-    <div>
+    <div style="flex:1;">
         <div class="header-title">MF Manager</div>
         <span class="header-sub">Magic Fireworks — Sistema interno</span>
     </div>
+    <button onclick="sair()" style="background:transparent;border:1px solid #29292e;color:#555;padding:8px 14px;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;"
+            onmouseover="this.style.color='#ccc';this.style.borderColor='#555'"
+            onmouseout="this.style.color='#555';this.style.borderColor='#29292e'">
+        <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sair
+    </button>
 </div>
+
+<script>
+    async function sair() {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
+</script>
 
 <div class="nav-grid">
 

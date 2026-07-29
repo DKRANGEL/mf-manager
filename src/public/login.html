@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #09090a;
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 380px;
+            background: #121214;
+            border: 1px solid #29292e;
+            border-radius: 18px;
+            padding: 40px 32px 32px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+        }
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .logo-area img {
+            width: 64px; height: 64px;
+            border-radius: 12px;
+            object-fit: contain;
+            margin-bottom: 14px;
+        }
+        .logo-area h1 { color: #fff; font-size: 20px; font-weight: 700; }
+        .logo-area span {
+            font-size: 10px; color: #555; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px;
+        }
+        .campo { margin-bottom: 16px; }
+        .campo label {
+            display: block; font-size: 10px; font-weight: 700; color: #555;
+            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+        }
+        .campo input {
+            width: 100%; height: 46px; background: #1a1a1e;
+            border: 1px solid #2a2a30; border-radius: 10px;
+            padding: 0 14px; color: #fff; font-size: 14px;
+            font-family: inherit; outline: none; transition: 0.15s;
+        }
+        .campo input:focus { border-color: #555; }
+        .btn-entrar {
+            width: 100%; height: 48px; background: #fff; border: none;
+            border-radius: 10px; color: #000; font-size: 14px; font-weight: 700;
+            font-family: inherit; cursor: pointer; transition: 0.15s;
+            margin-top: 8px;
+        }
+        .btn-entrar:hover { background: #e0e0e0; }
+        .btn-entrar:disabled { opacity: 0.5; cursor: not-allowed; }
+        .erro {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #f87171; font-size: 12px;
+            padding: 10px 14px; border-radius: 8px;
+            margin-bottom: 16px; display: none;
+        }
+        .erro.visivel { display: block; }
+        .rodape {
+            text-align: center; margin-top: 24px;
+            font-size: 10px; color: #333;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <div class="logo-area">
+        <img src="/public/MagicFireworksLogo.jpeg" alt="Magic Fireworks">
+        <h1>MF Manager</h1>
+        <span>Magic Fireworks — Sistema interno</span>
+    </div>
+
+    <div class="erro" id="erroBox"></div>
+
+    <form onsubmit="entrar(event)">
+        <div class="campo">
+            <label>Usuário</label>
+            <input type="text" id="usuario" autocomplete="username" autofocus required>
+        </div>
+        <div class="campo">
+            <label>Senha</label>
+            <input type="password" id="senha" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn-entrar" id="btnEntrar">Entrar</button>
+    </form>
+
+    <div class="rodape">MF Manager · Magic Fireworks</div>
+</div>
+
+<script>
+    async function entrar(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnEntrar');
+        const erroBox = document.getElementById('erroBox');
+        erroBox.classList.remove('visivel');
+        btn.disabled = true;
+        btn.textContent = 'Entrando...';
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuario: document.getElementById('usuario').value.trim(),
+                    senha: document.getElementById('senha').value,
+                })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error || 'Erro ao entrar');
+            window.location.href = '/';
+        } catch (err) {
+            erroBox.textContent = err.message;
+            erroBox.classList.add('visivel');
+            btn.disabled = false;
+            btn.textContent = 'Entrar';
+        }
+    }
+</script>
+</body>
+</html>

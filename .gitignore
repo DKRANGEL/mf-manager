@@ -3,3 +3,9 @@ node_modules/
 .DS_Store
 dist/
 *.log
+
+# dados locais de desenvolvimento — produção usa Docker volume
+src/data/usuarios.json
+src/data/pedidos/
+src/data/movimentos/
+src/data/contagens/
