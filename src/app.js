@@ -38,9 +38,14 @@ function createApp() {
 
     // ─── Static ─────────────────────────────────────────────────────────────────
     app.use('/public', express.static(path.join(__dirname, 'public')));
+    // Imagens: cache com revalidação — browser guarda a imagem mas confirma via
+    // ETag/Last-Modified a cada uso (304 = não rebaixa). O cache-bust ?v= nas
+    // telas garante URL nova quando a imagem muda.
     app.use('/data/produtos', express.static(path.join(__dirname, 'data', 'produtos'), {
+        etag: true,
+        lastModified: true,
         setHeaders: (res) => {
-            res.setHeader('Cache-Control', 'no-store');
+            res.setHeader('Cache-Control', 'private, no-cache');
         }
     }));
 
