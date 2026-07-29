@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
+    <style>
+        body { overflow: auto; background: #050505; }
+        .page-container { max-width: 1200px; margin: 0 auto; padding: 32px 24px 60px; }
+
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+        .page-header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .page-header .sub { font-size:10px; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; display:block; }
+        .btn-back { background:transparent; border:1px solid #333; color:#888; padding:9px 16px; border-radius:var(--sb-radius); font-size:13px; cursor:pointer; text-decoration:none; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; }
+        .btn-back:hover { border-color:#555; color:#fff; }
+
+        /* Filtros */
+        .filtros-bar { background:#121214; border:1px solid #29292e; border-radius:10px; padding:14px 16px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+        .filtro-group { display:flex; flex-direction:column; gap:4px; }
+        .filtro-group label { font-size:9px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; }
+        .filtro-input { height:36px; background:#1a1a1e; border:1px solid #2a2a30; border-radius:6px; padding:0 10px; color:#fff; font-size:12px; font-family:var(--font); outline:none; min-width:130px; }
+        .filtro-input:focus { border-color:#444; }
+        select.filtro-input { appearance:none; }
+        .btn-filtrar { height:36px; padding:0 16px; background:#fff; border:none; color:#000; border-radius:6px; font-size:12px; font-weight:700; font-family:var(--font); cursor:pointer; white-space:nowrap; align-self:flex-end; }
+        .btn-filtrar:hover { background:#e0e0e0; }
+        .btn-limpar { height:36px; padding:0 14px; background:transparent; border:1px solid #333; color:#666; border-radius:6px; font-size:12px; font-family:var(--font); cursor:pointer; white-space:nowrap; align-self:flex-end; }
+        .btn-limpar:hover { border-color:#555; color:#ccc; }
+
+        /* Tabela */
+        #tabelaContainer { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .audit-table { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+        .audit-table thead th {
+            background:#0e0e10; color:#555; font-size:10px; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.8px; padding:10px 12px; text-align:left;
+            border-bottom:1px solid #1e1e22; position:sticky; top:0; z-index:10; white-space:nowrap;
+        }
+        .audit-table tbody td { padding:9px 12px; border-bottom:1px solid #1a1a1e; vertical-align:middle; }
+        .audit-table tbody tr:hover { background:rgba(255,255,255,0.02); }
+
+        .td-data { font-family:var(--mono); font-size:11px; color:#666; white-space:nowrap; }
+        .td-user { font-family:var(--mono); font-size:11px; color:#60a5fa; white-space:nowrap; font-weight:600; }
+        .td-acao { color:#e0e0e0; }
+        .td-detalhe { color:#666; font-size:11px; font-family:var(--mono); }
+
+        .badge-tipo { display:inline-block; padding:2px 8px; border-radius:20px; font-size:9px; font-weight:700; text-transform:uppercase; }
+        .badge-acesso { background:rgba(255,255,255,0.05); color:#666; }
+        .badge-acao   { background:rgba(96,165,250,0.12); color:#60a5fa; }
+
+        .empty-msg { text-align:center; padding:60px 20px; color:#333; }
+        .stats-bar { font-size:11px; color:#444; margin-bottom:8px; }
+
+        @media (max-width:768px) {
+            .page-container { padding:20px 16px 60px; }
+            .filtros-bar { flex-direction:column; align-items:stretch; }
+            .filtro-group { width:100%; }
+            .filtro-input { min-width:0; width:100%; box-sizing:border-box; }
+            .btn-filtrar, .btn-limpar { width:100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Auditoria</h1>
+            <span class="sub">Rastreabilidade — quem fez o quê</span>
+        </div>
+        <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+    </div>
+
+    <div class="filtros-bar">
+        <div class="filtro-group">
+            <label>De</label>
+            <input type="date" class="filtro-input" id="fDe">
+        </div>
+        <div class="filtro-group">
+            <label>Até</label>
+            <input type="date" class="filtro-input" id="fAte">
+        </div>
+        <div class="filtro-group">
+            <label>Usuário</label>
+            <input type="text" class="filtro-input" id="fUsuario" placeholder="Ex: mateus">
+        </div>
+        <div class="filtro-group">
+            <label>Tipo</label>
+            <select class="filtro-input" id="fTipo">
+                <option value="">Todos</option>
+                <option value="acao">Ações</option>
+                <option value="acesso">Acessos a telas</option>
+            </select>
+        </div>
+        <div class="filtro-group" style="flex:1;">
+            <label>Buscar na ação</label>
+            <input type="text" class="filtro-input" id="fBusca" placeholder="Ex: pedido, produto, contagem..." style="width:100%;">
+        </div>
+        <button class="btn-filtrar" onclick="buscar()">Filtrar</button>
+        <button class="btn-limpar" onclick="limpar()">Limpar</button>
+    </div>
+
+    <div class="stats-bar" id="statsBar"></div>
+    <div id="tabelaContainer">
+        <div class="empty-msg">Carregando...</div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        lucide.createIcons();
+        // Verifica admin
+        try {
+            const res = await fetch('/api/auth/me');
+            const json = await res.json();
+            if (!json.success || !json.admin) {
+                window.location.href = '/';
+                return;
+            }
+        } catch { window.location.href = '/'; return; }
+
+        // Período padrão: últimos 7 dias
+        const hoje = new Date();
+        const h7 = new Date(hoje); h7.setDate(hoje.getDate() - 7);
+        document.getElementById('fAte').value = hoje.toISOString().split('T')[0];
+        document.getElementById('fDe').value  = h7.toISOString().split('T')[0];
+        buscar();
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
+
+    async function buscar() {
+        const params = new URLSearchParams();
+        const de = document.getElementById('fDe').value;
+        const ate = document.getElementById('fAte').value;
+        const usuario = document.getElementById('fUsuario').value.trim();
+        const tipo = document.getElementById('fTipo').value;
+        const q = document.getElementById('fBusca').value.trim();
+
+        if (de) params.set('de', de);
+        if (ate) params.set('ate', ate);
+        if (usuario) params.set('usuario', usuario);
+        if (tipo) params.set('tipo', tipo);
+        if (q) params.set('q', q);
+
+        document.getElementById('tabelaContainer').innerHTML = '<div class="empty-msg">Carregando...</div>';
+
+        try {
+            const res = await fetch(`/api/auditoria?${params}`);
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            renderTabela(json.data, json.total);
+        } catch (err) {
+            document.getElementById('tabelaContainer').innerHTML = `<div class="empty-msg">Erro: ${err.message}</div>`;
+        }
+    }
+
+    function limpar() {
+        document.getElementById('fUsuario').value = '';
+        document.getElementById('fTipo').value = '';
+        document.getElementById('fBusca').value = '';
+        const hoje = new Date();
+        const h7 = new Date(hoje); h7.setDate(hoje.getDate() - 7);
+        document.getElementById('fAte').value = hoje.toISOString().split('T')[0];
+        document.getElementById('fDe').value = h7.toISOString().split('T')[0];
+        buscar();
+    }
+
+    function renderTabela(lista, total) {
+        document.getElementById('statsBar').textContent =
+            `${total} registro${total !== 1 ? 's' : ''}${total > 500 ? ' (mostrando os 500 mais recentes)' : ''}`;
+
+        if (!lista.length) {
+            document.getElementById('tabelaContainer').innerHTML =
+                '<div class="empty-msg">Nenhum registro para os filtros aplicados.</div>';
+            return;
+        }
+
+        const rows = lista.map(r => {
+            const data = r.data ? new Date(r.data).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }) : '—';
+            const badge = r.tipo === 'acesso'
+                ? '<span class="badge-tipo badge-acesso">Acesso</span>'
+                : '<span class="badge-tipo badge-acao">Ação</span>';
+            return `<tr>
+                <td class="td-data">${data}</td>
+                <td class="td-user">@${esc(r.usuario)}</td>
+                <td>${badge}</td>
+                <td class="td-acao">${esc(r.acao)}</td>
+                <td class="td-detalhe">${esc(r.detalhe || '')}</td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('tabelaContainer').innerHTML = `
+            <table class="audit-table">
+                <thead><tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th>Ação</th>
+                    <th>Detalhe</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>

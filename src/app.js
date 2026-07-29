@@ -12,7 +12,9 @@ const contagensRoutes = require('./routes/contagens');
 const estoqueRoutes = require('./routes/estoque');
 const movimentosRoutes = require('./routes/movimentos');
 const authRoutes = require('./routes/auth');
+const auditoriaRoutes = require('./routes/auditoria');
 const { requireAuth } = require('./middleware/sessao');
+const { auditoria } = require('./middleware/auditoria');
 
 function createApp() {
     const app = express();
@@ -35,6 +37,8 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'login.html'));
     });
     app.use(requireAuth);
+    app.use(auditoria);
+    app.use('/api/auditoria', auditoriaRoutes);
 
     // ─── Static ─────────────────────────────────────────────────────────────────
     app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -131,6 +135,10 @@ function createApp() {
 
     app.get('/perfil', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'perfil.html'));
+    });
+
+    app.get('/auditoria', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'auditoria.html'));
     });
 
     // ─── Redirecionamento de QR Code ────────────────────────────────────────────

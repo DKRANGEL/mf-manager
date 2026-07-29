@@ -8,6 +8,7 @@ const PEDIDOS_ARQUIVO_DIR = path.join(PEDIDOS_DIR, 'arquivo');
 const CONTAGENS_DIR  = path.join(DATA_DIR, 'contagens');
 const MOVIMENTOS_DIR = path.join(DATA_DIR, 'movimentos');
 const PRODUTOS_IMG_DIR = path.join(DATA_DIR, 'produtos');
+const AUDITORIA_DIR = path.join(DATA_DIR, 'auditoria');
 
 const DEFAULTS = {
     'equipamentos.json': {
@@ -33,7 +34,7 @@ function initData() {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, {recursive: true});
     if (!fs.existsSync(ORDENS_DIR)) fs.mkdirSync(ORDENS_DIR, {recursive: true});
 
-    for (const dir of [PEDIDOS_DIR, PEDIDOS_ARQUIVO_DIR, CONTAGENS_DIR, MOVIMENTOS_DIR, PRODUTOS_IMG_DIR]) {
+    for (const dir of [PEDIDOS_DIR, PEDIDOS_ARQUIVO_DIR, CONTAGENS_DIR, MOVIMENTOS_DIR, PRODUTOS_IMG_DIR, AUDITORIA_DIR]) {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     }
 

@@ -119,6 +119,10 @@ router.post('/login', (req, res) => {
 
         const token = criarToken(u.usuario);
         setCookie(res, token);
+
+        // Auditoria de login (require tardio evita dependência circular)
+        try { require('../middleware/auditoria').registrarLogin(u.usuario); } catch {}
+
         res.json({ success: true, usuario: u.usuario, nome: u.nome });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

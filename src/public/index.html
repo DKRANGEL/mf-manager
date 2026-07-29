@@ -30,14 +30,26 @@
             text-transform: uppercase; letter-spacing: 1.2px; display: block; margin-top: 1px;
         }
 
-        /* ── GRID ── */
-        .nav-grid {
+        /* ── LAYOUT DE SEÇÕES ── */
+        .nav-wrap {
             max-width: 1100px;
-            margin: 32px auto 40px;
+            margin: 28px auto 48px;
             padding: 0 32px;
+        }
+        .nav-section { margin-bottom: 28px; }
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            padding-left: 2px;
+        }
+        .nav-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            gap: 12px;
         }
 
         /* ── CARDS ── */
@@ -97,16 +109,20 @@
 
         /* ── MOBILE ── */
         @media (max-width: 900px) {
-            .nav-grid { grid-template-columns: repeat(2, 1fr); padding: 0 16px; gap: 10px; }
+            .nav-wrap { padding: 0 16px; }
+            .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .nav-card.destaque { grid-column: span 2; }
         }
 
         @media (max-width: 500px) {
             .header { padding: 20px 16px 0; }
-            .nav-grid { grid-template-columns: 1fr; }
-            .nav-card.destaque { grid-column: span 1; flex-direction: row; }
-            .nav-card { flex-direction: row; align-items: center; padding: 18px 16px; }
-            .card-icon { width: 38px; height: 38px; }
+            .nav-grid { grid-template-columns: 1fr 1fr; }
+            .nav-card.destaque { grid-column: span 2; flex-direction: row; }
+            .nav-card { flex-direction: column; align-items: flex-start; padding: 14px; gap: 8px; }
+            .nav-card.destaque { flex-direction: row; align-items: center; padding: 18px 16px; }
+            .card-icon { width: 36px; height: 36px; }
+            .card-label { font-size: 13px; }
+            .card-sub { font-size: 10px; }
         }
     </style>
 </head>
@@ -135,73 +151,118 @@
         await fetch('/api/auth/logout', { method: 'POST' });
         window.location.href = '/login';
     }
+
+    // Mostra seção de administração só para admin
+    (async () => {
+        try {
+            const res = await fetch('/api/auth/me');
+            const json = await res.json();
+            if (json.success && json.admin) {
+                document.getElementById('secaoAdmin').style.display = '';
+                lucide.createIcons();
+            }
+        } catch {}
+    })();
 </script>
 
-<div class="nav-grid">
+<div class="nav-wrap">
 
-    <a href="/pedidos" class="nav-card destaque">
-        <div class="card-icon"><i data-lucide="file-text"></i></div>
-        <div class="card-body">
-            <div class="card-label">Pedidos</div>
-            <div class="card-sub">Ver, criar e emitir pedidos de venda</div>
+    <!-- DESTAQUE -->
+    <div class="nav-section">
+        <div class="nav-grid">
+            <a href="/pedidos" class="nav-card destaque">
+                <div class="card-icon"><i data-lucide="file-text"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Pedidos</div>
+                    <div class="card-sub">Ver, criar e emitir pedidos de venda</div>
+                </div>
+            </a>
         </div>
-    </a>
+    </div>
 
-    <a href="/estoque" class="nav-card">
-        <div class="card-icon"><i data-lucide="bar-chart-2"></i></div>
-        <div class="card-body">
-            <div class="card-label">Estoque</div>
-            <div class="card-sub">Saldo em tempo real</div>
+    <!-- ESTOQUE -->
+    <div class="nav-section">
+        <div class="nav-section-title">Estoque</div>
+        <div class="nav-grid">
+            <a href="/estoque" class="nav-card">
+                <div class="card-icon"><i data-lucide="bar-chart-2"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Saldo Atual</div>
+                    <div class="card-sub">Estoque em tempo real</div>
+                </div>
+            </a>
+            <a href="/contagem" class="nav-card">
+                <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Contagem</div>
+                    <div class="card-sub">Contagem física</div>
+                </div>
+            </a>
+            <a href="/coletor" class="nav-card">
+                <div class="card-icon"><i data-lucide="scan-line"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Coletor</div>
+                    <div class="card-sub">Bipar caixas</div>
+                </div>
+            </a>
+            <a href="/logs" class="nav-card">
+                <div class="card-icon"><i data-lucide="history"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Movimentos</div>
+                    <div class="card-sub">Entradas e saídas</div>
+                </div>
+            </a>
         </div>
-    </a>
+    </div>
 
-    <a href="/coletor" class="nav-card">
-        <div class="card-icon"><i data-lucide="scan-line"></i></div>
-        <div class="card-body">
-            <div class="card-label">Coletor</div>
-            <div class="card-sub">Bipar caixas — saída e entrada</div>
+    <!-- CADASTROS -->
+    <div class="nav-section">
+        <div class="nav-section-title">Cadastros</div>
+        <div class="nav-grid">
+            <a href="/produtos" class="nav-card">
+                <div class="card-icon"><i data-lucide="sparkles"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Produtos</div>
+                    <div class="card-sub">Catálogo de efeitos</div>
+                </div>
+            </a>
+            <a href="/equipamentos" class="nav-card">
+                <div class="card-icon"><i data-lucide="box"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Equipamentos</div>
+                    <div class="card-sub">Cadastro e inventário</div>
+                </div>
+            </a>
+            <a href="/etiquetas" class="nav-card">
+                <div class="card-icon"><i data-lucide="qr-code"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Etiquetas</div>
+                    <div class="card-sub">QR Codes para caixas</div>
+                </div>
+            </a>
         </div>
-    </a>
+    </div>
 
-    <a href="/contagem" class="nav-card">
-        <div class="card-icon"><i data-lucide="clipboard-list"></i></div>
-        <div class="card-body">
-            <div class="card-label">Contagem</div>
-            <div class="card-sub">Contagem física de estoque</div>
+    <!-- SISTEMA (admin) -->
+    <div class="nav-section" id="secaoAdmin" style="display:none;">
+        <div class="nav-section-title">Administração</div>
+        <div class="nav-grid">
+            <a href="/auditoria" class="nav-card">
+                <div class="card-icon"><i data-lucide="shield-check"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Auditoria</div>
+                    <div class="card-sub">Quem fez o quê no sistema</div>
+                </div>
+            </a>
+            <a href="/perfil" class="nav-card">
+                <div class="card-icon"><i data-lucide="users"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Usuários</div>
+                    <div class="card-sub">Gerenciar acessos</div>
+                </div>
+            </a>
         </div>
-    </a>
-
-    <a href="/produtos" class="nav-card">
-        <div class="card-icon"><i data-lucide="sparkles"></i></div>
-        <div class="card-body">
-            <div class="card-label">Produtos</div>
-            <div class="card-sub">Catálogo de efeitos</div>
-        </div>
-    </a>
-
-    <a href="/equipamentos" class="nav-card">
-        <div class="card-icon"><i data-lucide="box"></i></div>
-        <div class="card-body">
-            <div class="card-label">Equipamentos</div>
-            <div class="card-sub">Cadastro de equipamentos</div>
-        </div>
-    </a>
-
-    <a href="/etiquetas" class="nav-card">
-        <div class="card-icon"><i data-lucide="qr-code"></i></div>
-        <div class="card-body">
-            <div class="card-label">Etiquetas</div>
-            <div class="card-sub">Gerar QR Codes para caixas</div>
-        </div>
-    </a>
-
-    <a href="/logs" class="nav-card">
-        <div class="card-icon"><i data-lucide="history"></i></div>
-        <div class="card-body">
-            <div class="card-label">Log de Movimentos</div>
-            <div class="card-sub">Histórico de entradas e saídas</div>
-        </div>
-    </a>
+    </div>
 
 </div>
 
