@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
+    <style>
+        body { overflow: auto; background: #050505; }
+        .page-container { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+        .page-header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .page-header .sub { font-size:10px; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; display:block; }
+        .btn-back { background:transparent; border:1px solid #333; color:#888; padding:9px 16px; border-radius:var(--sb-radius); font-size:13px; cursor:pointer; text-decoration:none; transition:0.15s; font-family:var(--font); display:inline-flex; align-items:center; gap:6px; }
+        .btn-back:hover { border-color:#555; color:#fff; }
+
+        .card { background:#121214; border:1px solid #29292e; border-radius:14px; padding:24px; margin-bottom:16px; }
+        .card-title { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+        .card-sub { font-size:12px; color:#555; margin-bottom:18px; }
+
+        .campo { margin-bottom:14px; }
+        .campo label { display:block; font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:6px; }
+        .campo input {
+            width:100%; height:44px; background:#1a1a1e; border:1px solid #2a2a30;
+            border-radius:8px; padding:0 14px; color:#fff; font-size:14px;
+            font-family:var(--font); outline:none; transition:0.15s;
+        }
+        .campo input:focus { border-color:#555; }
+        .campo-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+        .btn-primary {
+            background:#fff; border:none; color:#000; padding:11px 22px;
+            border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;
+            transition:0.15s; font-family:var(--font);
+            display:inline-flex; align-items:center; gap:6px;
+        }
+        .btn-primary:hover { background:#e0e0e0; }
+        .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+
+        /* Usuário logado */
+        .me-info { display:flex; align-items:center; gap:14px; }
+        .me-avatar {
+            width:52px; height:52px; border-radius:50%; background:#1e1e24;
+            display:flex; align-items:center; justify-content:center;
+            font-size:20px; font-weight:800; color:#666;
+        }
+        .me-nome { font-size:16px; font-weight:700; color:#fff; }
+        .me-usuario { font-size:12px; color:#555; font-family:var(--mono); }
+        .badge-admin {
+            display:inline-block; background:rgba(96,165,250,0.12); color:#60a5fa;
+            font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px;
+            text-transform:uppercase; letter-spacing:0.5px; margin-left:8px; vertical-align:middle;
+        }
+
+        /* Lista de usuários */
+        .user-row {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 0; border-bottom:1px solid #1e1e22;
+        }
+        .user-row:last-child { border-bottom:none; }
+        .user-avatar {
+            width:36px; height:36px; border-radius:50%; background:#1e1e24;
+            display:flex; align-items:center; justify-content:center;
+            font-size:13px; font-weight:800; color:#555; flex-shrink:0;
+        }
+        .user-info { flex:1; min-width:0; }
+        .user-nome { font-size:13px; font-weight:600; color:#e0e0e0; }
+        .user-login { font-size:11px; color:#555; font-family:var(--mono); }
+        .user-actions { display:flex; gap:6px; }
+        .btn-icon {
+            width:32px; height:32px; border-radius:6px; border:none;
+            background:transparent; color:#444; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; transition:0.15s;
+        }
+        .btn-icon:hover { background:rgba(255,255,255,0.06); color:#ccc; }
+        .btn-icon.danger:hover { color:#ff6060; background:rgba(255,80,80,0.08); }
+        .btn-icon .lucide { width:15px; height:15px; }
+
+        .form-novo { display:none; margin-top:16px; padding-top:16px; border-top:1px solid #1e1e22; }
+        .form-novo.visivel { display:block; }
+
+        @media (max-width:600px) {
+            .campo-row { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+
+    <div class="page-header">
+        <div>
+            <h1>Perfil</h1>
+            <span class="sub">MF Manager — Conta e usuários</span>
+        </div>
+        <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+    </div>
+
+    <!-- QUEM SOU EU -->
+    <div class="card">
+        <div class="me-info">
+            <div class="me-avatar" id="meAvatar">?</div>
+            <div>
+                <div class="me-nome" id="meNome">—<span class="badge-admin" id="meBadge" style="display:none;">Admin</span></div>
+                <div class="me-usuario" id="meUsuario">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TROCAR SENHA -->
+    <div class="card">
+        <div class="card-title"><i data-lucide="key-round" style="width:16px;height:16px;"></i> Trocar senha</div>
+        <div class="card-sub">Altere a senha do seu usuário</div>
+        <form onsubmit="trocarSenha(event)">
+            <div class="campo">
+                <label>Senha atual</label>
+                <input type="password" id="senhaAtual" autocomplete="current-password" required>
+            </div>
+            <div class="campo-row">
+                <div class="campo">
+                    <label>Nova senha</label>
+                    <input type="password" id="senhaNova" autocomplete="new-password" minlength="6" required>
+                </div>
+                <div class="campo">
+                    <label>Confirmar nova senha</label>
+                    <input type="password" id="senhaConfirma" autocomplete="new-password" minlength="6" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary" id="btnTrocar">
+                <i data-lucide="check"></i> Salvar nova senha
+            </button>
+        </form>
+    </div>
+
+    <!-- GESTÃO DE USUÁRIOS (admin) -->
+    <div class="card" id="cardUsuarios" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+                <div class="card-title"><i data-lucide="users" style="width:16px;height:16px;"></i> Usuários</div>
+                <div class="card-sub">Gerenciar quem acessa o sistema</div>
+            </div>
+            <button class="btn-primary" onclick="toggleFormNovo()" style="padding:8px 16px;font-size:12px;">
+                <i data-lucide="plus" style="width:14px;height:14px;"></i> Novo
+            </button>
+        </div>
+
+        <div class="form-novo" id="formNovo">
+            <div class="campo-row">
+                <div class="campo">
+                    <label>Usuário (login)</label>
+                    <input type="text" id="novoUsuario" placeholder="Ex: mateus" autocomplete="off">
+                </div>
+                <div class="campo">
+                    <label>Nome</label>
+                    <input type="text" id="novoNome" placeholder="Ex: Mateus Silva" autocomplete="off">
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <input type="checkbox" id="novoAdmin" style="accent-color:#fff;">
+                <label for="novoAdmin" style="font-size:12px;color:#888;cursor:pointer;">Administrador (pode gerenciar usuários)</label>
+            </div>
+            <div style="font-size:11px;color:#555;margin-bottom:14px;">
+                🔑 O usuário será criado com a senha padrão <strong style="color:#888;font-family:var(--mono);">magic2026</strong> — ele pode trocá-la depois no Perfil.
+            </div>
+            <button class="btn-primary" onclick="criarUsuario()">
+                <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Criar usuário
+            </button>
+        </div>
+
+        <div id="listaUsuarios" style="margin-top:8px;"></div>
+    </div>
+
+</div>
+
+<script>
+    let me = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        lucide.createIcons();
+        await carregarMe();
+        if (me?.admin) {
+            document.getElementById('cardUsuarios').style.display = '';
+            carregarUsuarios();
+        }
+    });
+
+    async function carregarMe() {
+        try {
+            const res = await fetch('/api/auth/me');
+            const json = await res.json();
+            if (!json.success) { window.location.href = '/login'; return; }
+            me = json;
+            document.getElementById('meNome').childNodes[0].textContent = json.nome;
+            document.getElementById('meUsuario').textContent = '@' + json.usuario;
+            document.getElementById('meAvatar').textContent = (json.nome || '?').trim()[0].toUpperCase();
+            if (json.admin) document.getElementById('meBadge').style.display = '';
+        } catch { window.location.href = '/login'; }
+    }
+
+    // ── TROCAR SENHA ──
+    async function trocarSenha(e) {
+        e.preventDefault();
+        const atual = document.getElementById('senhaAtual').value;
+        const nova = document.getElementById('senhaNova').value;
+        const confirma = document.getElementById('senhaConfirma').value;
+
+        if (nova !== confirma) {
+            MF.alert('A confirmação não confere com a nova senha', 'warning', 'Senhas diferentes');
+            return;
+        }
+
+        const btn = document.getElementById('btnTrocar');
+        btn.disabled = true;
+        try {
+            const res = await fetch('/api/auth/senha', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senha_atual: atual, senha_nova: nova })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast('Senha alterada com sucesso!');
+            document.getElementById('senhaAtual').value = '';
+            document.getElementById('senhaNova').value = '';
+            document.getElementById('senhaConfirma').value = '';
+        } catch (err) {
+            MF.alert(err.message);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ── USUÁRIOS (admin) ──
+    function toggleFormNovo() {
+        document.getElementById('formNovo').classList.toggle('visivel');
+    }
+
+    async function carregarUsuarios() {
+        try {
+            const res = await fetch('/api/auth/usuarios');
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+
+            document.getElementById('listaUsuarios').innerHTML = json.data.map(u => `
+                <div class="user-row">
+                    <div class="user-avatar">${(u.nome || '?').trim()[0].toUpperCase()}</div>
+                    <div class="user-info">
+                        <div class="user-nome">${esc(u.nome)}${u.admin ? '<span class="badge-admin">Admin</span>' : ''}</div>
+                        <div class="user-login">@${esc(u.usuario)}${u.senha_alterada_em ? '' : ' · senha padrão'}</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-icon" onclick="resetarSenha('${esc(u.usuario)}')" title="Resetar senha para padrão">
+                            <i data-lucide="key-round"></i>
+                        </button>
+                        ${u.usuario !== 'admin' && u.usuario !== me.usuario ? `
+                        <button class="btn-icon danger" onclick="excluirUsuario('${esc(u.usuario)}')" title="Excluir usuário">
+                            <i data-lucide="trash-2"></i>
+                        </button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    async function criarUsuario() {
+        const usuario = document.getElementById('novoUsuario').value.trim();
+        const nome = document.getElementById('novoNome').value.trim();
+        const admin = document.getElementById('novoAdmin').checked;
+
+        if (!usuario || !nome) {
+            MF.alert('Preencha usuário e nome', 'warning', 'Campos obrigatórios');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, nome, admin })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast(`Usuário @${json.usuario} criado com senha padrão`);
+            document.getElementById('novoUsuario').value = '';
+            document.getElementById('novoNome').value = '';
+            document.getElementById('novoAdmin').checked = false;
+            toggleFormNovo();
+            carregarUsuarios();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    async function resetarSenha(usuario) {
+        const ok = await MF.confirm(`Resetar a senha de @${usuario} para a senha padrão (magic2026)?`, { title: 'Resetar senha', confirmText: 'Resetar' });
+        if (!ok) return;
+        try {
+            const res = await fetch(`/api/auth/usuarios/${encodeURIComponent(usuario)}/reset-senha`, { method: 'PUT' });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast(`Senha de @${usuario} resetada para padrão`);
+            carregarUsuarios();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    async function excluirUsuario(usuario) {
+        const ok = await MF.confirm(`Excluir o usuário @${usuario}? Ele perderá o acesso ao sistema.`, { title: 'Excluir usuário', confirmText: 'Excluir', danger: true });
+        if (!ok) return;
+        try {
+            const res = await fetch(`/api/auth/usuarios/${encodeURIComponent(usuario)}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast(`Usuário @${usuario} excluído`);
+            carregarUsuarios();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>

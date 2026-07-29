@@ -89,7 +89,143 @@ router.get('/me', (req, res) => {
     if (!sessao) return res.status(401).json({ success: false });
     const db = lerUsuarios();
     const u = db.usuarios.find(x => x.usuario === sessao.u);
-    res.json({ success: true, usuario: sessao.u, nome: u?.nome || sessao.u });
+    res.json({ success: true, usuario: sessao.u, nome: u?.nome || sessao.u, admin: isAdmin(u) });
+});
+
+// ── Helpers de permissão ──
+function isAdmin(u) {
+    return !!u && (u.admin === true || u.usuario === 'admin');
+}
+
+function getUsuarioLogado(req) {
+    const sessao = validarToken(lerCookie(req));
+    if (!sessao) return null;
+    const db = lerUsuarios();
+    return db.usuarios.find(x => x.usuario === sessao.u) || null;
+}
+
+const SENHA_PADRAO = 'magic2026';
+
+// PUT /api/auth/senha — usuário logado troca a própria senha
+router.put('/senha', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!logado) return res.status(401).json({ success: false, error: 'Não autenticado' });
+
+        const { senha_atual, senha_nova } = req.body;
+        if (!senha_atual || !senha_nova) {
+            return res.status(400).json({ success: false, error: 'Senha atual e nova são obrigatórias' });
+        }
+        if (senha_nova.length < 6) {
+            return res.status(400).json({ success: false, error: 'A nova senha precisa de pelo menos 6 caracteres' });
+        }
+        if (!verificarSenha(senha_atual, logado.senha_hash)) {
+            return res.status(401).json({ success: false, error: 'Senha atual incorreta' });
+        }
+
+        const db = lerUsuarios();
+        const idx = db.usuarios.findIndex(x => x.usuario === logado.usuario);
+        db.usuarios[idx].senha_hash = hashSenha(senha_nova);
+        db.usuarios[idx].senha_alterada_em = new Date().toISOString();
+        writeJSONAtomic(USUARIOS_FILE, db);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/auth/usuarios — lista usuários (admin)
+router.get('/usuarios', (req, res) => {
+    const logado = getUsuarioLogado(req);
+    if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+    const db = lerUsuarios();
+    const lista = db.usuarios.map(u => ({
+        usuario: u.usuario,
+        nome: u.nome,
+        admin: isAdmin(u),
+        criado_em: u.criado_em,
+        senha_alterada_em: u.senha_alterada_em || null,
+    }));
+    res.json({ success: true, data: lista });
+});
+
+// POST /api/auth/usuarios — cria usuário com senha padrão (admin)
+router.post('/usuarios', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        const usuario = (req.body.usuario || '').toLowerCase().trim().replace(/\s+/g, '');
+        const nome = (req.body.nome || '').trim();
+
+        if (!usuario || !nome) return res.status(400).json({ success: false, error: 'Usuário e nome são obrigatórios' });
+        if (!/^[a-z0-9._-]{3,20}$/.test(usuario)) {
+            return res.status(400).json({ success: false, error: 'Usuário: 3-20 caracteres, apenas letras minúsculas, números, ponto, hífen' });
+        }
+
+        const db = lerUsuarios();
+        if (db.usuarios.find(x => x.usuario === usuario)) {
+            return res.status(400).json({ success: false, error: `Usuário "${usuario}" já existe` });
+        }
+
+        db.usuarios.push({
+            usuario,
+            nome,
+            senha_hash: hashSenha(SENHA_PADRAO),
+            admin: !!req.body.admin,
+            criado_em: new Date().toISOString(),
+        });
+        writeJSONAtomic(USUARIOS_FILE, db);
+
+        res.json({ success: true, usuario, senha_padrao: SENHA_PADRAO });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// PUT /api/auth/usuarios/:usuario/reset-senha — reseta para senha padrão (admin)
+router.put('/usuarios/:usuario/reset-senha', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        const db = lerUsuarios();
+        const idx = db.usuarios.findIndex(x => x.usuario === req.params.usuario);
+        if (idx === -1) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+
+        db.usuarios[idx].senha_hash = hashSenha(SENHA_PADRAO);
+        db.usuarios[idx].senha_alterada_em = null;
+        writeJSONAtomic(USUARIOS_FILE, db);
+
+        res.json({ success: true, senha_padrao: SENHA_PADRAO });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// DELETE /api/auth/usuarios/:usuario — remove usuário (admin)
+router.delete('/usuarios/:usuario', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        const alvo = req.params.usuario;
+        if (alvo === logado.usuario) return res.status(400).json({ success: false, error: 'Você não pode excluir a si mesmo' });
+        if (alvo === 'admin') return res.status(400).json({ success: false, error: 'O usuário admin não pode ser excluído' });
+
+        const db = lerUsuarios();
+        const idx = db.usuarios.findIndex(x => x.usuario === alvo);
+        if (idx === -1) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+
+        db.usuarios.splice(idx, 1);
+        writeJSONAtomic(USUARIOS_FILE, db);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // ── Inicialização: cria usuário admin padrão se não existir nenhum ──
