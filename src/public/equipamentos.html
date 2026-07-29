@@ -6,443 +6,181 @@
     <title>Equipamentos — MF Manager</title>
     <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js"></script>
     <style>
-        body {
-            overflow: auto;
-            background: #050505;
-        }
+        body { overflow: auto; background: #050505; }
 
-        .page-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 32px;
-        }
+        .page-container { max-width: 1200px; margin: 0 auto; padding: 32px 24px 60px; }
 
+        /* ── HEADER ── */
         .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 36px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
         }
-
-        .page-header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -0.3px;
+        .page-header h1 { font-size: 22px; font-weight: 700; color: #fff; }
+        .page-header .sub {
+            font-size: 10px; color: #555; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; display: block;
         }
-
-        .page-header .brand-sub {
-            font-size: 10px;
-            color: var(--sb-text-dim);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            margin-top: 4px;
-            display: block;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
         .btn-back {
-            background: transparent;
-            border: 1px solid var(--sb-border);
-            color: var(--sb-text-dim);
-            padding: 9px 16px;
-            border-radius: var(--sb-radius);
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.15s;
-            font-family: var(--font);
+            background: transparent; border: 1px solid #333; color: #888;
+            padding: 9px 16px; border-radius: var(--sb-radius); font-size: 13px;
+            cursor: pointer; text-decoration: none; transition: 0.15s; font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 6px;
         }
-
-        .btn-back:hover {
-            border-color: #444;
-            color: #fff;
-        }
+        .btn-back:hover { border-color: #555; color: #fff; }
 
         .btn-primary {
-            background: #fff;
-            border: none;
-            color: #000;
-            padding: 9px 20px;
-            border-radius: var(--sb-radius);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.15s;
-            font-family: var(--font);
+            background: #fff; border: none; color: #000; padding: 9px 20px;
+            border-radius: var(--sb-radius); font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: 0.15s; font-family: var(--font);
+            display: inline-flex; align-items: center; gap: 6px;
         }
-
-        .btn-primary:hover {
-            background: #e0e0e0;
-        }
+        .btn-primary:hover { background: #e0e0e0; }
 
         .btn-sm {
-            padding: 5px 10px;
-            font-size: 11px;
-            border-radius: 4px;
-            cursor: pointer;
-            border: none;
-            transition: 0.15s;
-            font-family: var(--font);
+            padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer;
+            border: none; transition: 0.15s; font-family: var(--font);
         }
+        .btn-edit { background: rgba(255,255,255,0.08); color: #999; }
+        .btn-edit:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-delete { background: rgba(255,255,255,0.04); color: #666; }
+        .btn-delete:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+        .btn-cancel { background: rgba(255,255,255,0.05); color: #888; padding: 10px 20px; font-size: 13px; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #ccc; }
 
-        .btn-edit {
-            background: rgba(255, 255, 255, 0.06);
-            color: #888;
-        }
-
-        .btn-edit:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-        }
-
-        .btn-delete {
-            background: rgba(255, 80, 80, 0.08);
-            color: #ff6060;
-        }
-
-        .btn-delete:hover {
-            background: rgba(255, 80, 80, 0.15);
-        }
-
-        .btn-save {
-            background: rgba(76, 217, 100, 0.1);
-            color: #4cd964;
-        }
-
-        .btn-save:hover {
-            background: rgba(76, 217, 100, 0.2);
-        }
-
-        .btn-cancel {
-            background: rgba(255, 255, 255, 0.04);
-            color: #666;
-        }
-
-        .btn-cancel:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #aaa;
-        }
-
-        /* Toolbar */
+        /* ── TOOLBAR ── */
         .toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-            align-items: center;
-            flex-wrap: wrap;
+            display: flex; gap: 12px; margin-bottom: 24px;
+            align-items: center; flex-wrap: wrap;
         }
-
         .search-box {
-            flex: 1;
-            min-width: 200px;
-            height: 40px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 14px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            font-family: var(--font);
-            transition: 0.15s;
+            flex: 1; min-width: 200px; height: 42px; background: #1a1a1e;
+            border: 1px solid #333; border-radius: 6px; padding: 0 14px;
+            color: #fff; font-size: 13px; outline: none; font-family: var(--font);
         }
-
-        .search-box:focus {
-            border-color: #444;
-        }
-
+        .search-box:focus { border-color: #666; }
         .filter-select {
-            height: 40px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 14px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            min-width: 180px;
-            font-family: var(--font);
+            height: 42px; background: #1a1a1e; border: 1px solid #333;
+            border-radius: 6px; padding: 0 14px; color: #fff; font-size: 13px;
+            outline: none; min-width: 180px; font-family: var(--font);
         }
+        .stats { font-size: 12px; color: #666; margin-left: auto; }
 
-        .stats {
-            font-size: 12px;
-            color: var(--sb-text-dim);
-            margin-left: auto;
-        }
+        /* ── TABELA ── */
+        #tabelaContainer { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-        /* Tabela */
-        .equip-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 13px;
-        }
-
+        .equip-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
         .equip-table thead th {
-            background: #0e0e10;
-            color: var(--sb-text-dim);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            padding: 12px 14px;
-            text-align: left;
-            border-bottom: 1px solid var(--sb-border);
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            background: #1a1a1e; color: #666; font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 14px;
+            text-align: left; border-bottom: 2px solid #29292e;
+            position: sticky; top: 0; z-index: 10;
         }
-
         .equip-table tbody td {
-            padding: 11px 14px;
-            border-bottom: 1px solid var(--sb-border);
-            vertical-align: middle;
+            padding: 8px 14px; border-bottom: 1px solid #29292e;
+            vertical-align: middle; height: 48px;
         }
+        .equip-table tbody tr:hover { background: rgba(255,255,255,0.03); }
 
-        .equip-table tbody tr {
-            transition: 0.1s;
-        }
-
-        .equip-table tbody tr:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .td-sku {
-            font-family: var(--mono);
-            font-weight: 700;
-            color: #fff;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .td-nome {
-            color: #ccc;
-            font-weight: 400;
-        }
-
-        .td-qtd {
-            font-family: var(--mono);
-            font-weight: 600;
-            text-align: center;
-            color: #fff;
-        }
-
-        .td-manut {
-            font-family: var(--mono);
-            text-align: center;
-            color: #e67e22;
-        }
-
+        .td-sku { font-family: var(--mono); font-weight: 700; color: #fff; font-size: 12px; white-space: nowrap; }
+        .td-nome { color: #ccc; font-weight: 500; }
+        .td-qtd { font-family: var(--mono); font-weight: 600; text-align: center; color: #e0e0e0; }
+        .td-manut { font-family: var(--mono); text-align: center; color: #fbbf24; }
+        .td-manut.zero { color: #444; }
         .td-obs {
-            color: #444;
-            font-size: 11px;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: #555; font-size: 11px; max-width: 200px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
+        .td-actions { text-align: right; white-space: nowrap; vertical-align: middle; }
+        .td-actions-inner { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
 
-        .td-actions {
-            text-align: right;
-            white-space: nowrap;
-            display: flex;
-            gap: 6px;
-            justify-content: flex-end;
-        }
-
-        /* Categoria header */
         .cat-row td {
-            background: rgba(255, 255, 255, 0.03);
-            font-weight: 700;
-            font-size: 10px;
-            color: var(--sb-text-dim);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--sb-border);
+            background: rgba(255,255,255,0.04); font-weight: 700; font-size: 12px;
+            color: #999; letter-spacing: 0.5px; text-transform: uppercase;
+            padding: 8px 14px; border-bottom: 1px solid #29292e;
         }
-
         .cat-count {
-            font-weight: 400;
-            color: #333;
-            font-size: 10px;
-            text-transform: none;
-            letter-spacing: 0;
-            margin-left: 8px;
+            font-weight: 400; color: #555; font-size: 11px;
+            text-transform: none; letter-spacing: 0; margin-left: 8px;
         }
 
-        /* Inline edit */
-        .edit-input {
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: 4px;
-            color: #fff;
-            padding: 4px 8px;
-            font-size: 12px;
-            outline: none;
-            width: 100%;
-            font-family: var(--font);
-        }
-
-        .edit-input:focus {
-            border-color: #555;
-        }
-
-        .edit-input-sm {
-            width: 60px;
-            text-align: center;
-        }
-
-        /* Modal */
+        /* ── MODAL ── */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(3px);
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75); z-index: 1000;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(4px); padding: 20px;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
+        .modal-overlay.active { display: flex; }
         .modal {
-            background: #0e0e10;
-            border: 1px solid var(--sb-border);
-            border-radius: 12px;
-            padding: 28px;
-            width: 500px;
-            max-width: 90vw;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
+            background: #121214; border: 1px solid #29292e; border-radius: 14px;
+            padding: 28px; width: 500px; max-width: 100%;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.8);
         }
-
-        .modal h2 {
-            font-size: 16px;
-            color: #fff;
-            margin-bottom: 22px;
-            font-weight: 700;
-        }
-
-        .modal-field {
-            margin-bottom: 16px;
-        }
-
+        .modal h2 { font-size: 17px; color: #fff; margin-bottom: 20px; font-weight: 700; }
+        .modal-field { margin-bottom: 16px; }
         .modal-field label {
-            display: block;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--sb-text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 6px;
+            display: block; font-size: 10px; font-weight: 700; color: #555;
+            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
         }
-
         .modal-input {
-            width: 100%;
-            height: 40px;
-            background: var(--sb-input-bg);
-            border: 1px solid var(--sb-border);
-            border-radius: var(--sb-radius);
-            padding: 0 12px;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            font-family: var(--font);
-            transition: 0.15s;
+            width: 100%; height: 42px; background: #1a1a1e; border: 1px solid #2a2a30;
+            border-radius: 8px; padding: 0 14px; color: #fff; font-size: 13px;
+            outline: none; font-family: var(--font); transition: 0.15s;
+        }
+        .modal-input:focus { border-color: #555; }
+        .modal-row { display: flex; gap: 12px; }
+        .modal-row .modal-field { flex: 1; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        .empty-msg { text-align: center; padding: 60px 20px; color: #444; }
+
+        /* ── PREVIEW INVENTÁRIO ── */
+        #invModal {
+            display: none; position: fixed; inset: 0; z-index: 9999;
+            background: rgba(0,0,0,0.9); flex-direction: column;
+            align-items: center; padding: 12px 0 40px; overflow-y: auto;
+        }
+        #invModal.active { display: flex; }
+        .inv-toolbar {
+            width: 100%; max-width: 760px; display: flex;
+            justify-content: space-between; align-items: center;
+            padding: 0 12px 12px; flex-shrink: 0; gap: 10px;
+        }
+        #invContent {
+            width: 760px; background: #fff; transform-origin: top center;
+            flex-shrink: 0; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+            padding: 40px; box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif; color: #1a1a1a;
         }
 
-        .modal-input:focus {
-            border-color: #444;
+        @media print {
+            body > .page-container { display: none !important; }
+            #invModal { display: block !important; position: static !important; background: #fff !important; padding: 0 !important; }
+            .inv-toolbar { display: none !important; }
+            #invContent { box-shadow: none !important; transform: none !important; width: 100% !important; padding: 0 !important; }
         }
 
-        .modal-row {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-row .modal-field {
-            flex: 1;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        .empty-msg {
-            text-align: center;
-            padding: 60px 20px;
-            color: #333;
-        }
-
-        #tabelaContainer {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
+        /* ── MOBILE ── */
         @media (max-width: 768px) {
-            .page-container {
-                padding: 20px 16px 40px;
+            .page-container { padding: 20px 16px 40px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .page-header h1 { font-size: 20px; }
+            .header-actions { width: 100%; gap: 8px; }
+            .header-actions .btn-back, .header-actions .btn-primary {
+                flex: 1; justify-content: center; min-width: 0;
             }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                margin-bottom: 24px;
-            }
-
-            .page-header h1 {
-                font-size: 20px;
-            }
-
-            .header-actions {
-                width: 100%;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .header-actions .btn-back,
-            .header-actions .btn-primary {
-                flex: 1;
-                text-align: center;
-                justify-content: center;
-                min-width: 0;
-            }
-
-            .filter-select {
-                min-width: 0;
-                width: 100%;
-            }
-
-            .search-box {
-                min-width: 0;
-            }
-
-            .modal-row {
-                flex-direction: column;
-                gap: 0;
-            }
+            .filter-select { min-width: 0; width: 100%; }
+            .search-box { min-width: 0; }
+            .modal-row { flex-direction: column; gap: 0; }
+            .stats { margin-left: 0; }
         }
     </style>
 </head>
@@ -450,13 +188,13 @@
 <div class="page-container">
     <div class="page-header">
         <div>
-            <h1>Cadastro de Equipamentos</h1>
-            <span class="brand-sub">MF Manager — Magic Fireworks</span>
+            <h1>Equipamentos</h1>
+            <span class="sub">MF Manager — Cadastro e inventário</span>
         </div>
         <div class="header-actions">
-            <button class="btn-back" onclick="gerarInventarioPDF()"><i data-lucide="clipboard-list"></i> Inventário PDF</button>
-            <a href="/" class="btn-back">← Voltar</a>
-            <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Equipamento</button>
+            <button class="btn-back" onclick="abrirInventario()"><i data-lucide="clipboard-list"></i> Inventário PDF</button>
+            <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+            <button class="btn-primary" onclick="abrirModalNovo()"><i data-lucide="plus"></i> Novo Equipamento</button>
         </div>
     </div>
 
@@ -508,13 +246,29 @@
                 <input type="text" class="modal-input" id="modalObs" placeholder="Opcional...">
             </div>
             <div class="modal-actions">
-                <button class="btn-sm btn-cancel" onclick="fecharModal()" style="padding: 9px 18px; font-size: 13px;">
-                    Cancelar
-                </button>
+                <button class="btn-sm btn-cancel" onclick="fecharModal()">Cancelar</button>
                 <button class="btn-primary" onclick="salvarEquipamento()">Salvar</button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- MODAL INVENTÁRIO PDF -->
+<div id="invModal">
+    <div class="inv-toolbar">
+        <span style="color:#fff;font-weight:700;font-size:14px;">Inventário de Equipamentos</span>
+        <div style="display:flex;gap:8px;">
+            <button onclick="imprimirInventario()"
+                style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                <i data-lucide="printer"></i> Imprimir
+            </button>
+            <button onclick="fecharInventario()"
+                style="background:#333;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    </div>
+    <div id="invContent"></div>
 </div>
 
 <script>
@@ -523,7 +277,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         carregarDados();
-        document.getElementById('searchBox').focus();
+        lucide.createIcons();
     });
 
     async function carregarDados() {
@@ -538,11 +292,12 @@
                 json.data[cat].forEach(e => todosEquipamentos.push(e));
             });
 
+            const catAtual = document.getElementById('filterCategoria').value;
             const sel = document.getElementById('filterCategoria');
             sel.innerHTML = '<option value="">Todas as categorias</option>' +
-                categorias.map(c => `<option value="${c}">${c}</option>`).join('');
+                categorias.map(c => `<option value="${esc(c)}" ${c === catAtual ? 'selected' : ''}>${esc(c)}</option>`).join('');
 
-            document.getElementById('modalCatList').innerHTML = categorias.map(c => `<option value="${c}">`).join('');
+            document.getElementById('modalCatList').innerHTML = categorias.map(c => `<option value="${esc(c)}">`).join('');
 
             filtrar();
         } catch (err) {
@@ -582,28 +337,30 @@
         });
 
         let html = `<table class="equip-table"><thead><tr>
-        <th style="width:100px;">SKU</th>
+        <th style="width:110px;">SKU</th>
         <th>Nome</th>
         <th style="width:60px;text-align:center;">QTD</th>
         <th style="width:70px;text-align:center;">MANUT.</th>
         <th style="width:200px;">OBS</th>
-        <th style="width:90px;text-align:right;">AÇÕES</th>
+        <th style="width:100px;text-align:right;">AÇÕES</th>
     </tr></thead><tbody>`;
 
         Object.keys(agrupado).sort().forEach(cat => {
             const itens = agrupado[cat];
             const catQtd = itens.reduce((s, e) => s + e.quantidade, 0);
-            html += `<tr class="cat-row"><td colspan="6">${cat}<span class="cat-count">${itens.length} itens • ${catQtd} un.</span></td></tr>`;
+            html += `<tr class="cat-row"><td colspan="6">${esc(cat)}<span class="cat-count">${itens.length} itens • ${catQtd} un.</span></td></tr>`;
             itens.forEach(e => {
                 html += `<tr id="row-${e.id}">
                 <td class="td-sku">${esc(e.sku)}</td>
                 <td class="td-nome">${esc(e.nome)}</td>
                 <td class="td-qtd">${e.quantidade}</td>
-                <td class="td-manut">${e.em_manutencao > 0 ? e.em_manutencao : '-'}</td>
+                <td class="td-manut ${e.em_manutencao > 0 ? '' : 'zero'}">${e.em_manutencao > 0 ? e.em_manutencao : '-'}</td>
                 <td class="td-obs" title="${esc(e.observacoes || '')}">${esc(e.observacoes || '-')}</td>
                 <td class="td-actions">
-                    <button class="btn-sm btn-edit" onclick="editarEquipamento(${e.id})"><i data-lucide="pencil"></i></button>
-                    <button class="btn-sm btn-delete" onclick="deletarEquipamento(${e.id}, '${esc(e.nome)}')"><i data-lucide="trash-2"></i></button>
+                    <div class="td-actions-inner">
+                        <button class="btn-sm btn-edit" onclick="editarEquipamento(${e.id})"><i data-lucide="pencil"></i></button>
+                        <button class="btn-sm btn-delete" onclick="deletarEquipamento(${e.id}, '${esc(e.nome).replace(/'/g, "\\'")}')"><i data-lucide="trash-2"></i></button>
+                    </div>
                 </td>
             </tr>`;
             });
@@ -664,14 +421,8 @@
             observacoes: document.getElementById('modalObs').value.trim()
         };
 
-        if (!dados.nome) {
-            alert('Preencha o nome');
-            return;
-        }
-        if (!dados.sku) {
-            alert('Preencha o SKU');
-            return;
-        }
+        if (!dados.nome) { MF.alert('Preencha o nome', 'warning', 'Campo obrigatório'); return; }
+        if (!dados.sku)  { MF.alert('Preencha o SKU', 'warning', 'Campo obrigatório'); return; }
 
         try {
             let res;
@@ -687,31 +438,135 @@
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             fecharModal();
+            MF.toast(editId ? 'Equipamento atualizado' : 'Equipamento criado');
             carregarDados();
         } catch (err) {
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
     async function deletarEquipamento(id, nome) {
-        if (!confirm(`Remover "${nome}" do cadastro?`)) return;
+        const ok = await MF.confirm(`Remover "${nome}" do cadastro?`, { title: 'Remover equipamento', confirmText: 'Remover', danger: true });
+        if (!ok) return;
         try {
             const res = await fetch(`/api/equipamentos/item/${id}`, {method: 'DELETE'});
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
+            MF.toast('Equipamento removido');
             carregarDados();
         } catch (err) {
-            alert(err.message);
+            MF.alert(err.message);
         }
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') fecharModal();
+        if (e.key === 'Escape') { fecharModal(); fecharInventario(); }
     });
 
-    function gerarInventarioPDF() {
-        window.open('/?inventario=1', '_blank');
+    // ── INVENTÁRIO PDF ──
+    function abrirInventario() {
+        const agrupado = {};
+        todosEquipamentos.forEach(e => {
+            if (!agrupado[e.categoria]) agrupado[e.categoria] = [];
+            agrupado[e.categoria].push(e);
+        });
+
+        const cats = Object.keys(agrupado).sort();
+        const totalItens = todosEquipamentos.length;
+        const totalUn = todosEquipamentos.reduce((s, e) => s + (e.quantidade || 0), 0);
+        const totalManut = todosEquipamentos.reduce((s, e) => s + (e.em_manutencao || 0), 0);
+        const hoje = new Date().toLocaleDateString('pt-BR');
+
+        let html = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <img src="/public/MagicFireworksLogo.jpeg" style="width:64px;height:64px;object-fit:contain;border-radius:6px;">
+                <div>
+                    <div style="font-size:15px;font-weight:700;">MAGIC FIREWORKS</div>
+                    <div style="font-size:11px;color:#666;">CNPJ: 22.748.770/0001-50</div>
+                    <div style="font-size:11px;color:#666;">Brasília - DF</div>
+                </div>
+            </div>
+            <div style="border:2px solid #1a1a1a;padding:8px 14px;text-align:center;">
+                <div style="font-size:13px;font-weight:700;">INVENTÁRIO DE EQUIPAMENTOS</div>
+                <div style="font-size:11px;color:#555;margin-top:4px;">DATA: ${hoje}</div>
+            </div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+            <tr style="background:#f5f5f5;">
+                <td style="padding:8px 14px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;">Total de itens</td>
+                <td style="padding:8px 14px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;">Total unidades</td>
+                <td style="padding:8px 14px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;">Em manutenção</td>
+                <td style="padding:8px 14px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;">Categorias</td>
+            </tr>
+            <tr>
+                <td style="padding:8px 14px;font-size:16px;font-weight:800;font-family:monospace;">${totalItens}</td>
+                <td style="padding:8px 14px;font-size:16px;font-weight:800;font-family:monospace;">${totalUn}</td>
+                <td style="padding:8px 14px;font-size:16px;font-weight:800;font-family:monospace;color:${totalManut > 0 ? '#c0392b' : '#1a1a1a'};">${totalManut}</td>
+                <td style="padding:8px 14px;font-size:16px;font-weight:800;font-family:monospace;">${cats.length}</td>
+            </tr>
+        </table>`;
+
+        cats.forEach(cat => {
+            const itens = agrupado[cat];
+            const catQtd = itens.reduce((s, e) => s + (e.quantidade || 0), 0);
+            html += `
+            <table style="width:100%;border-collapse:collapse;margin-top:14px;">
+                <thead>
+                    <tr>
+                        <td colspan="5" style="background:#1a1a1a;color:#fff;font-size:11px;font-weight:700;padding:8px 14px;letter-spacing:0.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                            ${esc(cat.toUpperCase())} <span style="font-weight:400;color:#999;margin-left:8px;">${itens.length} itens · ${catQtd} un.</span>
+                        </td>
+                    </tr>
+                    <tr style="background:#2a2a2a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                        <th style="padding:5px 10px;text-align:left;font-size:9px;color:#fff;text-transform:uppercase;width:100px;">SKU</th>
+                        <th style="padding:5px 10px;text-align:left;font-size:9px;color:#fff;text-transform:uppercase;">Nome</th>
+                        <th style="padding:5px 10px;text-align:center;font-size:9px;color:#fff;text-transform:uppercase;width:50px;">QTD</th>
+                        <th style="padding:5px 10px;text-align:center;font-size:9px;color:#fff;text-transform:uppercase;width:60px;">Manut.</th>
+                        <th style="padding:5px 10px;text-align:left;font-size:9px;color:#fff;text-transform:uppercase;width:170px;">Obs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itens.map((e, i) => `
+                    <tr style="${i % 2 === 0 ? 'background:#f5f5f5;' : ''}">
+                        <td style="padding:6px 10px;font-family:monospace;font-weight:700;font-size:11px;border-bottom:1px solid #eee;">${esc(e.sku)}</td>
+                        <td style="padding:6px 10px;font-size:11px;border-bottom:1px solid #eee;">${esc(e.nome)}</td>
+                        <td style="padding:6px 10px;text-align:center;font-family:monospace;font-weight:700;font-size:11px;border-bottom:1px solid #eee;">${e.quantidade}</td>
+                        <td style="padding:6px 10px;text-align:center;font-family:monospace;font-size:11px;border-bottom:1px solid #eee;color:${e.em_manutencao > 0 ? '#c0392b' : '#999'};">${e.em_manutencao > 0 ? e.em_manutencao : '-'}</td>
+                        <td style="padding:6px 10px;font-size:10px;color:#666;border-bottom:1px solid #eee;">${esc(e.observacoes || '')}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
+        });
+
+        document.getElementById('invContent').innerHTML = html;
+        document.getElementById('invModal').classList.add('active');
+        escalarInventario();
+        lucide.createIcons();
     }
+
+    function fecharInventario() {
+        document.getElementById('invModal').classList.remove('active');
+    }
+
+    function imprimirInventario() {
+        const t = document.title;
+        document.title = `Inventário Equipamentos ${new Date().toLocaleDateString('pt-BR')}`;
+        window.print();
+        setTimeout(() => { document.title = t; }, 1500);
+    }
+
+    function escalarInventario() {
+        const content = document.getElementById('invContent');
+        const escala = Math.min(1, (window.innerWidth - 24) / 760);
+        content.style.transform = `scale(${escala})`;
+        content.style.marginBottom = escala < 1 ? `${-(content.offsetHeight * (1 - escala))}px` : '0';
+    }
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('invModal').classList.contains('active')) escalarInventario();
+    });
 </script>
 </body>
 </html>
