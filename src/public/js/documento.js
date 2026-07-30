@@ -459,3 +459,59 @@ function _mfGerarResumoHTML(pedido) {
 function _mfFmt(v) {
     return (parseFloat(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+// ══════════════════════════════════════════════════════════════
+// COMPARTILHAR PDF — gera o PDF no browser (html2pdf.js) e abre
+// a tela nativa de compartilhamento (Web Share API). No desktop,
+// baixa o arquivo diretamente.
+// Requer: <script html2pdf.bundle.min.js> na página.
+// ══════════════════════════════════════════════════════════════
+async function compartilharDocumentoPDF(contentEl, nome) {
+    nome = (nome || 'Documento').replace(/[\\/:*?"<>|]/g, '-').trim();
+
+    // Clona o conteúdo sem o scale/margens do preview mobile
+    const clone = contentEl.cloneNode(true);
+    clone.style.transform = 'none';
+    clone.style.margin = '0';
+    clone.style.width = '760px';
+    clone.style.boxShadow = 'none';
+
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:760px;background:#fff;';
+    holder.appendChild(clone);
+    document.body.appendChild(holder);
+
+    try {
+        const opt = {
+            margin: [8, 8, 10, 8],
+            filename: `${nome}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img'] }
+        };
+
+        const blob = await html2pdf().set(opt).from(clone).outputPdf('blob');
+        const file = new File([blob], `${nome}.pdf`, { type: 'application/pdf' });
+
+        // Mobile: share sheet nativo | Desktop: download direto
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: nome });
+            } catch (err) {
+                if (err.name !== 'AbortError') throw err; // usuário cancelou = ok
+            }
+        } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${nome}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+    } finally {
+        holder.remove();
+    }
+}

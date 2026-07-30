@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             overflow: auto;
@@ -443,6 +444,10 @@
         <input type="text" class="preview-nome-arquivo" id="nomeArquivo"
                placeholder="Nome do arquivo (ex: Pedido Marcio)">
         <div class="preview-btns">
+            <button id="btnCompartilhar" onclick="compartilharPDF(this)"
+                    style="background:#4ade80;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
+                <i data-lucide="share-2"></i> PDF
+            </button>
             <button onclick="imprimirPreview()"
                     style="background:#fff;color:#000;border:none;padding:8px 16px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;">
                 <i data-lucide="printer"></i> Imprimir
@@ -719,6 +724,22 @@
 
     function fecharPreview() {
         document.getElementById('previewModal').classList.remove('ativo');
+    }
+
+    async function compartilharPDF(btn) {
+        const nome = document.getElementById('nomeArquivo').value.trim() || 'Pedido';
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Gerando...';
+        try {
+            await compartilharDocumentoPDF(document.getElementById('previewContent'), nome);
+        } catch (err) {
+            MF.alert('Erro ao gerar PDF: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = original;
+            lucide.createIcons();
+        }
     }
 
     function imprimirPreview() {
