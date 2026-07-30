@@ -59,19 +59,24 @@ function gerarPedidoMFHTML(pedido) {
     const numDocHTML = cab.num_doc && cab.valores?.num_doc
         ? `<div style="font-size:12px;color:#666;margin-top:2px;">Nº: ${esc(cab.valores.num_doc)}</div>` : '';
 
-    // Seções
+    // Seções — as com total_separado (ex: Máquinas) renderizam DEPOIS do resumo
     let secoesHTML = '';
+    let separadasHTML = '';
     const secoes = pedido.secoes || [];
     const gruposVistos = new Set();
 
     for (const sec of secoes) {
+        let bloco = '';
         if (sec.grupo && !gruposVistos.has(sec.grupo)) {
             gruposVistos.add(sec.grupo);
-            secoesHTML += `<table style="width:100%;border-collapse:collapse;margin-top:20px;">
+            bloco += `<table style="width:100%;border-collapse:collapse;margin-top:20px;">
                 <tr><td style="background:#c0392b;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${esc(sec.grupo.toUpperCase())}</td></tr>
             </table>`;
         }
-        secoesHTML += _mfGerarSecaoHTML(sec);
+        bloco += _mfGerarSecaoHTML(sec);
+
+        if (sec.total_separado) separadasHTML += bloco;
+        else secoesHTML += bloco;
     }
 
     // Resumo
@@ -101,6 +106,7 @@ function gerarPedidoMFHTML(pedido) {
 
         ${secoesHTML}
         ${resumoHTML}
+        ${separadasHTML}
 
         <div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
             <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
@@ -199,18 +205,28 @@ function _mfGerarSecaoHTML(sec) {
         <td style="padding:8px 14px;text-align:right;font-weight:700;color:#000;font-size:12px;border-top:2px solid #ccc;font-family:monospace;">R$ ${_mfFmt(totalSec)}</td>
     </tr>`;
 
+    // Banda de total próprio para seções com total separado (ex: TOTAL MÁQUINAS)
+    const totalBand = sec.total_separado ? `
+    <table style="width:100%;border-collapse:collapse;margin-top:0;">
+        <tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+            <td style="padding:12px 16px;font-size:14px;font-weight:700;color:#fff;">TOTAL ${esc((sec.titulo || 'SEÇÃO').toUpperCase())}</td>
+            <td style="padding:12px 16px;text-align:right;font-size:16px;font-weight:700;color:#fff;font-family:monospace;">R$ ${_mfFmt(totalSec)}</td>
+        </tr>
+    </table>` : '';
+
     return `<table style="width:100%;border-collapse:collapse;margin-top:16px;table-layout:auto;word-break:break-word;">
         <thead>
             <tr><td colspan="${nCols}" style="background:#1a1a1a;color:#fff;font-size:12px;font-weight:700;padding:10px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${esc(tituloSec.toUpperCase())}</td></tr>
             <tr style="background:#2a2a2a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${ths}</tr>
         </thead>
         <tbody>${rows}${subtotalRow}</tbody>
-    </table>`;
+    </table>${totalBand}`;
 }
 
 function _mfGerarResumoHTML(pedido) {
     const res = pedido.resumo || {};
-    const secoes = pedido.secoes || [];
+    // Seções com total separado (ex: Máquinas) ficam fora do resumo e do total
+    const secoes = (pedido.secoes || []).filter(sec => !sec.total_separado);
     // Cálculo do total
     let total = secoes.reduce((s, sec) => s + _mfCalcSubtotal(sec), 0);
     if (res.desconto && res.desconto_valor > 0) total -= res.desconto_valor;

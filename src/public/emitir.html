@@ -862,6 +862,14 @@ function renderSecaoBody(sec) {
                    oninput="atualizarSecao('${sec.id}','grupo',this.value)"
                    style="height:38px;">
         </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+            <input type="checkbox" id="ts_${sec.id}" ${sec.total_separado ? 'checked' : ''}
+                   onchange="atualizarSecao('${sec.id}','total_separado',this.checked)"
+                   style="width:auto;height:auto;accent-color:#fff;">
+            <label for="ts_${sec.id}" style="font-size:11px;color:#888;margin:0;">
+                Total separado — fora do resumo do pedido (ex: Máquinas)
+            </label>
+        </div>
         <div style="margin-bottom:10px;">
             <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Colunas</div>
             <div class="colunas-grid" id="colunas_${sec.id}">${colsHtml}</div>
@@ -1414,7 +1422,10 @@ function calcSubtotalSecao(sec) {
 }
 
 function calcTotalGeral() {
-    let total = estado.secoes.reduce((s, sec) => s + calcSubtotalSecao(sec), 0);
+    // Seções com total separado (ex: Máquinas) não entram no total do pedido
+    let total = estado.secoes
+        .filter(sec => !sec.total_separado)
+        .reduce((s, sec) => s + calcSubtotalSecao(sec), 0);
     if (estado.resumo.desconto) total -= (estado.resumo.desconto_valor || 0);
     if (estado.resumo.pagamentos) {
         estado.resumo.pagamentos_itens.forEach(p => total -= (p.valor || 0));
