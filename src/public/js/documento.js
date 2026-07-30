@@ -238,13 +238,44 @@ function _mfGerarResumoHTML(pedido) {
             <td style="padding:8px 16px;text-align:right;font-size:11px;color:#c0392b;font-weight:600;font-family:monospace;">- R$ ${_mfFmt(res.desconto_valor)}</td>
         </tr>`;
     }
-    if (res.pagamentos) {
-        (res.pagamentos_itens || []).filter(p => p.valor > 0).forEach(p => {
-            linhas += `<tr>
-                <td style="padding:8px 16px;font-size:11px;color:#c0392b;font-weight:600;">${esc((p.label || 'PAGAMENTO').toUpperCase())} (VALOR JÁ PAGO)</td>
-                <td style="padding:8px 16px;text-align:right;font-size:11px;color:#c0392b;font-weight:600;font-family:monospace;">- R$ ${_mfFmt(p.valor)}</td>
-            </tr>`;
-        });
+    // Pagamentos já realizados: tabela separada acima do resumo,
+    // no resumo entra apenas uma linha com o subtotal deduzido
+    let pagamentosHTML = '';
+    const pagos = res.pagamentos ? (res.pagamentos_itens || []).filter(p => p.valor > 0) : [];
+    const totalPago = pagos.reduce((s, p) => s + (p.valor || 0), 0);
+
+    if (pagos.length > 0) {
+        pagamentosHTML = `
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+            <thead>
+                <tr><td colspan="4" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">PAGAMENTOS JÁ REALIZADOS</td></tr>
+                <tr style="background:#2a2a2a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                    <th style="padding:6px 10px;text-align:center;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;width:28px;">Nº</th>
+                    <th style="padding:6px 10px;text-align:left;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;">Descrição</th>
+                    <th style="padding:6px 10px;text-align:center;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;width:90px;">Data</th>
+                    <th style="padding:6px 10px;text-align:right;font-size:10px;font-weight:700;color:#fff;text-transform:uppercase;width:110px;">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${pagos.map((p, i) => `
+                <tr style="${i % 2 === 0 ? 'background:#f5f5f5;' : ''}">
+                    <td style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;border-bottom:1px solid #eee;">${i + 1}</td>
+                    <td style="padding:7px 10px;font-size:11px;border-bottom:1px solid #eee;">${esc((p.label || 'PAGAMENTO').toUpperCase())}</td>
+                    <td style="padding:7px 10px;text-align:center;font-size:11px;font-family:monospace;border-bottom:1px solid #eee;">${p.data ? formatDate(p.data) : '—'}</td>
+                    <td style="padding:7px 10px;text-align:right;font-size:11px;font-family:monospace;font-weight:600;border-bottom:1px solid #eee;">R$ ${_mfFmt(p.valor)}</td>
+                </tr>`).join('')}
+                <tr style="background:#f5f5f5;">
+                    <td colspan="3" style="padding:9px 10px;font-size:11px;font-weight:700;color:#c0392b;text-transform:uppercase;border-top:2px solid #ccc;">Total já pago</td>
+                    <td style="padding:9px 10px;text-align:right;font-size:12px;font-family:monospace;font-weight:700;color:#c0392b;border-top:2px solid #ccc;">R$ ${_mfFmt(totalPago)}</td>
+                </tr>
+            </tbody>
+        </table>`;
+
+        // Linha única no resumo
+        linhas += `<tr>
+            <td style="padding:8px 16px;font-size:11px;color:#c0392b;font-weight:600;">PAGAMENTOS JÁ REALIZADOS (${pagos.length})</td>
+            <td style="padding:8px 16px;text-align:right;font-size:11px;color:#c0392b;font-weight:600;font-family:monospace;">- R$ ${_mfFmt(totalPago)}</td>
+        </tr>`;
     }
     // Compatibilidade desconto antigo
     if (!res.desconto && descAntigOk) {
@@ -340,7 +371,7 @@ function _mfGerarResumoHTML(pedido) {
         </div>`;
     }
 
-    return `<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+    return `${pagamentosHTML}<table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">RESUMO DO PEDIDO</td></tr></thead>
         <tbody>${linhas}</tbody>
     </table>${extras}`;

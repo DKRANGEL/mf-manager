@@ -1234,16 +1234,21 @@ function toggleResumo(campo, swEl) {
 }
 
 function adicionarPagamento() {
-    estado.resumo.pagamentos_itens.push({ label: 'PAGAMENTO', valor: 0 });
+    estado.resumo.pagamentos_itens.push({ label: 'PAGAMENTO', valor: 0, data: '' });
     renderPagamentos();
 }
 
 function renderPagamentos() {
     const wrap = document.getElementById('pagamentosList');
     wrap.innerHTML = estado.resumo.pagamentos_itens.map((p, i) => `
-        <div class="pgto-item">
-            <input type="text" value="${esc(p.label)}" placeholder="Label"
-                   oninput="estado.resumo.pagamentos_itens[${i}].label=this.value">
+        <div class="pgto-item" style="flex-wrap:wrap;">
+            <input type="text" value="${esc(p.label)}" placeholder="Descrição"
+                   oninput="estado.resumo.pagamentos_itens[${i}].label=this.value"
+                   style="flex:1 1 100%;">
+            <input type="date" value="${esc(p.data || '')}"
+                   oninput="estado.resumo.pagamentos_itens[${i}].data=this.value"
+                   title="Data do pagamento (opcional)"
+                   style="flex:1;height:40px;background:#1a1a1e;border:1px solid #2a2a30;border-radius:6px;padding:0 10px;color:#fff;font-size:13px;font-family:var(--font);outline:none;">
             <input type="text" value="${fmtNEditar(p.valor)}" placeholder="0,00" inputmode="decimal"
                    oninput="mascaraMoeda(this);estado.resumo.pagamentos_itens[${i}].valor=parseMoeda(this.value)"
                    style="max-width:120px;">
