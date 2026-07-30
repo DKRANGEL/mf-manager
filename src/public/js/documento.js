@@ -260,9 +260,18 @@ function _mfGerarResumoHTML(pedido) {
     if (!res.desconto && descAntigOk) total -= (blocos.desconto.valor || 0);
     if (!res.nf && blocos.nf?.ativo) total += total * ((blocos.nf.percent || 18) / 100);
 
+    // Seções com kit vinculado não aparecem como subtotal — só a linha do kit
+    // (evita parecer que o valor unitário soma no total junto com o kit)
+    const kitsVinculados = (res.kits && res.kits_itens) ? res.kits_itens : [];
+    const secaoTemKit = (sec) => kitsVinculados.some(k =>
+        (k.secao_id && k.secao_id === sec.id) ||
+        (k.secao_titulo && k.secao_titulo === (sec.titulo || ''))
+    );
+
     let linhas = '';
     if (res.subtotais) {
         secoes.forEach(sec => {
+            if (secaoTemKit(sec)) return;
             const sub = _mfCalcSubtotal(sec);
             linhas += `<tr>
                 <td style="padding:8px 16px;font-size:11px;color:#555;">${esc((sec.titulo || 'SEÇÃO').toUpperCase())}</td>
