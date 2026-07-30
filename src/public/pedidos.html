@@ -480,6 +480,12 @@
             <input type="date" class="data-input" id="filtroInicio" onchange="setFiltroPeriodo(null,'custom')" title="Data início">
             <input type="date" class="data-input" id="filtroFim"    onchange="setFiltroPeriodo(null,'custom')" title="Data fim">
         </div>
+        <div class="filtros-row">
+            <input type="text" id="filtroBusca" placeholder="Buscar pedido por nome, cliente ou número..."
+                   oninput="renderGrid()"
+                   style="flex:1;min-width:200px;height:38px;background:#121214;border:1px solid #29292e;border-radius:8px;padding:0 14px;color:#fff;font-size:13px;font-family:inherit;outline:none;transition:.15s;"
+                   onfocus="this.style.borderColor='#555'" onblur="this.style.borderColor='#29292e'">
+        </div>
     </div>
     <div id="pedidosGrid" class="pedidos-grid">
         <div class="loading">Carregando pedidos...</div>
@@ -527,6 +533,15 @@
 
     function filtrarPedidos(pedidos) {
         let lista = pedidos;
+
+        // Busca por nome, cliente ou número
+        const busca = (document.getElementById('filtroBusca')?.value || '').toLowerCase().trim();
+        if (busca) {
+            lista = lista.filter(ped =>
+                (ped.cliente || '').toLowerCase().includes(busca) ||
+                (ped.numero || '').toLowerCase().includes(busca)
+            );
+        }
 
         // Filtro de status
         if (filtroStatus !== 'todos') {
