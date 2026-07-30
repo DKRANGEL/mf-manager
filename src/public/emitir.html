@@ -1306,6 +1306,66 @@ function baseParcelamento() {
     return calcTotalGeral() + (incluir ? totalSeparados() : 0);
 }
 
+// Valores fixados manualmente pelo usuário: { indice: valor }
+// As parcelas não fixadas dividem o restante igualmente.
+let parcelasFixas = {};
+
+function calcularDatasParcelas(n, dataStr, freq) {
+    const datas = [];
+    const base = new Date((dataStr || hoje()) + 'T12:00:00');
+    for (let i = 0; i < n; i++) {
+        const d = new Date(base);
+        if (freq === 'mensal') d.setMonth(d.getMonth() + i);
+        else if (freq === 'quinzenal') d.setDate(d.getDate() + i * 15);
+        else if (freq === 'semanal') d.setDate(d.getDate() + i * 7);
+        datas.push(d.toISOString().split('T')[0]);
+    }
+    return datas;
+}
+
+// Calcula o valor de cada parcela respeitando as fixadas.
+// A última parcela livre absorve o resto da divisão (centavos).
+function calcularValoresParcelas(n, total) {
+    const valores = new Array(n).fill(0);
+    let somaFixas = 0, livres = [];
+
+    for (let i = 0; i < n; i++) {
+        if (parcelasFixas[i] != null) {
+            valores[i] = parcelasFixas[i];
+            somaFixas += parcelasFixas[i];
+        } else {
+            livres.push(i);
+        }
+    }
+
+    const restante = total - somaFixas;
+    if (livres.length > 0) {
+        const cota = Math.floor((restante / livres.length) * 100) / 100;
+        let acumulado = 0;
+        livres.forEach((idx, j) => {
+            if (j === livres.length - 1) {
+                valores[idx] = Math.round((restante - acumulado) * 100) / 100;
+            } else {
+                valores[idx] = cota;
+                acumulado += cota;
+            }
+        });
+    }
+    return valores;
+}
+
+function fixarParcela(idx, input) {
+    const v = parseMoeda(input.value);
+    if (v > 0) parcelasFixas[idx] = v;
+    else delete parcelasFixas[idx];
+    recalcParcelas();
+}
+
+function liberarParcela(idx) {
+    delete parcelasFixas[idx];
+    recalcParcelas();
+}
+
 function recalcParcelas() {
     const n = parseInt(document.getElementById('fParcelasNum').value) || 2;
     const dataStr = document.getElementById('fParcelasData').value;
@@ -1313,43 +1373,40 @@ function recalcParcelas() {
     const wrap = document.getElementById('parcelasPreview');
     if (!dataStr) { wrap.innerHTML = ''; return; }
 
+    // Remove fixas de índices que não existem mais (se reduziu o nº de parcelas)
+    Object.keys(parcelasFixas).forEach(k => { if (parseInt(k) >= n) delete parcelasFixas[k]; });
+
     const total = baseParcelamento();
-    const valorParcela = total / n;
-    const datas = [];
-
-    if (freq === 'manual') {
-        // Mostra N date pickers
-        wrap.innerHTML = Array.from({length: n}, (_, i) => {
-            const d = new Date(dataStr + 'T12:00:00');
-            d.setMonth(d.getMonth() + i);
-            return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <span style="font-size:11px;color:#888;width:60px;">Parcela ${i+1}:</span>
-                <input type="date" class="parcela-data-manual" data-idx="${i}"
-                    value="${d.toISOString().split('T')[0]}"
-                    style="flex:1;height:36px;background:#1a1a1e;border:1px solid #2a2a30;border-radius:6px;padding:0 8px;color:#fff;font-size:12px;outline:none;">
-                <span style="font-size:11px;color:#888;font-family:var(--mono);">R$ ${fmtN(valorParcela)}</span>
-            </div>`;
-        }).join('');
-        return;
-    }
-
-    // Calcula datas automaticamente
-    const base = new Date(dataStr + 'T12:00:00');
-    for (let i = 0; i < n; i++) {
-        const d = new Date(base);
-        if (freq === 'mensal') d.setMonth(d.getMonth() + i);
-        else if (freq === 'quinzenal') d.setDate(d.getDate() + i * 15);
-        else if (freq === 'semanal') d.setDate(d.getDate() + i * 7);
-        datas.push(d);
-    }
+    const valores = calcularValoresParcelas(n, total);
+    const datas = calcularDatasParcelas(n, dataStr, freq);
+    const somaFixas = Object.values(parcelasFixas).reduce((s, v) => s + v, 0);
+    const estourou = somaFixas > total;
 
     wrap.innerHTML = `<div style="background:#1a1a1e;border-radius:8px;padding:10px;margin-top:4px;">
-        ${datas.map((d, i) => `
-            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:${i < datas.length-1 ? '1px solid #2a2a30' : 'none'};">
-                <span style="font-size:11px;color:#888;">Parcela ${i+1} — ${d.toLocaleDateString('pt-BR')}</span>
-                <span style="font-size:11px;color:#e0e0e0;font-family:var(--mono);">R$ ${fmtN(valorParcela)}</span>
-            </div>
-        `).join('')}
+        <div style="font-size:10px;color:#555;margin-bottom:8px;">
+            Edite o valor de qualquer parcela — as demais se recalculam sozinhas.
+        </div>
+        ${valores.map((v, i) => {
+            const fixa = parcelasFixas[i] != null;
+            return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:${i < n-1 ? '1px solid #2a2a30' : 'none'};">
+                <span style="font-size:11px;color:#888;width:58px;flex-shrink:0;">${i === 0 ? 'Entrada' : (i+1) + 'ª parc.'}</span>
+                ${freq === 'manual'
+                    ? `<input type="date" class="parcela-data-manual" data-idx="${i}" value="${datas[i]}"
+                          style="flex:1;min-width:0;height:34px;background:#121214;border:1px solid #2a2a30;border-radius:6px;padding:0 6px;color:#fff;font-size:11px;outline:none;">`
+                    : `<span style="flex:1;font-size:11px;color:#666;font-family:var(--mono);">${new Date(datas[i]+'T12:00:00').toLocaleDateString('pt-BR')}</span>`}
+                <input type="text" class="parcela-valor" data-idx="${i}" value="${fmtNEditar(v)}" inputmode="decimal"
+                       onchange="fixarParcela(${i}, this)"
+                       oninput="mascaraMoeda(this)"
+                       style="width:110px;height:34px;background:${fixa ? '#1e1e28' : '#121214'};border:1px solid ${fixa ? '#4455cc' : '#2a2a30'};border-radius:6px;padding:0 8px;color:${estourou && fixa ? '#ff6060' : '#fff'};font-size:12px;font-family:var(--mono);outline:none;text-align:right;">
+                ${fixa ? `<button onclick="liberarParcela(${i})" title="Voltar ao automático"
+                    style="width:26px;height:26px;background:transparent;border:none;color:#4455cc;cursor:pointer;font-size:13px;flex-shrink:0;">↺</button>`
+                    : '<span style="width:26px;flex-shrink:0;"></span>'}
+            </div>`;
+        }).join('')}
+        <div style="display:flex;justify-content:space-between;padding-top:8px;margin-top:4px;border-top:1px solid #2a2a30;">
+            <span style="font-size:11px;color:${estourou ? '#ff6060' : '#555'};">${estourou ? '⚠ Parcelas fixadas ultrapassam o total!' : 'Total do parcelamento'}</span>
+            <span style="font-size:11px;color:#e0e0e0;font-family:var(--mono);font-weight:700;">R$ ${fmtN(total)}</span>
+        </div>
     </div>`;
 }
 
@@ -1360,24 +1417,18 @@ function coletarParcelas() {
     const n = parseInt(document.getElementById('fParcelasNum')?.value) || 2;
     const dataStr = document.getElementById('fParcelasData')?.value || '';
     const total = baseParcelamento();
-    const valorParcela = total / n;
-    const parcelas = [];
+    const valores = calcularValoresParcelas(n, total);
 
+    // Datas: manual lê dos inputs, automático calcula
+    let datas;
     if (freq === 'manual') {
-        document.querySelectorAll('.parcela-data-manual').forEach((el, i) => {
-            parcelas.push({ num: i + 1, data: el.value, valor: valorParcela });
-        });
+        datas = Array.from(document.querySelectorAll('.parcela-data-manual')).map(el => el.value);
+        while (datas.length < n) datas.push('');
     } else {
-        const base = new Date((dataStr || hoje()) + 'T12:00:00');
-        for (let i = 0; i < n; i++) {
-            const d = new Date(base);
-            if (freq === 'mensal') d.setMonth(d.getMonth() + i);
-            else if (freq === 'quinzenal') d.setDate(d.getDate() + i * 15);
-            else if (freq === 'semanal') d.setDate(d.getDate() + i * 7);
-            parcelas.push({ num: i + 1, data: d.toISOString().split('T')[0], valor: valorParcela });
-        }
+        datas = calcularDatasParcelas(n, dataStr, freq);
     }
-    return parcelas;
+
+    return valores.map((v, i) => ({ num: i + 1, data: datas[i] || '', valor: v, fixa: parcelasFixas[i] != null }));
 }
 
 function textoPagamento() {
@@ -1489,6 +1540,7 @@ function coletarEstado() {
     estado.resumo.pag_parcelas_data = document.getElementById('fParcelasData')?.value || '';
     estado.resumo.pag_parcelas_freq = document.getElementById('fParcelasFreq')?.value || 'mensal';
     estado.resumo.pag_incluir_separado = document.getElementById('fParcIncluiSeparado')?.checked || false;
+    estado.resumo.pag_parcelas_fixas = { ...parcelasFixas };
     estado.resumo.pag_parcelas_lista = coletarParcelas();
     estado.resumo.condicao_texto = textoPagamento();
 }
@@ -1615,6 +1667,9 @@ function restaurarEstadoUI() {
             if (res.pag_parcelas_data) g('fParcelasData').value = res.pag_parcelas_data;
             if (res.pag_parcelas_freq) g('fParcelasFreq').value = res.pag_parcelas_freq;
             g('fParcIncluiSeparado').checked = !!res.pag_incluir_separado;
+            parcelasFixas = { ...(res.pag_parcelas_fixas || {}) };
+            // Chaves de objeto JSON viram strings — normaliza para números
+            parcelasFixas = Object.fromEntries(Object.entries(parcelasFixas).map(([k, v]) => [parseInt(k), v]));
             recalcParcelas();
         }
         if (res.pag_tipo === 'outro' && res.pag_outro_desc) {
