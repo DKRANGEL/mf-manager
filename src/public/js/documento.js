@@ -476,8 +476,11 @@ async function compartilharDocumentoPDF(contentEl, nome) {
     clone.style.width = '760px';
     clone.style.boxShadow = 'none';
 
+    // Holder em 0,0 (não deslocado): html2canvas perde o offset quando o
+    // elemento está fora da tela e a captura sai cortada. O modal do preview
+    // (z-index 9999) cobre o holder, então ele não aparece para o usuário.
     const holder = document.createElement('div');
-    holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:760px;background:#fff;';
+    holder.style.cssText = 'position:fixed;left:0;top:0;width:760px;background:#fff;z-index:0;';
     holder.appendChild(clone);
     document.body.appendChild(holder);
 
@@ -494,6 +497,9 @@ async function compartilharDocumentoPDF(contentEl, nome) {
                 // Força media queries de desktop — sem isso o celular renderiza
                 // o PDF com as regras mobile e o layout sai diferente do preview
                 windowWidth: 1300,
+                // Zera o scroll da captura — evita deslocamento do conteúdo
+                scrollX: 0,
+                scrollY: 0,
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img'] }
