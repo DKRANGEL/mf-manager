@@ -471,41 +471,51 @@ async function compartilharDocumentoPDF(contentEl, nome) {
 
     // Clona o conteúdo sem o scale/margens do preview mobile
     const clone = contentEl.cloneNode(true);
-    clone.style.transform = 'none';
-    clone.style.margin = '0';
-    clone.style.width = '760px';
-    clone.style.boxShadow = 'none';
+    clone.style.cssText = 'transform:none;margin:0;width:760px;box-shadow:none;background:#fff;';
 
-    // Holder em 0,0 (não deslocado): html2canvas perde o offset quando o
-    // elemento está fora da tela e a captura sai cortada. O modal do preview
-    // (z-index 9999) cobre o holder, então ele não aparece para o usuário.
+    // Holder no fluxo normal do documento, em 0,0 absoluto — evita os bugs
+    // de offset do html2canvas com elementos fixed/fora da tela
     const holder = document.createElement('div');
-    holder.style.cssText = 'position:fixed;left:0;top:0;width:760px;background:#fff;z-index:0;';
+    holder.style.cssText = 'position:absolute;left:0;top:0;width:760px;background:#fff;z-index:-1;overflow:hidden;';
     holder.appendChild(clone);
-    document.body.appendChild(holder);
+    document.body.prepend(holder);
 
     try {
-        const opt = {
-            // O .recibo já tem padding interno de 15mm — sem margem extra
-            margin: 0,
-            filename: `${nome}.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                // Força media queries de desktop — sem isso o celular renderiza
-                // o PDF com as regras mobile e o layout sai diferente do preview
-                windowWidth: 1300,
-                // Zera o scroll da captura — evita deslocamento do conteúdo
-                scrollX: 0,
-                scrollY: 0,
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img'] }
-        };
+        // Espera imagens do clone carregarem
+        const imgs = Array.from(clone.querySelectorAll('img'));
+        await Promise.all(imgs.map(img => img.complete ? Promise.resolve()
+            : new Promise(r => { img.onload = r; img.onerror = r; })));
+        await new Promise(r => setTimeout(r, 100)); // layout assentar
 
-        const blob = await html2pdf().set(opt).from(clone).outputPdf('blob');
+        // 1. Captura o documento inteiro num canvas único
+        const canvas = await html2canvas(clone, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+        });
+
+        // 2. Fatia o canvas em páginas A4 manualmente
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const pageW = 210, pageH = 297;
+        const imgW = pageW;
+        const imgH = canvas.height * pageW / canvas.width;
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+        let restante = imgH;
+        let posicao = 0;
+        pdf.addImage(imgData, 'JPEG', 0, posicao, imgW, imgH);
+        restante -= pageH;
+        while (restante > 0) {
+            posicao -= pageH;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', 0, posicao, imgW, imgH);
+            restante -= pageH;
+        }
+
+        const blob = pdf.output('blob');
         const file = new File([blob], `${nome}.pdf`, { type: 'application/pdf' });
 
         // Mobile: share sheet nativo | Desktop: download direto
