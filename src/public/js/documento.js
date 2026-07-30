@@ -487,6 +487,30 @@ async function compartilharDocumentoPDF(contentEl, nome) {
             : new Promise(r => { img.onload = r; img.onerror = r; })));
         await new Promise(r => setTimeout(r, 100)); // layout assentar
 
+        // html2canvas ignora object-fit:contain e estica as imagens.
+        // Compensa: redimensiona cada imagem para caber proporcionalmente
+        // na caixa original, centralizada num wrapper do mesmo tamanho.
+        imgs.forEach(img => {
+            const cs = getComputedStyle(img);
+            if (cs.objectFit !== 'contain') return;
+            const rect = img.getBoundingClientRect();
+            const boxW = rect.width, boxH = rect.height;
+            const natW = img.naturalWidth, natH = img.naturalHeight;
+            if (!boxW || !boxH || !natW || !natH) return;
+
+            const ratio = Math.min(boxW / natW, boxH / natH);
+            const w = natW * ratio, h = natH * ratio;
+
+            const wrap = document.createElement('div');
+            wrap.style.cssText = `width:${boxW}px;height:${boxH}px;display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+            img.replaceWith(wrap);
+            img.style.width = `${w}px`;
+            img.style.height = `${h}px`;
+            img.style.objectFit = 'fill';
+            wrap.appendChild(img);
+        });
+        await new Promise(r => setTimeout(r, 50));
+
         // 1. Captura o documento inteiro num canvas único
         const canvas = await html2canvas(clone, {
             scale: 2,
