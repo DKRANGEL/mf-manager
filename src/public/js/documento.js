@@ -79,8 +79,9 @@ function gerarPedidoMFHTML(pedido) {
         else secoesHTML += bloco;
     }
 
-    // Resumo
-    const resumoHTML = _mfGerarResumoHTML(pedido);
+    // Resumo em duas partes: tabela principal (antes das separadas)
+    // e extras — condição, parcelas, obs (depois das separadas)
+    const { principal: resumoHTML, extras: extrasHTML } = _mfGerarResumoHTML(pedido);
 
     return `<div class="recibo">
         <div class="recibo-header">
@@ -107,6 +108,7 @@ function gerarPedidoMFHTML(pedido) {
         ${secoesHTML}
         ${resumoHTML}
         ${separadasHTML}
+        ${extrasHTML}
 
         <div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
             <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
@@ -387,10 +389,32 @@ function _mfGerarResumoHTML(pedido) {
         </div>`;
     }
 
-    return `${pagamentosHTML}<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+    // Banda TOTAL GERAL quando o parcelamento inclui os totais separados
+    const totalSeparadosVal = (pedido.secoes || [])
+        .filter(sec => sec.total_separado)
+        .reduce((s, sec) => s + _mfCalcSubtotal(sec), 0);
+
+    let totalGeralHTML = '';
+    if (res.pag_incluir_separado && totalSeparadosVal > 0) {
+        const nomesSeparados = (pedido.secoes || [])
+            .filter(sec => sec.total_separado)
+            .map(sec => (sec.titulo || 'SEÇÃO').toUpperCase())
+            .join(' + ');
+        totalGeralHTML = `
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+            <tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                <td style="padding:12px 16px;font-size:14px;font-weight:700;color:#fff;">TOTAL GERAL (PEDIDO + ${esc(nomesSeparados)})</td>
+                <td style="padding:12px 16px;text-align:right;font-size:16px;font-weight:700;color:#fff;font-family:monospace;">R$ ${_mfFmt(totalFinal + totalSeparadosVal)}</td>
+            </tr>
+        </table>`;
+    }
+
+    const principal = `${pagamentosHTML}<table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">RESUMO DO PEDIDO</td></tr></thead>
         <tbody>${linhas}</tbody>
-    </table>${extras}`;
+    </table>`;
+
+    return { principal, extras: totalGeralHTML + extras };
 }
 
 function _mfFmt(v) {

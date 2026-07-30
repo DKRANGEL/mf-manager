@@ -521,6 +521,13 @@
                             <option value="manual">Manual (definir datas)</option>
                         </select>
                     </div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <input type="checkbox" id="fParcIncluiSeparado" onchange="recalcParcelas()"
+                               style="width:auto;height:auto;accent-color:#fff;">
+                        <label for="fParcIncluiSeparado" style="font-size:12px;color:#888;cursor:pointer;">
+                            Incluir totais separados no parcelamento (ex: Máquinas)
+                        </label>
+                    </div>
                     <div id="parcelasPreview" style="margin-top:8px;"></div>
                 </div>
             </div>
@@ -1288,6 +1295,17 @@ function onPagTipoChange() {
     }
 }
 
+function totalSeparados() {
+    return estado.secoes
+        .filter(sec => sec.total_separado)
+        .reduce((s, sec) => s + calcSubtotalSecao(sec), 0);
+}
+
+function baseParcelamento() {
+    const incluir = document.getElementById('fParcIncluiSeparado')?.checked;
+    return calcTotalGeral() + (incluir ? totalSeparados() : 0);
+}
+
 function recalcParcelas() {
     const n = parseInt(document.getElementById('fParcelasNum').value) || 2;
     const dataStr = document.getElementById('fParcelasData').value;
@@ -1295,7 +1313,7 @@ function recalcParcelas() {
     const wrap = document.getElementById('parcelasPreview');
     if (!dataStr) { wrap.innerHTML = ''; return; }
 
-    const total = calcTotalGeral();
+    const total = baseParcelamento();
     const valorParcela = total / n;
     const datas = [];
 
@@ -1341,7 +1359,7 @@ function coletarParcelas() {
     const freq = document.getElementById('fParcelasFreq')?.value || 'mensal';
     const n = parseInt(document.getElementById('fParcelasNum')?.value) || 2;
     const dataStr = document.getElementById('fParcelasData')?.value || '';
-    const total = calcTotalGeral();
+    const total = baseParcelamento();
     const valorParcela = total / n;
     const parcelas = [];
 
@@ -1370,10 +1388,11 @@ function textoPagamento() {
     if (tipo === 'parcelado') {
         const n = document.getElementById('fParcelasNum')?.value || '2';
         const freq = document.getElementById('fParcelasFreq')?.value || 'mensal';
-        const freqLabel = { mensal:'MENSAL', quinzenal:'QUINZENAL', semanal:'SEMANAL', manual:'MANUAL' };
+        const freqLabel = { mensal:'MENSAL', quinzenal:'QUINZENAL', semanal:'SEMANAL', manual:'' };
         const data1 = document.getElementById('fParcelasData')?.value;
         const dataFmt = data1 ? new Date(data1+'T12:00:00').toLocaleDateString('pt-BR') : '';
-        return `${n}X ${freqLabel[freq] || ''} — 1ª PARCELA: ${dataFmt}`;
+        const freqStr = freqLabel[freq] ? ` ${freqLabel[freq]}` : '';
+        return `${n}X${freqStr} — 1ª PARCELA: ${dataFmt}`;
     }
     return mapLabel[tipo] || tipo.toUpperCase();
 }
@@ -1469,6 +1488,7 @@ function coletarEstado() {
     estado.resumo.pag_parcelas_num = parseInt(document.getElementById('fParcelasNum')?.value) || 2;
     estado.resumo.pag_parcelas_data = document.getElementById('fParcelasData')?.value || '';
     estado.resumo.pag_parcelas_freq = document.getElementById('fParcelasFreq')?.value || 'mensal';
+    estado.resumo.pag_incluir_separado = document.getElementById('fParcIncluiSeparado')?.checked || false;
     estado.resumo.pag_parcelas_lista = coletarParcelas();
     estado.resumo.condicao_texto = textoPagamento();
 }
@@ -1594,6 +1614,7 @@ function restaurarEstadoUI() {
             if (res.pag_parcelas_num)  g('fParcelasNum').value  = res.pag_parcelas_num;
             if (res.pag_parcelas_data) g('fParcelasData').value = res.pag_parcelas_data;
             if (res.pag_parcelas_freq) g('fParcelasFreq').value = res.pag_parcelas_freq;
+            g('fParcIncluiSeparado').checked = !!res.pag_incluir_separado;
             recalcParcelas();
         }
         if (res.pag_tipo === 'outro' && res.pag_outro_desc) {
