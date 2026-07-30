@@ -65,6 +65,9 @@ function gerarPedidoMFHTML(pedido) {
     const secoes = pedido.secoes || [];
     const gruposVistos = new Set();
 
+    // Kits vinculados por seção (para exibir a multiplicação junto ao subtotal)
+    const kitsItens = (pedido.resumo?.kits && pedido.resumo?.kits_itens) ? pedido.resumo.kits_itens : [];
+
     for (const sec of secoes) {
         let bloco = '';
         if (sec.grupo && !gruposVistos.has(sec.grupo)) {
@@ -73,7 +76,11 @@ function gerarPedidoMFHTML(pedido) {
                 <tr><td style="background:#c0392b;color:#fff;font-size:12px;font-weight:700;padding:8px 14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${esc(sec.grupo.toUpperCase())}</td></tr>
             </table>`;
         }
-        bloco += _mfGerarSecaoHTML(sec);
+        const kit = kitsItens.find(k =>
+            (k.secao_id && k.secao_id === sec.id) ||
+            (k.secao_titulo && k.secao_titulo === (sec.titulo || ''))
+        );
+        bloco += _mfGerarSecaoHTML(sec, kit);
 
         if (sec.total_separado) separadasHTML += bloco;
         else secoesHTML += bloco;
@@ -133,7 +140,7 @@ function _mfContarCols(cols) {
     return n + 1; // +1 for DESCRIÇÃO
 }
 
-function _mfGerarSecaoHTML(sec) {
+function _mfGerarSecaoHTML(sec, kit) {
     const cols = sec.colunas;
     const totalSec = _mfCalcSubtotal(sec);
     const nCols = _mfContarCols(cols);
@@ -202,10 +209,23 @@ function _mfGerarSecaoHTML(sec) {
         return `<tr style="${bg}">${tds}</tr>`;
     }).join('');
 
-    const subtotalRow = `<tr style="background:#f5f5f5;">
-        <td colspan="${nCols-1}" style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;border-top:2px solid #ccc;text-transform:uppercase;">SUBTOTAL</td>
+    // Com kit vinculado: subtotal vira "valor por kit" + linha da multiplicação
+    const temKit = kit && kit.qtd > 0;
+    const subtotalLabel = temKit ? 'SUBTOTAL (VALOR POR KIT)' : 'SUBTOTAL';
+
+    let subtotalRow = `<tr style="background:#f5f5f5;">
+        <td colspan="${nCols-1}" style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;border-top:2px solid #ccc;text-transform:uppercase;">${subtotalLabel}</td>
         <td style="padding:8px 14px;text-align:right;font-weight:700;color:#000;font-size:12px;border-top:2px solid #ccc;font-family:monospace;">R$ ${_mfFmt(totalSec)}</td>
     </tr>`;
+
+    if (temKit) {
+        subtotalRow += `<tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+            <td colspan="${nCols-1}" style="padding:9px 14px;font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;">
+                TOTAL — ${kit.qtd} KIT${kit.qtd > 1 ? 'S' : ''} × R$ ${_mfFmt(totalSec)} / KIT
+            </td>
+            <td style="padding:9px 14px;text-align:right;font-weight:700;color:#fff;font-size:13px;font-family:monospace;">R$ ${_mfFmt(kit.qtd * totalSec)}</td>
+        </tr>`;
+    }
 
     // Banda de total próprio para seções com total separado (ex: TOTAL MÁQUINAS)
     const totalBand = sec.total_separado ? `
