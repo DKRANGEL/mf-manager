@@ -304,18 +304,28 @@ function _mfGerarResumoHTML(pedido) {
     }
 
     // Kits — dentro do RESUMO, antes do total final
-    const comKits = res.kits && res.kits_qtd > 0 && res.kits_valor > 0;
-    const totalKits = comKits ? res.kits_qtd * res.kits_valor : 0;
+    // Novo formato: lista kits_itens; antigo: kits_qtd + kits_valor
+    let kitsArr = [];
+    if (res.kits) {
+        if (res.kits_itens?.length) {
+            kitsArr = res.kits_itens.filter(k => k.qtd > 0 && k.valor > 0);
+        } else if (res.kits_qtd > 0 && res.kits_valor > 0) {
+            kitsArr = [{ qtd: res.kits_qtd, valor: res.kits_valor, secao_titulo: '' }];
+        }
+    }
+    const comKits = kitsArr.length > 0;
+    const totalKits = kitsArr.reduce((s, k) => s + k.qtd * k.valor, 0);
     const totalFinal = comKits ? totalKits : total;
 
-    if (comKits) {
+    kitsArr.forEach(k => {
+        const ref = k.secao_titulo ? ` (${esc(k.secao_titulo.toUpperCase())})` : '';
         linhas += `<tr style="background:#f5f5f5;">
             <td style="padding:8px 16px;font-size:11px;color:#333;">
-                ${res.kits_qtd} KIT${res.kits_qtd > 1 ? 'S' : ''} × R$ ${_mfFmt(res.kits_valor)} / kit
+                ${k.qtd} KIT${k.qtd > 1 ? 'S' : ''} × R$ ${_mfFmt(k.valor)} / kit${ref}
             </td>
-            <td style="padding:8px 16px;text-align:right;font-size:11px;font-family:monospace;font-weight:700;color:#333;">R$ ${_mfFmt(totalKits)}</td>
+            <td style="padding:8px 16px;text-align:right;font-size:11px;font-family:monospace;font-weight:700;color:#333;">R$ ${_mfFmt(k.qtd * k.valor)}</td>
         </tr>`;
-    }
+    });
 
     linhas += `<tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         <td style="padding:12px 16px;font-size:14px;font-weight:700;color:#fff;">VALOR TOTAL DO PEDIDO</td>

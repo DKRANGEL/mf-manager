@@ -540,23 +540,10 @@
                 <div class="toggle-sw" id="toggleKits" onclick="toggleResumo('kits',this)"></div>
             </div>
             <div class="resumo-extra resumo-extra-hidden" id="extraKits">
-                <div class="campo">
-                    <label>Seção vinculada (valor por kit)</label>
-                    <select id="fKitsSecao" onchange="onKitsSecaoChange()">
-                        <option value="">Selecionar seção...</option>
-                    </select>
-                </div>
-                <div class="campo-row">
-                    <div class="campo">
-                        <label>Qtd. de kits</label>
-                        <input type="number" id="fKitsQtd" value="1" min="1" oninput="recalcKits()">
-                    </div>
-                    <div class="campo">
-                        <label>Valor por kit (R$)</label>
-                        <input type="text" id="fKitsValor" inputmode="decimal" oninput="mascaraMoeda(this);recalcKits()" placeholder="0,00">
-                    </div>
-                </div>
-                <div id="kitsTotal" style="font-size:12px;color:#888;font-family:var(--mono);padding:4px 0;"></div>
+                <div id="kitsLista"></div>
+                <button class="btn-add-sec" style="margin-top:6px;" onclick="adicionarKit()">
+                    <i data-lucide="plus"></i> Adicionar kit
+                </button>
             </div>
             <!-- Bloco INCLUSO -->
             <div class="resumo-item">
@@ -681,7 +668,7 @@ let estado = {
         pagamentos: false, pagamentos_itens: [],
         nf: false, nf_percent: 18,
         condicao: true, condicao_valor: '',
-        kits: false, kits_qtd: 1, kits_valor: 0,
+        kits: false, kits_itens: [],
         incluso: false, incluso_texto: '',
         obs: false, obs_texto: '',
     }
@@ -1245,7 +1232,10 @@ function toggleResumo(campo, swEl) {
         const el = document.getElementById(extraId);
         if (el) el.classList.toggle('resumo-extra-hidden', !estado.resumo[campo]);
     }
-    if (campo === 'kits' && estado.resumo[campo]) atualizarSelectKits();
+    if (campo === 'kits' && estado.resumo[campo]) {
+        if (estado.resumo.kits_itens.length === 0) adicionarKit();
+        else renderKits();
+    }
 }
 
 function adicionarPagamento() {
@@ -1448,40 +1438,88 @@ function textoPagamento() {
     return mapLabel[tipo] || tipo.toUpperCase();
 }
 
-// ── KITS VINCULADOS ──
-function atualizarSelectKits() {
-    const sel = document.getElementById('fKitsSecao');
-    if (!sel) return;
-    const atual = sel.value;
-    sel.innerHTML = '<option value="">Valor manual</option>' +
-        estado.secoes.map((s, i) => `<option value="${s.id}" ${s.id === atual ? 'selected' : ''}>${esc(s.titulo || 'Seção ' + (i+1))}</option>`).join('');
+// ── KITS (LISTA — cada kit vinculado a uma seção) ──
+function adicionarKit() {
+    estado.resumo.kits_itens.push({ secao_id: '', secao_titulo: '', qtd: 1, valor: 0 });
+    renderKits();
 }
 
-function onKitsSecaoChange() {
-    const secId = document.getElementById('fKitsSecao').value;
-    if (!secId) { document.getElementById('fKitsValor').readOnly = false; recalcKits(); return; }
-    const sec = estado.secoes.find(s => s.id === secId);
-    if (!sec) return;
-    const sub = calcSubtotalSecao(sec);
-    document.getElementById('fKitsValor').value = fmtNEditar(sub);
-    document.getElementById('fKitsValor').readOnly = true;
-    recalcKits();
+function removerKit(idx) {
+    estado.resumo.kits_itens.splice(idx, 1);
+    renderKits();
 }
 
-function recalcKits() {
-    const secId = document.getElementById('fKitsSecao')?.value;
+function onKitSecao(idx, secId) {
+    const k = estado.resumo.kits_itens[idx];
+    if (!k) return;
+    k.secao_id = secId;
     if (secId) {
         const sec = estado.secoes.find(s => s.id === secId);
         if (sec) {
-            const sub = calcSubtotalSecao(sec);
-            document.getElementById('fKitsValor').value = fmtNEditar(sub);
+            k.valor = calcSubtotalSecao(sec);
+            k.secao_titulo = sec.titulo || '';
         }
+    } else {
+        k.secao_titulo = '';
     }
-    const qtd = parseFloat(document.getElementById('fKitsQtd')?.value) || 1;
-    const val = parseMoeda(document.getElementById('fKitsValor')?.value || '0');
-    const total = qtd * val;
-    const el = document.getElementById('kitsTotal');
-    if (el) el.textContent = total > 0 ? `${qtd} kit${qtd > 1 ? 's' : ''} × R$ ${fmtN(val)} = R$ ${fmtN(total)}` : '';
+    renderKits();
+}
+
+function onKitQtd(idx, val) {
+    const k = estado.resumo.kits_itens[idx];
+    if (k) { k.qtd = parseFloat(val) || 1; atualizarTotalKit(idx); }
+}
+
+function onKitValor(idx, input) {
+    const k = estado.resumo.kits_itens[idx];
+    if (k) { k.valor = parseMoeda(input.value); atualizarTotalKit(idx); }
+}
+
+function atualizarTotalKit(idx) {
+    const k = estado.resumo.kits_itens[idx];
+    const el = document.getElementById(`kitTotal_${idx}`);
+    if (k && el) el.textContent = `${k.qtd} kit${k.qtd > 1 ? 's' : ''} × R$ ${fmtN(k.valor)} = R$ ${fmtN(k.qtd * k.valor)}`;
+}
+
+function renderKits() {
+    const wrap = document.getElementById('kitsLista');
+    if (!wrap) return;
+
+    wrap.innerHTML = estado.resumo.kits_itens.map((k, i) => {
+        const options = '<option value="">Valor manual</option>' +
+            estado.secoes.map((s, j) =>
+                `<option value="${s.id}" ${s.id === k.secao_id ? 'selected' : ''}>${esc(s.titulo || 'Seção ' + (j+1))}</option>`
+            ).join('');
+        const vinculado = !!k.secao_id;
+        return `
+        <div style="background:#0e0e10;border:1px solid #1e1e22;border-radius:10px;padding:12px;margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.8px;">Kit ${i + 1}</span>
+                <button onclick="removerKit(${i})" style="background:none;border:none;color:#444;cursor:pointer;padding:2px;" title="Remover kit">
+                    <i data-lucide="x" style="width:14px;height:14px;"></i>
+                </button>
+            </div>
+            <div class="campo">
+                <label>Seção vinculada (valor por kit)</label>
+                <select onchange="onKitSecao(${i}, this.value)">${options}</select>
+            </div>
+            <div class="campo-row">
+                <div class="campo">
+                    <label>Qtd. de kits</label>
+                    <input type="number" value="${k.qtd}" min="1" oninput="onKitQtd(${i}, this.value)">
+                </div>
+                <div class="campo">
+                    <label>Valor por kit (R$)</label>
+                    <input type="text" value="${fmtNEditar(k.valor)}" inputmode="decimal" ${vinculado ? 'readonly style="opacity:0.6;"' : ''}
+                           oninput="mascaraMoeda(this);onKitValor(${i}, this)">
+                </div>
+            </div>
+            <div id="kitTotal_${i}" style="font-size:12px;color:#888;font-family:var(--mono);padding-top:4px;">
+                ${k.qtd} kit${k.qtd > 1 ? 's' : ''} × R$ ${fmtN(k.valor)} = R$ ${fmtN(k.qtd * k.valor)}
+            </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1528,9 +1566,14 @@ function coletarEstado() {
     estado.resumo.desconto_valor = parseMoeda(document.getElementById('fDescontoValor')?.value || '0');
     estado.resumo.desconto_label = document.getElementById('fDescontoLabel')?.value || 'DESCONTO';
     estado.resumo.nf_percent = parseFloat(document.getElementById('fNFPercent')?.value) || 18;
-    estado.resumo.kits_qtd = parseFloat(document.getElementById('fKitsQtd')?.value) || 1;
-    estado.resumo.kits_valor = parseMoeda(document.getElementById('fKitsValor')?.value || '0');
-    estado.resumo.kits_secao_id = document.getElementById('fKitsSecao')?.value || '';
+    // Kits vinculados: sincroniza valor e título com o subtotal atual da seção
+    estado.resumo.kits_itens = (estado.resumo.kits_itens || []).map(k => {
+        if (k.secao_id) {
+            const sec = estado.secoes.find(s => s.id === k.secao_id);
+            if (sec) { k.valor = calcSubtotalSecao(sec); k.secao_titulo = sec.titulo || ''; }
+        }
+        return k;
+    });
     estado.resumo.incluso_texto = document.getElementById('fIncluso')?.value || '';
     estado.resumo.obs_texto = document.getElementById('fObs')?.value || '';
     // Pagamento
@@ -1677,16 +1720,23 @@ function restaurarEstadoUI() {
         }
     }
 
-    // Kits
+    // Kits — migra formato antigo (kit único) e revincula seções pelo título
     if (res.kits) {
-        atualizarSelectKits();
-        if (res.kits_qtd)   g('fKitsQtd').value   = res.kits_qtd;
-        if (res.kits_valor) g('fKitsValor').value  = fmtNEditar(res.kits_valor);
-        if (res.kits_secao_id) {
-            g('fKitsSecao').value = res.kits_secao_id;
-            g('fKitsValor').readOnly = !!res.kits_secao_id;
+        if (!res.kits_itens || !res.kits_itens.length) {
+            // Formato antigo: kits_qtd + kits_valor
+            estado.resumo.kits_itens = (res.kits_qtd && res.kits_valor)
+                ? [{ secao_id: '', secao_titulo: '', qtd: res.kits_qtd, valor: res.kits_valor }]
+                : [];
         }
-        recalcKits();
+        // IDs de seção mudam a cada carregamento — revincula pelo título
+        estado.resumo.kits_itens.forEach(k => {
+            if (k.secao_titulo) {
+                const sec = estado.secoes.find(s => (s.titulo || '') === k.secao_titulo);
+                k.secao_id = sec ? sec.id : '';
+                if (sec) k.valor = calcSubtotalSecao(sec);
+            }
+        });
+        renderKits();
     }
 }
 
