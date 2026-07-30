@@ -483,10 +483,18 @@ async function compartilharDocumentoPDF(contentEl, nome) {
 
     try {
         const opt = {
-            margin: [8, 8, 10, 8],
+            // O .recibo já tem padding interno de 15mm — sem margem extra
+            margin: 0,
             filename: `${nome}.pdf`,
             image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                // Força media queries de desktop — sem isso o celular renderiza
+                // o PDF com as regras mobile e o layout sai diferente do preview
+                windowWidth: 1300,
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', 'img'] }
         };
