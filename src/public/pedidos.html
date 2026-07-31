@@ -132,6 +132,49 @@
         .filtro-btn.aberto.ativo    { background: rgba(239,68,68,.12);  border-color: #ef4444; color: #ef4444; }
         .filtro-btn.concluido.ativo { background: rgba(74,222,128,.12); border-color: #4ade80; color: #4ade80; }
 
+        /* ── ABAS POR TIPO DE DOCUMENTO ── */
+        .tabs-tipos {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #1e1e22;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tabs-tipos::-webkit-scrollbar { display: none; }
+
+        .tab-tipo {
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+            transition: .15s;
+            -webkit-tap-highlight-color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-tipo:hover { color: #aaa; }
+        .tab-tipo.ativo { color: #fff; border-bottom-color: #fff; }
+
+        .tab-count {
+            font-size: 10px;
+            font-weight: 700;
+            background: #1e1e22;
+            color: #777;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-family: var(--mono, 'JetBrains Mono', monospace);
+        }
+        .tab-tipo.ativo .tab-count { background: #333; color: #fff; }
+
         .data-input {
             height: 32px; background: #121214; border: 1px solid #29292e;
             border-radius: 20px; padding: 0 12px; color: #666; font-size: 11px;
@@ -473,6 +516,7 @@
             <a href="/emitir" class="btn btn-white"><i data-lucide="pencil"></i> Novo Pedido</a>
         </div>
     </div>
+    <div class="tabs-tipos" id="tabsTipos"></div>
     <div class="filtros-wrapper">
         <div class="filtros-row">
             <button class="filtro-btn ativo"               onclick="setFiltroStatus('todos')">Todos</button>
@@ -504,6 +548,7 @@
     let todosPedidos = [];
     let filtroStatus = 'todos';
     let filtroPeriodo = 'todos';
+    let filtroTipo = 'todos';
 
     document.addEventListener('DOMContentLoaded', carregarPedidos);
 
@@ -515,10 +560,39 @@
             todosPedidos = (json.data || []).sort((a, b) =>
                 new Date(b.data_atualizacao || b.data_emissao) - new Date(a.data_atualizacao || a.data_emissao)
             );
+            renderTabs();
             renderGrid();
         } catch (err) {
             document.getElementById('pedidosGrid').innerHTML = `<div class="empty"><p>Erro ao carregar: ${err.message}</p></div>`;
         }
+    }
+
+    // ── ABAS POR TIPO DE DOCUMENTO ──
+    function renderTabs() {
+        const el = document.getElementById('tabsTipos');
+        if (!el) return;
+
+        const contagens = {};
+        todosPedidos.forEach(p => {
+            const t = p.tipo || 'PEDIDO DE VENDA';
+            contagens[t] = (contagens[t] || 0) + 1;
+        });
+        const tipos = Object.keys(contagens).sort();
+
+        // Se o tipo filtrado deixou de existir, volta para "todos"
+        if (filtroTipo !== 'todos' && !contagens[filtroTipo]) filtroTipo = 'todos';
+
+        let html = `<button class="tab-tipo ${filtroTipo === 'todos' ? 'ativo' : ''}" onclick="setFiltroTipo('todos')">
+            Todos <span class="tab-count">${todosPedidos.length}</span></button>`;
+        html += tipos.map(t => `<button class="tab-tipo ${filtroTipo === t ? 'ativo' : ''}" onclick="setFiltroTipo(this.dataset.tipo)" data-tipo="${t.replace(/"/g, '&quot;')}">
+            ${t} <span class="tab-count">${contagens[t]}</span></button>`).join('');
+        el.innerHTML = html;
+    }
+
+    function setFiltroTipo(tipo) {
+        filtroTipo = tipo;
+        renderTabs();
+        renderGrid();
     }
 
     // ── FILTROS DE STATUS ──
@@ -542,10 +616,16 @@
     function filtrarPedidos(pedidos) {
         let lista = pedidos;
 
+        // Aba por tipo de documento
+        if (filtroTipo !== 'todos') {
+            lista = lista.filter(ped => (ped.tipo || 'PEDIDO DE VENDA') === filtroTipo);
+        }
+
         // Busca por nome, cliente ou número
         const busca = (document.getElementById('filtroBusca')?.value || '').toLowerCase().trim();
         if (busca) {
             lista = lista.filter(ped =>
+                (ped.nome || '').toLowerCase().includes(busca) ||
                 (ped.cliente || '').toLowerCase().includes(busca) ||
                 (ped.numero || '').toLowerCase().includes(busca)
             );
