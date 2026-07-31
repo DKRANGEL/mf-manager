@@ -40,8 +40,8 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 ### Instalação
 
 ```bash
-git clone <repo>
-cd tiny-recibo-pro
+git clone https://github.com/DKRANGEL/mf-manager.git
+cd mf-manager
 npm install
 cp .env.example .env   # edite com seu token
 npm run dev
@@ -111,7 +111,7 @@ src/data/
 
 ```bash
 # Usar cmd.exe (não PowerShell 7)
-ssh root@85.31.60.246
+ssh root@<IP_DO_VPS>   # IP disponível no painel da Hostinger
 ```
 
 ### Estrutura no servidor
@@ -127,16 +127,16 @@ Os dados ficam em Docker volume (`mf_data`) montado em `/app/src/data` — persi
 ### Deploy manual (se necessário)
 
 ```bash
-ssh root@85.31.60.246
+ssh root@<IP_DO_VPS>
 cd /app/mf-manager
-git pull origin magic-fireworks-template
+git pull origin main
 docker compose up -d --build
 docker image prune -f
 ```
 
 ### Auto-deploy
 
-Todo `git push` na branch `magic-fireworks-template` dispara o GitHub Actions (`.github/workflows/deploy.yml`) que faz o deploy automaticamente via SSH.
+Todo `git push` na branch `main` dispara o GitHub Actions (`.github/workflows/deploy.yml`) que faz o deploy automaticamente via SSH.
 
 **Secrets necessários no GitHub:** `VPS_HOST`, `VPS_USER`, `VPS_KEY`
 

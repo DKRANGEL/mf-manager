@@ -1,6 +1,6 @@
 // ===================== ROTAS: ORDENS DE EQUIPAMENTO =====================
 // CRUD de ordens (salvas em JSON) + config de responsáveis/locais
-// + pesquisa de produtos/equipamentos no Tiny
+// + pesquisa de produtos/equipamentos no catálogo local
 
 const express = require('express');
 const fs = require('fs');

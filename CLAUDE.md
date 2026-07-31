@@ -13,7 +13,7 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 - **Frontend:** HTML/CSS/JS vanilla, mobile-first
 - **Ícones:** Lucide Icons (CDN, `lucide.createIcons()` após cada render dinâmico)
 - **Fontes:** DM Sans + JetBrains Mono (Google Fonts)
-- **Deploy:** Hostinger VPS + Docker + Nginx — branch `magic-fireworks-template`
+- **Deploy:** Hostinger VPS + Docker + Nginx — branch `main`
 
 ---
 
@@ -206,16 +206,16 @@ src/
 - CSS mobile-first — breakpoint padrão `@media (max-width: 768px)`
 - `preco_total = qtd_entrada × preco_unit` — fator nunca multiplica preço, só quantidade
 - Lucide: adicionar `lucide.createIcons()` após qualquer `innerHTML =` que contenha `<i data-lucide>`
-- Commits convencionais na branch `magic-fireworks-template`
+- Commits convencionais na branch `main`
 
 ## Servidor de produção
 
 - **URL:** `https://manager.magicfireworks.com`
-- **VPS:** Hostinger — IP `85.31.60.246`
-- **Acesso SSH:** `ssh root@85.31.60.246` (usar **cmd.exe**, não PowerShell 7)
+- **VPS:** Hostinger — IP disponível no painel da Hostinger (não commitado)
+- **Acesso SSH:** `ssh root@<IP_DO_VPS>` (usar **cmd.exe**, não PowerShell 7)
 - **Pasta no servidor:** `/app/mf-manager`
 - **Dados persistentes:** Docker volume `mf_data` → `/app/src/data`
-- **Auto-deploy:** GitHub Actions via push na branch `magic-fireworks-template`
+- **Auto-deploy:** GitHub Actions via push na branch `main`
 
 ### Comandos úteis no servidor
 

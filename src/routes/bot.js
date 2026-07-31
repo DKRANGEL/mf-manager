@@ -5,7 +5,7 @@ const {getCatalogoBot} = require('../utils/catalogoCache');
 
 /**
  * GET /bot/catalogo
- * Retorna catálogo de produtos Tiny formatado para o FastZap.
+ * Retorna catálogo de produtos formatado para o FastZap.
  * Resposta em ~50ms via cache (TTL 10 minutos).
  */
 router.get('/catalogo', requireApiKey, async (req, res) => {

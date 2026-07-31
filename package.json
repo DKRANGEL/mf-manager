@@ -1,21 +1,19 @@
 {
-  "name": "tiny-recibo-pro",
+  "name": "mf-manager",
   "version": "1.0.0",
-  "description": "Gerador de recibos profissionais para o ERP Tiny/Olist",
+  "description": "MF Manager — Sistema interno de gestão da Magic Fireworks",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js"
   },
   "keywords": [
-    "tiny",
-    "olist",
-    "erp",
-    "recibo",
-    "pdv",
-    "nota-fiscal"
+    "gestao",
+    "pedidos",
+    "estoque",
+    "pirotecnia"
   ],
-  "author": "",
+  "author": "Dérick",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.5",

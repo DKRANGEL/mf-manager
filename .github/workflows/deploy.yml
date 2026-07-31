@@ -3,7 +3,7 @@ name: Deploy — MF Manager
 on:
   push:
     branches:
-      - magic-fireworks-template
+      - main
 
 jobs:
   deploy:
@@ -20,7 +20,8 @@ jobs:
           script: |
             set -e
             cd /app/mf-manager
-            git pull origin magic-fireworks-template
+            git checkout main
+            git pull origin main
             docker compose up -d --build
             docker image prune -f
             echo "Deploy concluído: $(date)"
