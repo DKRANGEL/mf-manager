@@ -199,7 +199,7 @@ function _mfGerarSecaoHTML(sec, kit) {
         if (cols?.qtd || !cols) tds += `<td style="${tdC}">${qtd}</td>`;
         if (cols?.v_unit || !cols) {
             tds += item.sem_valor
-                ? `<td style="${tdR}"><span style="color:#c0392b;font-size:10px;">PAGO P/<br>EVENTO</span></td>`
+                ? `<td style="${tdR}"><span style="color:#c0392b;font-size:10px;">${esc(item.sem_valor_msg || 'PAGO P/ EVENTO')}</span></td>`
                 : `<td style="${tdR}">R$ ${_mfFmt(vUnit)}</td>`;
         }
         if (cols?.total_kit) tds += `<td style="${tdR}">${item.total_kit != null ? 'R$ '+_mfFmt(item.total_kit) : '-'}</td>`;

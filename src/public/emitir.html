@@ -1168,13 +1168,26 @@ function editarItem(secId, idx) {
     if (cols.complemento) fields += `<div class="campo" style="grid-column:1/-1;"><label>Complemento</label><input type="text" id="mi_complemento" value="${esc(item.complemento || '')}" placeholder="Ex: Pago pelo evento"></div>`;
     fields += `
         <div class="campo" style="grid-column:1/-1; display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="mi_sem_valor" ${item.sem_valor ? 'checked' : ''} style="width:auto;height:auto;accent-color:#fff;">
-            <label for="mi_sem_valor" style="font-size:12px;color:#888;margin:0;text-transform:none;letter-spacing:0;">Item sem valor (ex: pago pelo evento)</label>
+            <input type="checkbox" id="mi_sem_valor" ${item.sem_valor ? 'checked' : ''} onchange="toggleSemValorMsg()" style="width:auto;height:auto;accent-color:#fff;">
+            <label for="mi_sem_valor" style="font-size:12px;color:#888;margin:0;text-transform:none;letter-spacing:0;">Item sem valor</label>
+        </div>
+        <div class="campo" id="mi_sem_valor_msg_wrap" style="grid-column:1/-1; ${item.sem_valor ? '' : 'display:none;'}">
+            <label>Motivo</label>
+            <select id="mi_sem_valor_msg">
+                <option value="PAGO P/ EVENTO" ${(!item.sem_valor_msg || item.sem_valor_msg === 'PAGO P/ EVENTO') ? 'selected' : ''}>Pago pelo evento</option>
+                <option value="ISENTO" ${item.sem_valor_msg === 'ISENTO' ? 'selected' : ''}>Isento</option>
+            </select>
         </div>
     `;
 
     document.getElementById('modalItemFields').innerHTML = fields;
     document.getElementById('modalItem').classList.add('active');
+}
+
+function toggleSemValorMsg() {
+    const checked = document.getElementById('mi_sem_valor')?.checked;
+    const wrap = document.getElementById('mi_sem_valor_msg_wrap');
+    if (wrap) wrap.style.display = checked ? '' : 'none';
 }
 
 function recalcModalItem() {
@@ -1209,6 +1222,7 @@ function salvarModalItem() {
     item.ncm = g('mi_ncm')?.value || item.ncm;
     item.complemento = g('mi_complemento')?.value || '';
     item.sem_valor = g('mi_sem_valor')?.checked || false;
+    item.sem_valor_msg = item.sem_valor ? (g('mi_sem_valor_msg')?.value || 'PAGO P/ EVENTO') : '';
 
     // recalcula total
     if (!item.sem_valor) {
@@ -1987,7 +2001,7 @@ function gerarTRItem(item, num, cols) {
     if (cols.unidade) tds += `<td style="${tdCenter}">${esc(item.unidade || 'UN')}</td>`;
     if (cols.qtd) tds += `<td style="${tdCenter}">${item.qtd || 1}</td>`;
     if (cols.v_unit) {
-        tds += `<td style="${tdRight}">${item.sem_valor ? '<span style="color:#c0392b;font-size:10px;">PAGO P/<br>EVENTO</span>' : 'R$ ' + fmtN(item.v_unit || 0)}</td>`;
+        tds += `<td style="${tdRight}">${item.sem_valor ? `<span style="color:#c0392b;font-size:10px;">${esc(item.sem_valor_msg || 'PAGO P/ EVENTO')}</span>` : 'R$ ' + fmtN(item.v_unit || 0)}</td>`;
     }
     if (cols.total_kit) tds += `<td style="${tdRight}">${item.total_kit != null ? 'R$ ' + fmtN(item.total_kit) : '-'}</td>`;
     tds += `<td style="${tdRight}font-weight:700;">${item.sem_valor ? '—' : 'R$ ' + fmtN(item.total || 0)}</td>`;
