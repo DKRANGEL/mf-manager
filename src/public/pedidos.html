@@ -128,9 +128,95 @@
 
         .filtro-btn:hover { border-color: #444; color: #ccc; }
 
-        .filtro-btn.pendente.ativo  { background: rgba(251,191,36,.12); border-color: #fbbf24; color: #fbbf24; }
-        .filtro-btn.aberto.ativo    { background: rgba(239,68,68,.12);  border-color: #ef4444; color: #ef4444; }
-        .filtro-btn.concluido.ativo { background: rgba(74,222,128,.12); border-color: #4ade80; color: #4ade80; }
+        /* ── PASTAS DE STATUS ── */
+        .pastas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .pasta-card {
+            background: #111113;
+            border: 1px solid #29292e;
+            border-radius: 14px;
+            padding: 26px 18px 20px;
+            cursor: pointer;
+            text-align: center;
+            transition: transform .18s, border-color .18s, box-shadow .18s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .pasta-card:hover { transform: translateY(-3px); }
+        .pasta-card.pendente:hover  { border-color: rgba(251,191,36,.5); box-shadow: 0 12px 32px rgba(251,191,36,.10); }
+        .pasta-card.aberto:hover    { border-color: rgba(239,68,68,.5);  box-shadow: 0 12px 32px rgba(239,68,68,.10); }
+        .pasta-card.concluido:hover { border-color: rgba(74,222,128,.5); box-shadow: 0 12px 32px rgba(74,222,128,.10); }
+
+        /* Ícone de pasta desenhado em CSS — aba e borda superior na cor do status */
+        .pasta-icone {
+            position: relative;
+            width: 96px; height: 70px;
+            margin: 0 auto 16px;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,.45));
+        }
+        .pasta-aba {
+            position: absolute; top: 0; left: 0;
+            width: 44%; height: 18px;
+            border-radius: 8px 12px 0 0;
+        }
+        .pasta-corpo {
+            position: absolute; top: 10px; left: 0; right: 0; bottom: 0;
+            border-radius: 0 10px 10px 10px;
+            background: linear-gradient(180deg, #26262c 0%, #19191e 100%);
+            border: 1px solid #34343b;
+            border-top-width: 3px;
+        }
+        .pasta-corpo::after {
+            content: '';
+            position: absolute; top: 6px; left: 8px; right: 8px; height: 1px;
+            background: rgba(255,255,255,.05);
+        }
+        .pasta-card.pendente  .pasta-aba { background: #fbbf24; }
+        .pasta-card.aberto    .pasta-aba { background: #ef4444; }
+        .pasta-card.concluido .pasta-aba { background: #4ade80; }
+        .pasta-card.pendente  .pasta-corpo { border-top-color: #fbbf24; }
+        .pasta-card.aberto    .pasta-corpo { border-top-color: #ef4444; }
+        .pasta-card.concluido .pasta-corpo { border-top-color: #4ade80; }
+
+        .pasta-qtd {
+            position: absolute; inset: 10px 0 0 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 800; color: #e8e8e8;
+            font-family: var(--mono, 'JetBrains Mono', monospace);
+        }
+
+        .pasta-nome { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .pasta-card.pendente  .pasta-nome { color: #fbbf24; }
+        .pasta-card.aberto    .pasta-nome { color: #ef4444; }
+        .pasta-card.concluido .pasta-nome { color: #4ade80; }
+        .pasta-meta { font-size: 11px; color: #555; font-family: var(--mono, 'JetBrains Mono', monospace); }
+
+        /* Cabeçalho dentro da pasta */
+        .pasta-header {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 16px; flex-wrap: wrap;
+        }
+        .pasta-header-titulo {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 15px; font-weight: 700; color: #fff;
+        }
+        .pasta-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+        @media (max-width: 768px) {
+            .pastas-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .pasta-card { padding: 18px 8px 14px; }
+            .pasta-icone { width: 68px; height: 52px; margin-bottom: 12px; }
+            .pasta-aba { height: 14px; }
+            .pasta-corpo { top: 8px; }
+            .pasta-qtd { inset: 8px 0 0 0; font-size: 17px; }
+            .pasta-nome { font-size: 12px; }
+            .pasta-meta { font-size: 9px; }
+        }
 
         /* ── ABAS POR TIPO DE DOCUMENTO ── */
         .tabs-tipos {
@@ -519,12 +605,6 @@
     <div class="tabs-tipos" id="tabsTipos"></div>
     <div class="filtros-wrapper">
         <div class="filtros-row">
-            <button class="filtro-btn ativo"               onclick="setFiltroStatus('todos')">Todos</button>
-            <button class="filtro-btn pendente"             onclick="setFiltroStatus('pendente')">🟡 Pendente</button>
-            <button class="filtro-btn aberto"               onclick="setFiltroStatus('aberto')">🔴 Aberto</button>
-            <button class="filtro-btn concluido"            onclick="setFiltroStatus('concluido')">🟢 Concluído</button>
-        </div>
-        <div class="filtros-row">
             <button class="filtro-btn ativo" data-periodo="todos"  onclick="setFiltroPeriodo(this)">Todos</button>
             <button class="filtro-btn" data-periodo="hoje"         onclick="setFiltroPeriodo(this)">Hoje</button>
             <button class="filtro-btn" data-periodo="semana"       onclick="setFiltroPeriodo(this)">Semana</button>
@@ -539,6 +619,8 @@
                    onfocus="this.style.borderColor='#555'" onblur="this.style.borderColor='#29292e'">
         </div>
     </div>
+    <div id="pastasGrid" class="pastas-grid"></div>
+    <div id="pastaHeader" class="pasta-header" style="display:none;"></div>
     <div id="pedidosGrid" class="pedidos-grid">
         <div class="loading">Carregando pedidos...</div>
     </div>
@@ -546,9 +628,15 @@
 
 <script>
     let todosPedidos = [];
-    let filtroStatus = 'todos';
+    let pastaAtual = null; // null = mostrando as pastas | 'pendente' | 'aberto' | 'concluido'
     let filtroPeriodo = 'todos';
     let filtroTipo = 'todos';
+
+    const PASTAS = {
+        pendente:  { nome: 'Pendentes',  cor: '#fbbf24', match: s => s === 'rascunho' || s === 'pendente' },
+        aberto:    { nome: 'Abertos',    cor: '#ef4444', match: s => s === 'emitido'  || s === 'aberto' },
+        concluido: { nome: 'Concluídos', cor: '#4ade80', match: s => s === 'concluido' },
+    };
 
     // Permissões do usuário logado (a segurança real é no servidor;
     // aqui só escondemos o que ele não pode usar)
@@ -608,13 +696,14 @@
         renderGrid();
     }
 
-    // ── FILTROS DE STATUS ──
-    function setFiltroStatus(status) {
-        filtroStatus = status;
-        document.querySelectorAll('.filtros-row:first-child .filtro-btn').forEach(b => b.classList.remove('ativo'));
-        const btns = document.querySelectorAll('.filtros-row:first-child .filtro-btn');
-        const idx = ['todos','pendente','aberto','concluido'].indexOf(status);
-        if (btns[idx]) btns[idx].classList.add('ativo');
+    // ── PASTAS ──
+    function abrirPasta(chave) {
+        pastaAtual = chave;
+        renderGrid();
+    }
+
+    function fecharPasta() {
+        pastaAtual = null;
         renderGrid();
     }
 
@@ -642,17 +731,6 @@
                 (ped.cliente || '').toLowerCase().includes(busca) ||
                 (ped.numero || '').toLowerCase().includes(busca)
             );
-        }
-
-        // Filtro de status
-        if (filtroStatus !== 'todos') {
-            lista = lista.filter(ped => {
-                const s = ped.status || 'rascunho';
-                if (filtroStatus === 'pendente') return s === 'rascunho' || s === 'pendente';
-                if (filtroStatus === 'aberto')   return s === 'emitido'  || s === 'aberto';
-                if (filtroStatus === 'concluido') return s === 'concluido';
-                return true;
-            });
         }
 
         // Filtro de período
@@ -686,15 +764,61 @@
     }
 
     function renderGrid() {
+        const base = filtrarPedidos(todosPedidos);
+        const pastasEl = document.getElementById('pastasGrid');
+        const headerEl = document.getElementById('pastaHeader');
+        const gridEl = document.getElementById('pedidosGrid');
+
+        if (!pastaAtual) {
+            // Vista de pastas
+            headerEl.style.display = 'none';
+            gridEl.innerHTML = '';
+            pastasEl.style.display = '';
+            pastasEl.innerHTML = Object.entries(PASTAS).map(([chave, p]) => {
+                const itens = base.filter(ped => p.match(ped.status || 'rascunho'));
+                const soma = itens.reduce((s, ped) => s + (ped.total_valor || 0), 0);
+                const meta = PERM.ver_valores && soma > 0
+                    ? `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'} · ${fmtMoney(soma)}`
+                    : `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'}`;
+                return `<div class="pasta-card ${chave}" onclick="abrirPasta('${chave}')">
+                    <div class="pasta-icone">
+                        <div class="pasta-aba"></div>
+                        <div class="pasta-corpo"></div>
+                        <div class="pasta-qtd">${itens.length}</div>
+                    </div>
+                    <div class="pasta-nome">${p.nome}</div>
+                    <div class="pasta-meta">${meta}</div>
+                </div>`;
+            }).join('');
+            return;
+        }
+
+        // Vista dentro da pasta
+        const pasta = PASTAS[pastaAtual];
+        const lista = base.filter(ped => pasta.match(ped.status || 'rascunho'));
+        pastasEl.style.display = 'none';
+        pastasEl.innerHTML = '';
+        headerEl.style.display = '';
+        headerEl.innerHTML = `
+            <button class="btn btn-ghost" onclick="fecharPasta()"><i data-lucide="arrow-left"></i> Pastas</button>
+            <div class="pasta-header-titulo">
+                <span class="pasta-dot" style="background:${pasta.cor};"></span>
+                ${pasta.nome} <span class="tab-count">${lista.length}</span>
+            </div>`;
+        renderCards(lista);
+        lucide.createIcons();
+    }
+
+    function renderCards(lista) {
         const container = document.getElementById('pedidosGrid');
-        const lista = filtrarPedidos(todosPedidos);
 
         if (lista.length === 0) {
             container.innerHTML = `<div class="empty">
-            <div class="empty-icon"><i data-lucide="file-text"></i></div>
-            <div style="color:#555;font-size:14px;font-weight:600;">Nenhum pedido encontrado</div>
-            <p>Crie um novo pedido para começar</p>
+            <div class="empty-icon"><i data-lucide="folder-open"></i></div>
+            <div style="color:#555;font-size:14px;font-weight:600;">Pasta vazia</div>
+            <p>Nenhum pedido ${PASTAS[pastaAtual]?.nome.toLowerCase() || ''} com os filtros atuais</p>
         </div>`;
+            lucide.createIcons();
             return;
         }
 
