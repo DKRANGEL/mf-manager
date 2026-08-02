@@ -22,8 +22,8 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 ```
 src/
 ├── app.js                  # createApp() — registra todas as rotas e páginas
-├── server.js               # entry point, dotenv, initData, aquecerCache
-├── data/                   # persistência (volume Fly.io)
+├── server.js               # entry point, dotenv, initData, initUsuarios
+├── data/                   # persistência (Docker volume mf_data)
 │   ├── produtos.json       # catálogo de produtos { proximo_id, produtos[] }
 │   ├── equipamentos.json
 │   ├── config-pedidos.json # { proximo_numero }
@@ -34,8 +34,8 @@ src/
 ├── public/
 │   ├── css/app.css         # design system global (variáveis, sidebar, modais, Lucide)
 │   ├── css/documento.css   # estilos do documento impresso
-│   ├── js/app.js           # lógica da index (OS, inventário)
-│   ├── js/documento.js     # renderização do documento PDF/preview
+│   ├── js/alerts.js        # wrapper MF (alert/confirm/prompt/toast) sobre SweetAlert2
+│   ├── js/documento.js     # renderização do documento PDF/preview (+ modo romaneio)
 │   ├── index.html          # home — desktop: gerador OS/recibo | mobile: cards de nav
 │   ├── pedidos.html        # hall de pedidos com cards e preview modal
 │   ├── emitir.html         # criação/edição de pedido de venda
@@ -56,9 +56,11 @@ src/
 ├── middleware/
 │   ├── sessao.js           # cookie HMAC + requireAuth
 │   ├── auditoria.js        # registro automático de ações
+│   ├── permissoes.js       # controle de acesso por papel/permissões (páginas 302, APIs 403)
 │   └── auth.js             # requireApiKey (bot)
 └── utils/
     ├── storage.js          # readJSON, writeJSONAtomic, listJSON
+    ├── permissoes.js       # papéis (admin/owner/operador), presets e resolverPermissoes
     ├── catalogoCache.js    # catálogo do bot — 100% local (produtos + saldo)
     ├── initData.js         # cria arquivos/diretórios na inicialização
     ├── parserPedido.js     # parser de texto → itens de pedido
@@ -91,6 +93,46 @@ src/
 | GET | `/api/equipamentos/catalogo` | Lista equipamentos por categoria |
 | POST/PUT/DELETE | `/api/equipamentos/item` | CRUD equipamentos |
 | GET | `/bot/catalogo` | Catálogo para FastZap (requer BOT_API_KEY) |
+| GET | `/api/auth/me` | Sessão atual (usuario, nome, admin, papel, permissoes) |
+| GET/POST | `/api/auth/usuarios` | Lista / cria usuário (admin; aceita `papel`) |
+| PUT | `/api/auth/usuarios/:u/permissoes` | Salva papel + permissões granulares (admin) |
+
+---
+
+## Níveis de acesso
+
+Três papéis (presets em `utils/permissoes.js`), customizáveis por usuário no `/perfil`:
+
+| Papel | Acesso |
+|-------|--------|
+| `admin` | Tudo — inclui usuários, senhas e auditoria. Ignora customizações. |
+| `owner` | Tudo, exceto gerenciar usuários/senhas/auditoria |
+| `operador` | Só a tela de pedidos, somente visualização, **sem valores** |
+
+- **Permissões granulares** por usuário: `telas` (pedidos, emitir, estoque, contagem, produtos, equipamentos, etiquetas, coletor, movimentos) + `pedidos` (ver_valores, criar_editar, excluir, mudar_status)
+- **Enforcement no servidor** (`middleware/permissoes.js`): páginas proibidas → redirect `/`; APIs → 403
+- **Sem `ver_valores`**: a API de pedidos remove os preços do JSON (`ocultarValoresPedido`) e marca `valores_ocultos: true`; o `documento.js` então renderiza modo "romaneio" (sem colunas de valor, subtotais, resumo, pagamentos, dados bancários)
+- **Usuários legados sem `papel`** = owner (nada quebra)
+- O frontend só esconde botões por cortesia — a segurança real é sempre no servidor
+
+### usuarios.json (gitignored)
+```json
+{
+  "usuarios": [{
+    "usuario": "fulano",
+    "nome": "Fulano Silva",
+    "admin": false,
+    "papel": "operador",
+    "permissoes": {
+      "telas": { "pedidos": true, "emitir": false, "...": false },
+      "pedidos": { "ver_valores": false, "criar_editar": false, "excluir": false, "mudar_status": false }
+    },
+    "senha_hash": "salt:hash (scrypt)",
+    "senha_cifrada": "iv:tag:enc (AES-256-GCM, requer SENHA_CRYPT_KEY)",
+    "criado_em": "ISO"
+  }]
+}
+```
 
 ---
 
@@ -190,6 +232,12 @@ src/
 - [x] Responsividade mobile completa em todas as telas
 - [x] Lucide Icons em substituição a emojis em todos os arquivos
 - [x] CRUD de equipamentos e Ordens de Serviço
+- [x] Login, gestão de usuários, auditoria e trilha de ações
+- [x] Níveis de acesso (Administrador / Owner / Operador) com permissões granulares por usuário
+- [x] Preview "romaneio" sem valores para usuários sem `ver_valores`
+- [x] Abas por tipo de documento no hall de pedidos
+- [x] Item sem valor com motivo selecionável (Pago pelo evento / Isento)
+- [x] Compartilhar PDF pelo share sheet nativo do mobile (html2canvas + jsPDF)
 
 ## O que ainda pode ser feito
 

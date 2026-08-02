@@ -10,11 +10,15 @@ Sistema interno de gestão de pedidos, estoque e equipamentos para a **Magic Eff
 
 ## Funcionalidades
 
-- **Pedidos de venda** — criar, emitir e controlar baixa de estoque bidirecional
+- **Pedidos de venda** — criar, emitir e controlar baixa de estoque bidirecional, com abas por tipo de documento
 - **Estoque em tempo real** — saldo por produto calculado a partir da última contagem + movimentos
 - **Contagem física** — registrar contagens por categoria com exportação em PDF
 - **Catálogo de produtos** — CRUD com upload de imagem e autocomplete
 - **Equipamentos** — cadastro e ordens de serviço
+- **Etiquetas QR + Coletor** — QR codes nas caixas e entrada/saída de estoque pela câmera do celular
+- **Níveis de acesso** — papéis Administrador / Owner / Operador com permissões granulares por usuário; sem a permissão de valores, os pedidos viram um "romaneio" sem preços (removidos no servidor)
+- **Auditoria** — trilha de quem acessou e fez o quê (só admin)
+- **Compartilhar PDF** — gera o PDF no navegador e abre o share sheet nativo do celular
 - **Mobile-first** — interface otimizada para uso no celular pelo Mateus (usuário principal)
 
 ---
@@ -63,13 +67,31 @@ Acesse `http://localhost:3003`.
 
 | Rota | Descrição |
 |------|-----------|
-| `/` | Home — desktop (gerador OS/recibo) e mobile (cards de navegação) |
-| `/pedidos` | Hall de pedidos com filtros e preview |
+| `/` | Home — cards de navegação (filtrados pelas permissões do usuário) |
+| `/pedidos` | Hall de pedidos com abas por tipo, filtros e preview |
 | `/emitir` | Criar ou editar pedido de venda |
 | `/estoque` | Saldo em tempo real por produto |
 | `/contagem` | Registrar contagem física de estoque |
 | `/produtos` | Catálogo de produtos (CRUD) |
 | `/equipamentos` | Cadastro de equipamentos e ordens de serviço |
+| `/etiquetas` | Gerador de etiquetas com QR code |
+| `/coletor` | Leitor de QR para entrada/saída de estoque (mobile) |
+| `/logs` | Log de movimentos de estoque |
+| `/perfil` | Conta, troca de senha e (admin) usuários + permissões |
+| `/auditoria` | Trilha de ações por usuário (admin) |
+
+### Níveis de acesso
+
+| Papel | Acesso |
+|-------|--------|
+| **Administrador** | Tudo, incluindo usuários, senhas e auditoria |
+| **Owner** | Tudo, exceto gerenciar usuários/senhas/auditoria |
+| **Operador** | Só a tela de pedidos, somente visualização, sem valores |
+
+Os papéis são presets — o admin pode ajustar as permissões de cada usuário
+individualmente em `/perfil` (telas acessíveis + ações dentro de pedidos).
+O bloqueio é aplicado no servidor: páginas proibidas redirecionam, APIs
+retornam 403 e os valores dos pedidos são removidos do JSON antes do envio.
 
 ---
 
