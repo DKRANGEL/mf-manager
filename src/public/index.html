@@ -152,15 +152,36 @@
         window.location.href = '/login';
     }
 
-    // Mostra seção de administração só para admin
+    // Esconde cards de telas sem permissão + mostra Administração só para admin
     (async () => {
         try {
             const res = await fetch('/api/auth/me');
             const json = await res.json();
-            if (json.success && json.admin) {
+            if (!json.success) return;
+
+            if (json.admin) {
                 document.getElementById('secaoAdmin').style.display = '';
-                lucide.createIcons();
             }
+
+            const telas = json.permissoes?.telas;
+            if (telas && !json.admin) {
+                const MAPA = {
+                    '/pedidos': 'pedidos', '/estoque': 'estoque', '/contagem': 'contagem',
+                    '/coletor': 'coletor', '/logs': 'movimentos', '/produtos': 'produtos',
+                    '/equipamentos': 'equipamentos', '/etiquetas': 'etiquetas',
+                };
+                document.querySelectorAll('.nav-card').forEach(card => {
+                    const tela = MAPA[card.getAttribute('href')];
+                    if (tela && !telas[tela]) card.style.display = 'none';
+                });
+                // Esconde seções que ficaram vazias
+                document.querySelectorAll('.nav-section').forEach(sec => {
+                    const visiveis = Array.from(sec.querySelectorAll('.nav-card'))
+                        .filter(c => c.style.display !== 'none');
+                    if (visiveis.length === 0) sec.style.display = 'none';
+                });
+            }
+            lucide.createIcons();
         } catch {}
     })();
 </script>

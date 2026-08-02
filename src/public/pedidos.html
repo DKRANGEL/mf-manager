@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -550,7 +550,20 @@
     let filtroPeriodo = 'todos';
     let filtroTipo = 'todos';
 
-    document.addEventListener('DOMContentLoaded', carregarPedidos);
+    // Permissões do usuário logado (a segurança real é no servidor;
+    // aqui só escondemos o que ele não pode usar)
+    let PERM = { ver_valores: true, criar_editar: true, excluir: true, mudar_status: true };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const me = await fetch('/api/auth/me').then(r => r.json());
+            if (me?.permissoes?.pedidos) PERM = me.permissoes.pedidos;
+        } catch {}
+        if (!PERM.criar_editar) {
+            document.querySelectorAll('a[href="/emitir"]').forEach(a => a.style.display = 'none');
+        }
+        carregarPedidos();
+    });
 
     async function carregarPedidos() {
         try {
@@ -689,7 +702,8 @@
 
             const cliente = ped.cliente || '';
             const subtotal = ped.total_valor || 0;
-            const totalStr = subtotal > 0 ? fmtMoney(subtotal) : 'Sem valor';
+            const semValores = !PERM.ver_valores || ped.total_valor === null;
+            const totalStr = semValores ? '' : (subtotal > 0 ? fmtMoney(subtotal) : 'Sem valor');
             const totalClass = subtotal > 0 ? '' : 'zero';
             const data = formatData(ped.data_atualizacao || ped.data_emissao);
             const status = ped.status || 'rascunho';
@@ -704,26 +718,35 @@
             const sClass      = isPendente ? 's-pendente' : isAberto ? 's-aberto' : 's-concluido';
             const numCurto    = ped.numero.replace(/^PED-\d{4}-/, ''); // mantém zeros: 001, 002
 
+            const cliqueInfo = PERM.criar_editar
+                ? `abrirEditar('${esc(ped.numero)}')`
+                : `abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')`;
+
+            const statusHTML = PERM.mudar_status
+                ? `<select class="status-select ${selectClass}" onchange="mudarStatus('${esc(ped.numero)}', this.value, this)">
+                    <option value="rascunho" ${isPendente  ? 'selected' : ''}>🟡 Pendente</option>
+                    <option value="emitido"  ${isAberto    ? 'selected' : ''}>🔴 Aberto</option>
+                    <option value="concluido"${isConcluido ? 'selected' : ''}>🟢 Concluído</option>
+                </select>`
+                : `<div class="status-select ${selectClass}" style="cursor:default;">${statusLabel === 'PENDENTE' ? '🟡 Pendente' : statusLabel === 'ABERTO' ? '🔴 Aberto' : '🟢 Concluído'}</div>`;
+
+            const acoesHTML = `
+                <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
+                ${PERM.criar_editar ? `<button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>` : ''}
+                ${PERM.excluir ? `<button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir"><i data-lucide="trash-2"></i></button>` : ''}`;
+
             return `<div class="pedido-card ${sClass}">
             <div class="card-head">
                 <span class="card-num">#${numCurto}</span>
                 <span class="card-status ${statusClass}">${statusLabel}</span>
             </div>
-            <div class="card-info" onclick="abrirEditar('${esc(ped.numero)}')">
+            <div class="card-info" onclick="${cliqueInfo}">
                 <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
                 <div class="card-meta">${data} · ${ped.total_itens} ${ped.total_itens === 1 ? 'item' : 'itens'}</div>
-                <div class="card-total ${totalClass}">${totalStr}</div>
+                ${semValores ? '' : `<div class="card-total ${totalClass}">${totalStr}</div>`}
             </div>
-            <select class="status-select ${selectClass}" onchange="mudarStatus('${esc(ped.numero)}', this.value, this)">
-                <option value="rascunho" ${isPendente  ? 'selected' : ''}>🟡 Pendente</option>
-                <option value="emitido"  ${isAberto    ? 'selected' : ''}>🔴 Aberto</option>
-                <option value="concluido"${isConcluido ? 'selected' : ''}>🟢 Concluído</option>
-            </select>
-            <div class="card-actions">
-                <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
-                <button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>
-                <button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir"><i data-lucide="trash-2"></i></button>
-            </div>
+            ${statusHTML}
+            <div class="card-actions">${acoesHTML}</div>
         </div>`;
         }).join('');
         lucide.createIcons();
@@ -869,6 +892,6 @@
 
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
-<script src="/public/js/documento.js?v=20260730d"></script>
+<script src="/public/js/documento.js?v=20260802"></script>
 </body>
 </html>

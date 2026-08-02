@@ -68,6 +68,11 @@ function gerarPedidoMFHTML(pedido) {
     // Kits vinculados por seção (para exibir a multiplicação junto ao subtotal)
     const kitsItens = (pedido.resumo?.kits && pedido.resumo?.kits_itens) ? pedido.resumo.kits_itens : [];
 
+    // Modo sem valores (romaneio): API removeu os preços e marcou a flag.
+    // Renderiza só cliente + produtos com quantidades — sem colunas de valor,
+    // sem subtotais, sem resumo, sem pagamentos, sem dados bancários.
+    const semValores = !!pedido.valores_ocultos;
+
     for (const sec of secoes) {
         let bloco = '';
         if (sec.grupo && !gruposVistos.has(sec.grupo)) {
@@ -80,7 +85,7 @@ function gerarPedidoMFHTML(pedido) {
             (k.secao_id && k.secao_id === sec.id) ||
             (k.secao_titulo && k.secao_titulo === (sec.titulo || ''))
         );
-        bloco += _mfGerarSecaoHTML(sec, kit);
+        bloco += _mfGerarSecaoHTML(sec, semValores ? null : kit, semValores);
 
         if (sec.total_separado) separadasHTML += bloco;
         else secoesHTML += bloco;
@@ -88,7 +93,33 @@ function gerarPedidoMFHTML(pedido) {
 
     // Resumo em duas partes: tabela principal (antes das separadas)
     // e extras — condição, parcelas, obs (depois das separadas)
-    const { principal: resumoHTML, extras: extrasHTML } = _mfGerarResumoHTML(pedido);
+    let resumoHTML = '', extrasHTML = '', rodapeBancario = `
+        <div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
+            <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
+        </div>`;
+    if (semValores) {
+        rodapeBancario = '';
+        // Mantém só observações e "incluso" (sem valores)
+        const r = pedido.resumo || {};
+        if (r.incluso && r.incluso_texto) {
+            const li = r.incluso_texto.split('\n').filter(l => l.trim());
+            extrasHTML += `<table style="width:100%;border-collapse:collapse;margin-top:14px;">
+                <tr><td style="background:#f0f0f0;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:0.5px;">INCLUSO</td></tr>
+                <tr><td style="padding:10px 14px;font-size:11px;color:#333;">
+                    ${li.map(l => `<div style="margin-bottom:4px;">• ${esc(l.replace(/^[•·\-]\s*/, ''))}</div>`).join('')}
+                </td></tr>
+            </table>`;
+        }
+        if (r.obs && r.obs_texto) {
+            extrasHTML += `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
+                <strong>OBS:</strong> ${esc(r.obs_texto)}
+            </div>`;
+        }
+    } else {
+        const partes = _mfGerarResumoHTML(pedido);
+        resumoHTML = partes.principal;
+        extrasHTML = partes.extras;
+    }
 
     return `<div class="recibo">
         <div class="recibo-header">
@@ -116,10 +147,7 @@ function gerarPedidoMFHTML(pedido) {
         ${resumoHTML}
         ${separadasHTML}
         ${extrasHTML}
-
-        <div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
-            <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
-        </div>
+        ${rodapeBancario}
     </div>`;
 }
 
@@ -140,16 +168,22 @@ function _mfContarCols(cols) {
     return n + 1; // +1 for DESCRIÇÃO
 }
 
-function _mfGerarSecaoHTML(sec, kit) {
+function _mfGerarSecaoHTML(sec, kit, semValores) {
     const cols = sec.colunas;
     const totalSec = _mfCalcSubtotal(sec);
-    const nCols = _mfContarCols(cols);
+    // Sem valores: some V.UNIT, T.KIT e TOTAL da contagem de colunas
+    let nCols = _mfContarCols(cols);
+    if (semValores) {
+        nCols -= 1; // TOTAL
+        if (cols?.v_unit || !cols) nCols -= 1;
+        if (cols?.total_kit) nCols -= 1;
+    }
     const compact = nCols > 8;
     const p = compact ? '4px 5px' : '6px 10px';
     const fs = compact ? '9px' : '10px';
 
     let tituloSec = sec.titulo || '';
-    if (sec.preco_padrao_ativo && sec.preco_padrao) {
+    if (!semValores && sec.preco_padrao_ativo && sec.preco_padrao) {
         tituloSec += ` — R$ ${_mfFmt(sec.preco_padrao)} / ${sec.preco_rotulo || 'UN'}`;
     }
 
@@ -168,9 +202,11 @@ function _mfGerarSecaoHTML(sec, kit) {
     if (cols?.qtd_un) ths += `<th style="${thC}">QTD<br>UN</th>`;
     if (cols?.unidade) ths += `<th style="${thC}">UN</th>`;
     if (cols?.qtd || !cols) ths += `<th style="${thC}">QTD</th>`;
-    if (cols?.v_unit || !cols) ths += `<th style="${thR}">V.UNIT</th>`;
-    if (cols?.total_kit) ths += `<th style="${thR}">T.KIT</th>`;
-    ths += `<th style="${thR}">TOTAL</th>`;
+    if (!semValores) {
+        if (cols?.v_unit || !cols) ths += `<th style="${thR}">V.UNIT</th>`;
+        if (cols?.total_kit) ths += `<th style="${thR}">T.KIT</th>`;
+        ths += `<th style="${thR}">TOTAL</th>`;
+    }
 
     // Rows
     const fp = compact ? '5px 5px' : '8px 10px'; const ffs = compact ? '10px' : '11px';
@@ -197,23 +233,25 @@ function _mfGerarSecaoHTML(sec, kit) {
         if (cols?.qtd_un) tds += `<td style="${tdC}font-weight:700;">${item.qtd_un != null ? item.qtd_un.toLocaleString('pt-BR') : '-'}</td>`;
         if (cols?.unidade) tds += `<td style="${tdC}">${esc(un)}</td>`;
         if (cols?.qtd || !cols) tds += `<td style="${tdC}">${qtd}</td>`;
-        if (cols?.v_unit || !cols) {
-            tds += item.sem_valor
-                ? `<td style="${tdR}"><span style="color:#c0392b;font-size:10px;">${esc(item.sem_valor_msg || 'PAGO P/ EVENTO')}</span></td>`
-                : `<td style="${tdR}">R$ ${_mfFmt(vUnit)}</td>`;
+        if (!semValores) {
+            if (cols?.v_unit || !cols) {
+                tds += item.sem_valor
+                    ? `<td style="${tdR}"><span style="color:#c0392b;font-size:10px;">${esc(item.sem_valor_msg || 'PAGO P/ EVENTO')}</span></td>`
+                    : `<td style="${tdR}">R$ ${_mfFmt(vUnit)}</td>`;
+            }
+            if (cols?.total_kit) tds += `<td style="${tdR}">${item.total_kit != null ? 'R$ '+_mfFmt(item.total_kit) : '-'}</td>`;
+            tds += `<td style="${tdR}font-weight:700;">${item.sem_valor ? '—' : 'R$ '+_mfFmt(total)}</td>`;
         }
-        if (cols?.total_kit) tds += `<td style="${tdR}">${item.total_kit != null ? 'R$ '+_mfFmt(item.total_kit) : '-'}</td>`;
-        tds += `<td style="${tdR}font-weight:700;">${item.sem_valor ? '—' : 'R$ '+_mfFmt(total)}</td>`;
 
         const bg = i % 2 === 0 ? 'background:#f5f5f5;' : '';
         return `<tr style="${bg}">${tds}</tr>`;
     }).join('');
 
     // Com kit vinculado: subtotal vira "valor por kit" + linha da multiplicação
-    const temKit = kit && kit.qtd > 0;
+    const temKit = !semValores && kit && kit.qtd > 0;
     const subtotalLabel = temKit ? 'SUBTOTAL (VALOR POR KIT)' : 'SUBTOTAL';
 
-    let subtotalRow = `<tr style="background:#f5f5f5;">
+    let subtotalRow = semValores ? '' : `<tr style="background:#f5f5f5;">
         <td colspan="${nCols-1}" style="padding:8px 14px;font-size:11px;font-weight:700;color:#333;border-top:2px solid #ccc;text-transform:uppercase;">${subtotalLabel}</td>
         <td style="padding:8px 14px;text-align:right;font-weight:700;color:#000;font-size:12px;border-top:2px solid #ccc;font-family:monospace;">R$ ${_mfFmt(totalSec)}</td>
     </tr>`;
@@ -228,7 +266,7 @@ function _mfGerarSecaoHTML(sec, kit) {
     }
 
     // Banda de total próprio para seções com total separado (ex: TOTAL MÁQUINAS)
-    const totalBand = sec.total_separado ? `
+    const totalBand = (sec.total_separado && !semValores) ? `
     <table style="width:100%;border-collapse:collapse;margin-top:0;">
         <tr style="background:#1a1a1a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
             <td style="padding:12px 16px;font-size:14px;font-weight:700;color:#fff;">TOTAL ${esc((sec.titulo || 'SEÇÃO').toUpperCase())}</td>

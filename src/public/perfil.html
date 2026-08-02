@@ -58,6 +58,35 @@
             font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px;
             text-transform:uppercase; letter-spacing:0.5px; margin-left:8px; vertical-align:middle;
         }
+        .badge-owner {
+            display:inline-block; background:rgba(192,132,252,0.12); color:#c084fc;
+            font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px;
+            text-transform:uppercase; letter-spacing:0.5px; margin-left:8px; vertical-align:middle;
+        }
+        .badge-operador {
+            display:inline-block; background:rgba(255,255,255,0.06); color:#888;
+            font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px;
+            text-transform:uppercase; letter-spacing:0.5px; margin-left:8px; vertical-align:middle;
+        }
+
+        .campo select {
+            width:100%; height:44px; background:#1a1a1e; border:1px solid #2a2a30;
+            border-radius:8px; padding:0 14px; color:#fff; font-size:14px;
+            font-family:var(--font); outline:none; transition:0.15s; cursor:pointer;
+        }
+        .campo select:focus { border-color:#555; }
+
+        /* Editor de permissões */
+        .perm-grupo { margin-bottom:16px; }
+        .perm-grupo-titulo { font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+        .perm-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .perm-item {
+            display:flex; align-items:center; gap:8px; padding:8px 10px;
+            background:#1a1a1e; border:1px solid #2a2a30; border-radius:8px;
+            font-size:12px; color:#ccc; cursor:pointer; user-select:none;
+        }
+        .perm-item input { accent-color:#fff; cursor:pointer; }
+        .perm-item.desativado { opacity:0.5; cursor:not-allowed; }
 
         /* Lista de usuários */
         .user-row {
@@ -177,12 +206,16 @@
                     <input type="text" id="novoNome" placeholder="Ex: Mateus Silva" autocomplete="off">
                 </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <input type="checkbox" id="novoAdmin" style="accent-color:#fff;">
-                <label for="novoAdmin" style="font-size:12px;color:#888;cursor:pointer;">Administrador (pode gerenciar usuários)</label>
+            <div class="campo">
+                <label>Nível de acesso</label>
+                <select id="novoPapel">
+                    <option value="operador" selected>Operador — só visualiza pedidos, sem valores</option>
+                    <option value="owner">Owner — tudo, exceto usuários e auditoria</option>
+                    <option value="admin">Administrador — acesso total</option>
+                </select>
             </div>
             <div style="font-size:11px;color:#555;margin-bottom:14px;">
-                🔑 O usuário será criado com a senha padrão <strong style="color:#888;font-family:var(--mono);">magic2026</strong> — ele pode trocá-la depois no Perfil.
+                🔑 O usuário será criado com a senha padrão <strong style="color:#888;font-family:var(--mono);">magic2026</strong> — ele pode trocá-la depois no Perfil. As permissões podem ser ajustadas individualmente no botão <strong style="color:#888;">escudo</strong> da lista.
             </div>
             <button class="btn-primary" onclick="criarUsuario()">
                 <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Criar usuário
@@ -214,12 +247,46 @@
             <label>Nova senha (deixe em branco para manter)</label>
             <input type="text" id="editSenha" autocomplete="off" placeholder="Mín. 6 caracteres">
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
-            <input type="checkbox" id="editAdmin" style="accent-color:#fff;">
-            <label for="editAdmin" style="font-size:12px;color:#888;cursor:pointer;">Administrador</label>
-        </div>
         <button class="btn-primary" onclick="salvarEdicao()" style="width:100%;justify-content:center;">
             Salvar alterações
+        </button>
+    </div>
+</div>
+
+<!-- MODAL PERMISSÕES -->
+<div class="modal-overlay" id="modalPerm">
+    <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+        <div class="modal-titulo">
+            <span>Permissões — <span id="permUsuarioLabel" style="font-family:var(--mono);font-size:13px;color:#888;"></span></span>
+            <button class="modal-fechar" onclick="fecharModalPerm()">✕</button>
+        </div>
+        <input type="hidden" id="permUsuario">
+
+        <div class="campo">
+            <label>Nível de acesso (preset)</label>
+            <select id="permPapel" onchange="aplicarPresetPapel()">
+                <option value="operador">Operador — só pedidos, sem valores</option>
+                <option value="owner">Owner — tudo, exceto usuários e auditoria</option>
+                <option value="admin">Administrador — acesso total</option>
+            </select>
+        </div>
+
+        <div id="permChecksWrap">
+            <div class="perm-grupo">
+                <div class="perm-grupo-titulo">Telas que pode acessar</div>
+                <div class="perm-grid" id="permTelas"></div>
+            </div>
+            <div class="perm-grupo">
+                <div class="perm-grupo-titulo">Dentro de Pedidos</div>
+                <div class="perm-grid" id="permPedidos"></div>
+            </div>
+        </div>
+        <div id="permAdminAviso" style="display:none;font-size:12px;color:#60a5fa;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25);border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+            Administrador tem acesso total ao sistema, incluindo usuários, senhas e auditoria.
+        </div>
+
+        <button class="btn-primary" onclick="salvarPermissoes()" style="width:100%;justify-content:center;">
+            <i data-lucide="shield-check" style="width:14px;height:14px;"></i> Salvar permissões
         </button>
     </div>
 </div>
@@ -287,24 +354,36 @@
         document.getElementById('formNovo').classList.toggle('visivel');
     }
 
+    let usuariosCache = [];
+
+    function badgePapel(u) {
+        if (u.admin) return '<span class="badge-admin">Admin</span>';
+        if (u.papel === 'operador') return '<span class="badge-operador">Operador</span>';
+        return '<span class="badge-owner">Owner</span>';
+    }
+
     async function carregarUsuarios() {
         try {
             const res = await fetch('/api/auth/usuarios');
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
+            usuariosCache = json.data;
 
             document.getElementById('listaUsuarios').innerHTML = json.data.map(u => `
                 <div class="user-row">
                     <div class="user-avatar">${(u.nome || '?').trim()[0].toUpperCase()}</div>
                     <div class="user-info">
-                        <div class="user-nome">${esc(u.nome)}${u.admin ? '<span class="badge-admin">Admin</span>' : ''}</div>
+                        <div class="user-nome">${esc(u.nome)}${badgePapel(u)}</div>
                         <div class="user-login">@${esc(u.usuario)}${u.senha_alterada_em ? '' : ' · senha padrão'}</div>
                     </div>
                     <div class="user-actions">
+                        <button class="btn-icon" onclick="abrirModalPerm('${esc(u.usuario)}')" title="Permissões e acessos">
+                            <i data-lucide="shield"></i>
+                        </button>
                         <button class="btn-icon" onclick="verSenha('${esc(u.usuario)}')" title="Ver senha">
                             <i data-lucide="eye"></i>
                         </button>
-                        <button class="btn-icon" onclick="abrirModalEditar('${esc(u.usuario)}','${esc(u.nome)}',${u.admin})" title="Editar usuário">
+                        <button class="btn-icon" onclick="abrirModalEditar('${esc(u.usuario)}','${esc(u.nome)}')" title="Editar usuário">
                             <i data-lucide="pencil"></i>
                         </button>
                         <button class="btn-icon" onclick="resetarSenha('${esc(u.usuario)}')" title="Resetar senha para padrão">
@@ -323,10 +402,99 @@
         }
     }
 
+    // ── PERMISSÕES ──
+    const TELAS_LABELS = {
+        pedidos: 'Pedidos', emitir: 'Emitir pedido', estoque: 'Estoque',
+        contagem: 'Contagem', produtos: 'Produtos', equipamentos: 'Equipamentos',
+        etiquetas: 'Etiquetas', coletor: 'Coletor', movimentos: 'Movimentos',
+    };
+    const PEDIDOS_LABELS = {
+        ver_valores: 'Ver valores (R$)', criar_editar: 'Criar e editar',
+        excluir: 'Excluir', mudar_status: 'Mudar status',
+    };
+
+    function presetLocal(papel) {
+        const telas = {};
+        Object.keys(TELAS_LABELS).forEach(t => telas[t] = papel !== 'operador');
+        if (papel === 'operador') telas.pedidos = true;
+        const tudo = papel !== 'operador';
+        return { telas, pedidos: { ver_valores: tudo, criar_editar: tudo, excluir: tudo, mudar_status: tudo } };
+    }
+
+    function renderChecks(perm) {
+        document.getElementById('permTelas').innerHTML = Object.entries(TELAS_LABELS).map(([k, label]) => `
+            <label class="perm-item"><input type="checkbox" data-grupo="telas" data-chave="${k}" ${perm.telas?.[k] ? 'checked' : ''}> ${label}</label>
+        `).join('');
+        document.getElementById('permPedidos').innerHTML = Object.entries(PEDIDOS_LABELS).map(([k, label]) => `
+            <label class="perm-item"><input type="checkbox" data-grupo="pedidos" data-chave="${k}" ${perm.pedidos?.[k] ? 'checked' : ''}> ${label}</label>
+        `).join('');
+    }
+
+    function abrirModalPerm(usuario) {
+        const u = usuariosCache.find(x => x.usuario === usuario);
+        if (!u) return;
+        document.getElementById('permUsuario').value = usuario;
+        document.getElementById('permUsuarioLabel').textContent = '@' + usuario;
+
+        const papel = u.admin ? 'admin' : (u.papel || 'owner');
+        const sel = document.getElementById('permPapel');
+        sel.value = papel;
+        sel.disabled = (usuario === 'admin' || usuario === me.usuario);
+
+        renderChecks(u.permissoes || presetLocal(papel));
+        atualizarModoAdmin(papel === 'admin');
+        document.getElementById('modalPerm').classList.add('visivel');
+        lucide.createIcons();
+    }
+
+    function atualizarModoAdmin(ehAdmin) {
+        document.getElementById('permChecksWrap').style.display = ehAdmin ? 'none' : '';
+        document.getElementById('permAdminAviso').style.display = ehAdmin ? '' : 'none';
+    }
+
+    function aplicarPresetPapel() {
+        const papel = document.getElementById('permPapel').value;
+        atualizarModoAdmin(papel === 'admin');
+        if (papel !== 'admin') renderChecks(presetLocal(papel));
+    }
+
+    function fecharModalPerm() {
+        document.getElementById('modalPerm').classList.remove('visivel');
+    }
+
+    document.getElementById('modalPerm').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalPerm();
+    });
+
+    async function salvarPermissoes() {
+        const usuario = document.getElementById('permUsuario').value;
+        const papel = document.getElementById('permPapel').value;
+
+        const permissoes = { telas: {}, pedidos: {} };
+        document.querySelectorAll('#permChecksWrap input[type="checkbox"]').forEach(cb => {
+            permissoes[cb.dataset.grupo][cb.dataset.chave] = cb.checked;
+        });
+
+        try {
+            const res = await fetch(`/api/auth/usuarios/${encodeURIComponent(usuario)}/permissoes`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ papel, permissoes }),
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast(`Permissões de @${usuario} atualizadas`);
+            fecharModalPerm();
+            carregarUsuarios();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
     async function criarUsuario() {
         const usuario = document.getElementById('novoUsuario').value.trim();
         const nome = document.getElementById('novoNome').value.trim();
-        const admin = document.getElementById('novoAdmin').checked;
+        const papel = document.getElementById('novoPapel').value;
 
         if (!usuario || !nome) {
             MF.alert('Preencha usuário e nome', 'warning', 'Campos obrigatórios');
@@ -337,14 +505,14 @@
             const res = await fetch('/api/auth/usuarios', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario, nome, admin })
+                body: JSON.stringify({ usuario, nome, papel })
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
             MF.toast(`Usuário @${json.usuario} criado com senha padrão`);
             document.getElementById('novoUsuario').value = '';
             document.getElementById('novoNome').value = '';
-            document.getElementById('novoAdmin').checked = false;
+            document.getElementById('novoPapel').value = 'operador';
             toggleFormNovo();
             carregarUsuarios();
         } catch (err) {
@@ -401,14 +569,12 @@
     }
 
     // ── EDITAR USUÁRIO ──
-    function abrirModalEditar(usuario, nome, admin) {
+    function abrirModalEditar(usuario, nome) {
         document.getElementById('editUsuarioOriginal').value = usuario;
         document.getElementById('editUsuario').value = usuario;
         document.getElementById('editUsuario').disabled = (usuario === 'admin');
         document.getElementById('editNome').value = nome;
         document.getElementById('editSenha').value = '';
-        document.getElementById('editAdmin').checked = admin;
-        document.getElementById('editAdmin').disabled = (usuario === 'admin' || usuario === me.usuario);
         document.getElementById('modalEditar').classList.add('visivel');
     }
 
@@ -425,7 +591,6 @@
         const payload = {
             novo_usuario: document.getElementById('editUsuario').value.trim(),
             nome: document.getElementById('editNome').value.trim(),
-            admin: document.getElementById('editAdmin').checked,
             senha: document.getElementById('editSenha').value,
         };
 

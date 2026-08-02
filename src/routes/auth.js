@@ -10,6 +10,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { readJSON, writeJSONAtomic } = require('../utils/storage');
 const { criarToken, setCookie, limparCookie, validarToken, lerCookie } = require('../middleware/sessao');
+const { PAPEIS, presetPermissoes, resolverPermissoes } = require('../utils/permissoes');
 
 const router = express.Router();
 const USUARIOS_FILE = path.join(__dirname, '..', 'data', 'usuarios.json');
@@ -141,7 +142,15 @@ router.get('/me', (req, res) => {
     if (!sessao) return res.status(401).json({ success: false });
     const db = lerUsuarios();
     const u = db.usuarios.find(x => x.usuario === sessao.u);
-    res.json({ success: true, usuario: sessao.u, nome: u?.nome || sessao.u, admin: isAdmin(u) });
+    const perm = resolverPermissoes(u);
+    res.json({
+        success: true,
+        usuario: sessao.u,
+        nome: u?.nome || sessao.u,
+        admin: isAdmin(u),
+        papel: perm?.papel || 'owner',
+        permissoes: perm ? { telas: perm.telas, pedidos: perm.pedidos } : null,
+    });
 });
 
 // ── Helpers de permissão ──
@@ -193,13 +202,18 @@ router.get('/usuarios', (req, res) => {
     if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
 
     const db = lerUsuarios();
-    const lista = db.usuarios.map(u => ({
-        usuario: u.usuario,
-        nome: u.nome,
-        admin: isAdmin(u),
-        criado_em: u.criado_em,
-        senha_alterada_em: u.senha_alterada_em || null,
-    }));
+    const lista = db.usuarios.map(u => {
+        const perm = resolverPermissoes(u);
+        return {
+            usuario: u.usuario,
+            nome: u.nome,
+            admin: isAdmin(u),
+            papel: perm.papel,
+            permissoes: { telas: perm.telas, pedidos: perm.pedidos },
+            criado_em: u.criado_em,
+            senha_alterada_em: u.senha_alterada_em || null,
+        };
+    });
     res.json({ success: true, data: lista });
 });
 
@@ -222,10 +236,14 @@ router.post('/usuarios', (req, res) => {
             return res.status(400).json({ success: false, error: `Usuário "${usuario}" já existe` });
         }
 
+        // Papel define o preset de permissões (admin | owner | operador)
+        const papel = PAPEIS[req.body.papel] ? req.body.papel : (req.body.admin ? 'admin' : 'operador');
         const novoUsuario = {
             usuario,
             nome,
-            admin: !!req.body.admin,
+            admin: papel === 'admin',
+            papel,
+            permissoes: presetPermissoes(papel),
             criado_em: new Date().toISOString(),
         };
         armazenarSenha(novoUsuario, SENHA_PADRAO);
@@ -320,6 +338,45 @@ router.put('/usuarios/:usuario', (req, res) => {
 
         writeJSONAtomic(USUARIOS_FILE, db);
         res.json({ success: true, usuario: u.usuario });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// PUT /api/auth/usuarios/:usuario/permissoes — papel + permissões granulares (admin)
+router.put('/usuarios/:usuario/permissoes', (req, res) => {
+    try {
+        const logado = getUsuarioLogado(req);
+        if (!isAdmin(logado)) return res.status(403).json({ success: false, error: 'Acesso restrito ao administrador' });
+
+        const db = lerUsuarios();
+        const u = db.usuarios.find(x => x.usuario === req.params.usuario);
+        if (!u) return res.status(404).json({ success: false, error: 'Usuário não encontrado' });
+
+        const { papel, permissoes } = req.body;
+
+        if (papel !== undefined) {
+            if (!PAPEIS[papel]) return res.status(400).json({ success: false, error: 'Papel inválido' });
+            if (u.usuario === 'admin' && papel !== 'admin') {
+                return res.status(400).json({ success: false, error: 'O usuário admin não pode perder privilégios' });
+            }
+            if (u.usuario === logado.usuario && papel !== 'admin') {
+                return res.status(400).json({ success: false, error: 'Você não pode remover seus próprios privilégios' });
+            }
+            u.papel = papel;
+            u.admin = papel === 'admin';
+        }
+
+        if (permissoes !== undefined && typeof permissoes === 'object') {
+            u.permissoes = {
+                telas:   { ...(permissoes.telas   || {}) },
+                pedidos: { ...(permissoes.pedidos || {}) },
+            };
+        }
+
+        writeJSONAtomic(USUARIOS_FILE, db);
+        const perm = resolverPermissoes(u);
+        res.json({ success: true, papel: perm.papel, permissoes: { telas: perm.telas, pedidos: perm.pedidos } });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

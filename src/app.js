@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth');
 const auditoriaRoutes = require('./routes/auditoria');
 const { requireAuth } = require('./middleware/sessao');
 const { auditoria } = require('./middleware/auditoria');
+const { permissoesMiddleware } = require('./middleware/permissoes');
 
 function createApp() {
     const app = express();
@@ -37,6 +38,7 @@ function createApp() {
     });
     app.use(requireAuth);
     app.use(auditoria);
+    app.use(permissoesMiddleware);
     app.use('/api/auditoria', auditoriaRoutes);
 
     // ─── Static ─────────────────────────────────────────────────────────────────

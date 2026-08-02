@@ -31,6 +31,43 @@ function pedidoPath(numero) {
     return path.join(PEDIDOS_DIR, `${numero}.json`);
 }
 
+// ---- Ocultação de valores (usuários sem permissão ver_valores) ----
+// A remoção acontece AQUI no servidor: o JSON nunca sai com preço.
+
+function podeVerValores(req) {
+    return req.permissoes?.pedidos?.ver_valores !== false;
+}
+
+function ocultarValoresPedido(original) {
+    const pedido = JSON.parse(JSON.stringify(original));
+    pedido.valores_ocultos = true;
+    pedido.total_valor = null;
+
+    (pedido.secoes || []).forEach(sec => {
+        delete sec.preco_padrao;
+        sec.preco_padrao_ativo = false;
+        delete sec.preco_rotulo;
+        (sec.itens || []).forEach(item => {
+            delete item.v_unit;
+            delete item.total;
+            delete item.total_kit;
+            delete item.preco_unit;
+            delete item.preco_total;
+        });
+    });
+
+    // Resumo carrega só dinheiro (pagamentos, parcelas, kits, NF, desconto) — some inteiro.
+    // Mantém apenas observações e "incluso", que não têm valores.
+    const res = pedido.resumo || {};
+    pedido.resumo = {
+        obs: !!res.obs, obs_texto: res.obs_texto || '',
+        incluso: !!res.incluso, incluso_texto: res.incluso_texto || '',
+    };
+    delete pedido.blocos; // schema antigo também carrega nf/desconto/parcelas
+
+    return pedido;
+}
+
 // ===================== PARSE =====================
 
 // POST /api/pedidos/parse — texto → rascunho com 3 baldes
@@ -120,7 +157,7 @@ router.get('/', (req, res) => {
                     data_atualizacao: pedido.data_atualizacao,
                     cliente,
                     total_itens: pedido.total_itens || itens.length,
-                    total_valor: subtotal
+                    total_valor: podeVerValores(req) ? subtotal : null
                 };
             } catch {
                 return null;
@@ -151,7 +188,8 @@ router.get('/:numero', (req, res) => {
             };
         }
 
-        res.json({success: true, data: pedido});
+        const data = podeVerValores(req) ? pedido : ocultarValoresPedido(pedido);
+        res.json({success: true, data});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
