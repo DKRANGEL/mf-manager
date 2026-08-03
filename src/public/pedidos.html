@@ -200,6 +200,11 @@
         .pasta-card.sub.avulsos .pasta-aba { background: #555; }
         .pasta-card.sub.avulsos .pasta-corpo { border-top-color: #555; }
         .pasta-card.sub.avulsos:hover { border-color: #555; box-shadow: 0 12px 32px rgba(255,255,255,.05); }
+        /* Pasta com cor personalizada: contorno e brilho do hover na cor escolhida */
+        .pasta-card.sub.custom:hover {
+            border-color: var(--pasta-cor);
+            box-shadow: 0 12px 32px color-mix(in srgb, var(--pasta-cor) 15%, transparent);
+        }
 
         /* Menu de 3 pontos da pasta */
         .pasta-menu-btn {
@@ -933,7 +938,8 @@
                 const cor = corDaPasta(k);
                 const estAba   = cor ? ` style="background:${cor};"` : '';
                 const estCorpo = cor ? ` style="border-top-color:${cor};"` : '';
-                return `<div class="pasta-card sub ${pastaAtual} ${k === 'avulsos' ? 'avulsos' : ''}" data-chave="${k}" onclick="abrirSubPasta('${k}')">
+                const estCard  = cor ? ` style="--pasta-cor:${cor};"` : '';
+                return `<div class="pasta-card sub ${pastaAtual} ${k === 'avulsos' ? 'avulsos' : ''} ${cor ? 'custom' : ''}" data-chave="${k}"${estCard} onclick="abrirSubPasta('${k}')">
                     <button class="pasta-menu-btn" onclick="abrirMenuPasta(event, '${k}')" title="Opções da pasta">⋮</button>
                     <div class="pasta-icone">
                         <div class="pasta-aba"${estAba}></div>
