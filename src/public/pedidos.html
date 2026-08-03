@@ -194,6 +194,11 @@
         .pasta-card.pendente  .pasta-nome { color: #fbbf24; }
         .pasta-card.aberto    .pasta-nome { color: #ef4444; }
         .pasta-card.concluido .pasta-nome { color: #4ade80; }
+        /* Sub-pastas (clientes): nome branco, cor só na aba */
+        .pasta-card.sub .pasta-nome { color: #fff; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pasta-card.sub.avulsos .pasta-aba { background: #555; }
+        .pasta-card.sub.avulsos .pasta-corpo { border-top-color: #555; }
+        .pasta-card.sub.avulsos:hover { border-color: #555; box-shadow: 0 12px 32px rgba(255,255,255,.05); }
         .pasta-meta { font-size: 11px; color: #555; font-family: var(--mono, 'JetBrains Mono', monospace); }
 
         /* Cabeçalho dentro da pasta */
@@ -628,7 +633,9 @@
 
 <script>
     let todosPedidos = [];
-    let pastaAtual = null; // null = mostrando as pastas | 'pendente' | 'aberto' | 'concluido'
+    let todosClientes = [];
+    let pastaAtual = null;    // null = pastas de status | 'pendente' | 'aberto' | 'concluido'
+    let subPastaAtual = null; // null = sub-pastas de cliente | 'c<id>' | 'avulsos'
     let filtroPeriodo = 'todos';
     let filtroTipo = 'todos';
 
@@ -655,9 +662,12 @@
 
     async function carregarPedidos() {
         try {
-            const res = await fetch('/api/pedidos');
-            const json = await res.json();
+            const [json, cli] = await Promise.all([
+                fetch('/api/pedidos').then(r => r.json()),
+                fetch('/api/clientes').then(r => r.json()).catch(() => ({ data: [] })),
+            ]);
             if (!json.success) throw new Error(json.error);
+            todosClientes = cli?.data || [];
             todosPedidos = (json.data || []).sort((a, b) =>
                 new Date(b.data_atualizacao || b.data_emissao) - new Date(a.data_atualizacao || a.data_emissao)
             );
@@ -666,6 +676,23 @@
         } catch (err) {
             document.getElementById('pedidosGrid').innerHTML = `<div class="empty"><p>Erro ao carregar: ${err.message}</p></div>`;
         }
+    }
+
+    // A qual cliente cadastrado o pedido pertence?
+    // 1º pelo cliente_id gravado; 2º pelo nome (pedidos antigos: "LOOPTALENTS – CINTIA" casa com "LOOPTALENTS")
+    function chaveCliente(ped) {
+        if (ped.cliente_id) {
+            const c = todosClientes.find(x => x.id === ped.cliente_id);
+            if (c) return 'c' + c.id;
+        }
+        const nome = (ped.cliente || '').toLowerCase().trim();
+        if (nome) {
+            const match = todosClientes
+                .filter(c => nome.startsWith((c.nome || '').toLowerCase().trim()) && c.nome)
+                .sort((a, b) => b.nome.length - a.nome.length)[0];
+            if (match) return 'c' + match.id;
+        }
+        return 'avulsos';
     }
 
     // ── ABAS POR TIPO DE DOCUMENTO ──
@@ -699,11 +726,18 @@
     // ── PASTAS ──
     function abrirPasta(chave) {
         pastaAtual = chave;
+        subPastaAtual = null;
         renderGrid();
     }
 
-    function fecharPasta() {
-        pastaAtual = null;
+    function abrirSubPasta(chave) {
+        subPastaAtual = chave;
+        renderGrid();
+    }
+
+    function voltarPasta() {
+        if (subPastaAtual !== null) subPastaAtual = null;
+        else pastaAtual = null;
         renderGrid();
     }
 
@@ -793,20 +827,80 @@
             return;
         }
 
-        // Vista dentro da pasta
+        // Dentro de uma pasta de status
         const pasta = PASTAS[pastaAtual];
         const lista = base.filter(ped => pasta.match(ped.status || 'rascunho'));
+
+        // Agrupa por cliente cadastrado (+ Avulsos)
+        const grupos = new Map();
+        lista.forEach(ped => {
+            const k = chaveCliente(ped);
+            if (!grupos.has(k)) grupos.set(k, []);
+            grupos.get(k).push(ped);
+        });
+        const soAvulsos = grupos.size === 0 || (grupos.size === 1 && grupos.has('avulsos'));
+
+        headerEl.style.display = '';
+
+        if (subPastaAtual === null && !soAvulsos) {
+            // Nível 2: sub-pastas por cliente
+            gridEl.innerHTML = '';
+            headerEl.innerHTML = `
+                <button class="btn btn-ghost" onclick="voltarPasta()"><i data-lucide="arrow-left"></i> Pastas</button>
+                <div class="pasta-header-titulo">
+                    <span class="pasta-dot" style="background:${pasta.cor};"></span>
+                    ${pasta.nome} <span class="tab-count">${lista.length}</span>
+                </div>`;
+
+            const chaves = [...grupos.keys()].sort((a, b) => {
+                if (a === 'avulsos') return 1;
+                if (b === 'avulsos') return -1;
+                return nomeGrupo(a).localeCompare(nomeGrupo(b));
+            });
+            pastasEl.style.display = '';
+            pastasEl.innerHTML = chaves.map(k => {
+                const itens = grupos.get(k);
+                const soma = itens.reduce((s, p) => s + (p.total_valor || 0), 0);
+                const meta = PERM.ver_valores && soma > 0
+                    ? `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'} · ${fmtMoney(soma)}`
+                    : `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'}`;
+                return `<div class="pasta-card sub ${pastaAtual} ${k === 'avulsos' ? 'avulsos' : ''}" onclick="abrirSubPasta('${k}')">
+                    <div class="pasta-icone">
+                        <div class="pasta-aba"></div>
+                        <div class="pasta-corpo"></div>
+                        <div class="pasta-qtd">${itens.length}</div>
+                    </div>
+                    <div class="pasta-nome" title="${esc(nomeGrupo(k))}">${esc(nomeGrupo(k))}</div>
+                    <div class="pasta-meta">${meta}</div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+            return;
+        }
+
+        // Nível 3: cards (dentro de sub-pasta, ou direto quando só há avulsos)
         pastasEl.style.display = 'none';
         pastasEl.innerHTML = '';
-        headerEl.style.display = '';
+        const listaFinal = (subPastaAtual !== null && !soAvulsos)
+            ? (grupos.get(subPastaAtual) || [])
+            : lista;
+        const tituloSub = (subPastaAtual !== null && !soAvulsos) ? nomeGrupo(subPastaAtual) : null;
+
         headerEl.innerHTML = `
-            <button class="btn btn-ghost" onclick="fecharPasta()"><i data-lucide="arrow-left"></i> Pastas</button>
+            <button class="btn btn-ghost" onclick="voltarPasta()"><i data-lucide="arrow-left"></i> ${tituloSub ? pasta.nome : 'Pastas'}</button>
             <div class="pasta-header-titulo">
                 <span class="pasta-dot" style="background:${pasta.cor};"></span>
-                ${pasta.nome} <span class="tab-count">${lista.length}</span>
+                ${pasta.nome}${tituloSub ? ` <span style="color:#555;">/</span> ${esc(tituloSub)}` : ''}
+                <span class="tab-count">${listaFinal.length}</span>
             </div>`;
-        renderCards(lista);
+        renderCards(listaFinal);
         lucide.createIcons();
+    }
+
+    function nomeGrupo(chave) {
+        if (chave === 'avulsos') return 'Avulsos';
+        const c = todosClientes.find(x => 'c' + x.id === chave);
+        return c?.nome || 'Cliente';
     }
 
     function renderCards(lista) {

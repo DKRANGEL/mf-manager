@@ -168,7 +168,7 @@
                 const MAPA = {
                     '/pedidos': 'pedidos', '/estoque': 'estoque', '/contagem': 'contagem',
                     '/coletor': 'coletor', '/logs': 'movimentos', '/produtos': 'produtos',
-                    '/equipamentos': 'equipamentos', '/etiquetas': 'etiquetas',
+                    '/clientes': 'clientes', '/equipamentos': 'equipamentos', '/etiquetas': 'etiquetas',
                 };
                 document.querySelectorAll('.nav-card').forEach(card => {
                     const tela = MAPA[card.getAttribute('href')];
@@ -245,6 +245,13 @@
                 <div class="card-body">
                     <div class="card-label">Produtos</div>
                     <div class="card-sub">Catálogo de efeitos</div>
+                </div>
+            </a>
+            <a href="/clientes" class="nav-card">
+                <div class="card-icon"><i data-lucide="building-2"></i></div>
+                <div class="card-body">
+                    <div class="card-label">Clientes</div>
+                    <div class="card-sub">Escritórios, produtoras e tabelas de preço</div>
                 </div>
             </a>
             <a href="/equipamentos" class="nav-card">

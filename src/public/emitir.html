@@ -391,9 +391,16 @@
                 <label>Nome do pedido (aparece na listagem)</label>
                 <input type="text" id="fNomePedido" placeholder="Ex: Show Chicote de Luxo — BSB 25/07" autocomplete="off">
             </div>
-            <div class="campo">
+            <div class="campo" style="position:relative;">
                 <label>Cliente *</label>
-                <input type="text" id="fCliente" placeholder="Ex: Marcio Santana, AGF..." autocomplete="off">
+                <input type="text" id="fCliente" placeholder="Ex: Marcio Santana, AGF..." autocomplete="off"
+                       oninput="buscarCliente(this.value)"
+                       onblur="setTimeout(() => document.getElementById('clienteSugestoes').style.display='none', 200)">
+                <div id="clienteSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:#1a1a1e;border:1px solid #333;border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;"></div>
+                <div id="clienteVinculo" style="display:none;margin-top:8px;font-size:11px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:8px;padding:7px 12px;align-items:center;gap:8px;">
+                    <span id="clienteVinculoNome"></span>
+                    <button onclick="desvincularCliente()" style="background:none;border:none;color:#666;cursor:pointer;font-size:13px;margin-left:auto;padding:0 2px;">✕</button>
+                </div>
             </div>
             <div class="campo-row">
                 <div class="campo">
@@ -660,6 +667,7 @@ const COLUNAS_PADRAO = { imagem: true, codigo: true, complemento: false, ncm: fa
 
 let estado = {
     numero: null,
+    cliente_id: null,
     tipo: 'PEDIDO DE VENDA',
     cabecalho: {
         cliente: '', data: hoje(),
@@ -1027,6 +1035,73 @@ function toggleColuna(secId, colId) {
 
 // ══════════════════════════════════════════════════════════════
 // AUTOCOMPLETE
+// ── CLIENTE VINCULADO (tabela de preços) ──
+let clienteVinculado = null;
+let buscaClienteTimer = null;
+
+function buscarCliente(q) {
+    clearTimeout(buscaClienteTimer);
+    const box = document.getElementById('clienteSugestoes');
+    q = (q || '').trim();
+    if (q.length < 2) { box.style.display = 'none'; return; }
+    buscaClienteTimer = setTimeout(async () => {
+        try {
+            const json = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`).then(r => r.json());
+            const lista = json.data || [];
+            if (!lista.length) { box.style.display = 'none'; return; }
+            box.innerHTML = lista.map(c => `
+                <div onmousedown='vincularCliente(${JSON.stringify(c).replace(/'/g, "&#39;")})'
+                     style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #222;"
+                     onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">
+                    <div style="font-size:13px;font-weight:700;color:#fff;">${esc(c.nome)}</div>
+                    <div style="font-size:10px;color:#555;">${c.tipo === 'produtora' ? 'Produtora' : c.tipo === 'outro' ? 'Outro' : 'Escritório'}${Object.keys(c.precos?.categorias || {}).length + Object.keys(c.precos?.produtos || {}).length ? ' · tabela de preços própria' : ''}</div>
+                </div>`).join('');
+            box.style.display = 'block';
+        } catch {}
+    }, 250);
+}
+
+function vincularCliente(c) {
+    estado.cliente_id = c.id;
+    clienteVinculado = c;
+    document.getElementById('clienteSugestoes').style.display = 'none';
+    const input = document.getElementById('fCliente');
+    if (!input.value.toLowerCase().startsWith(c.nome.toLowerCase())) {
+        input.value = c.nome + ' – ';
+    }
+    input.focus();
+    renderVinculoCliente();
+}
+
+function desvincularCliente() {
+    estado.cliente_id = null;
+    clienteVinculado = null;
+    renderVinculoCliente();
+}
+
+function renderVinculoCliente() {
+    const el = document.getElementById('clienteVinculo');
+    if (clienteVinculado) {
+        const n = Object.keys(clienteVinculado.precos?.categorias || {}).length + Object.keys(clienteVinculado.precos?.produtos || {}).length;
+        document.getElementById('clienteVinculoNome').textContent =
+            `Vinculado a ${clienteVinculado.nome}${n ? ` — ${n} preço${n > 1 ? 's' : ''} na tabela` : ' (sem tabela de preços)'}`;
+        el.style.display = 'flex';
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+// Preço do produto para o cliente vinculado:
+// exceção por produto > preço da categoria > preço padrão do catálogo
+function precoCliente(prod) {
+    const p = clienteVinculado?.precos;
+    if (p) {
+        if (p.produtos?.[prod.codigo] > 0) return p.produtos[prod.codigo];
+        if (p.categorias?.[prod.categoria] > 0) return p.categorias[prod.categoria];
+    }
+    return prod.preco || 0;
+}
+
 // ══════════════════════════════════════════════════════════════
 function buscarProduto(q, secId) {
     buscaSecaoId = secId;
@@ -1052,7 +1127,7 @@ function buscarProduto(q, secId) {
                     <div class="ac-cod">${esc(p.codigo)}</div>
                     <div class="ac-nome">${esc(p.nome)}</div>
                 </div>
-                <div class="ac-preco">${p.preco > 0 ? 'R$ ' + fmtN(p.preco) : 'Sem preço'}</div>
+                <div class="ac-preco">${precoCliente(p) > 0 ? 'R$ ' + fmtN(precoCliente(p)) : 'Sem preço'}</div>
             </div>`;
         }).join('');
         list.style.display = 'block';
@@ -1083,11 +1158,12 @@ function adicionarItemDoAC(secId, prod) {
         renderItensSecao(secId);
         return;
     }
+    const precoAplicado = precoCliente(prod);
     sec.itens.push({
         codigo: prod.codigo, descricao: prod.nome, imagem: prod.imagem || null,
         imagem_v: prod.imagem_v || 1,
-        qtd: 1, unidade: prod.unidade || 'UN', v_unit: prod.preco || 0,
-        total: prod.preco || 0, fator: prod.fator || 1,
+        qtd: 1, unidade: prod.unidade || 'UN', v_unit: precoAplicado,
+        total: precoAplicado, fator: prod.fator || 1,
         cx_master: null, cx_100: null, qtd_un: null,
         complemento: '', ncm: '', total_kit: null, sem_valor: false
     });
@@ -1618,6 +1694,7 @@ async function salvarRascunho() {
     const payload = {
         nome: estado.nome || '',
         cliente: estado.cabecalho.cliente,
+        cliente_id: estado.cliente_id,
         tipo: estado.tipo,
         cabecalho: estado.cabecalho,
         secoes: estado.secoes,
@@ -1649,7 +1726,13 @@ async function carregarPedido(numero) {
         if (!json.success) return;
         const ped = json.data;
         estado.numero = ped.numero;
+        estado.cliente_id = ped.cliente_id || null;
         estado.tipo = ped.tipo || 'PEDIDO DE VENDA';
+        if (estado.cliente_id) {
+            fetch(`/api/clientes/${estado.cliente_id}`).then(r => r.json()).then(j => {
+                if (j.success) { clienteVinculado = j.data; renderVinculoCliente(); }
+            }).catch(() => {});
+        }
         estado.cabecalho = ped.cabecalho || { cliente: ped.cliente || '', data: ped.data_emissao || hoje(), campos: {}, valores: {} };
         if (!estado.cabecalho.campos) estado.cabecalho.campos = {};
         if (!estado.cabecalho.valores) estado.cabecalho.valores = {};

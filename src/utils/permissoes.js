@@ -3,7 +3,7 @@
 // (só pedidos, sem valores). Cada usuário guarda papel + permissoes; o
 // admin pode customizar as permissões individualmente depois do preset.
 
-const TELAS = ['pedidos', 'emitir', 'estoque', 'contagem', 'produtos', 'equipamentos', 'etiquetas', 'coletor', 'movimentos'];
+const TELAS = ['pedidos', 'emitir', 'estoque', 'contagem', 'produtos', 'clientes', 'equipamentos', 'etiquetas', 'coletor', 'movimentos'];
 
 const PAPEIS = {
     admin:    'Administrador',

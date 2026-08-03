@@ -111,6 +111,7 @@ router.post('/', (req, res) => {
             status: 'rascunho',
             data_emissao: data_emissao || new Date().toISOString(),
             data_atualizacao: new Date().toISOString(),
+            cliente_id: req.body.cliente_id || null,
             cliente: cabecalho?.cliente || cliente || '',
             cabecalho: cabecalho || {cliente: cliente || '', data: new Date().toISOString().split('T')[0]},
             secoes: todasSecoes,
@@ -153,6 +154,7 @@ router.get('/', (req, res) => {
                     numero: pedido.numero,
                     tipo: pedido.tipo || 'PEDIDO DE VENDA',
                     status: pedido.status || 'rascunho',
+                    cliente_id: pedido.cliente_id || null,
                     data_emissao: pedido.data_emissao,
                     data_atualizacao: pedido.data_atualizacao,
                     cliente,
@@ -210,6 +212,7 @@ router.put('/:numero', (req, res) => {
         const {tipo, cabecalho, secoes, resumo, total_valor, total_itens, data_emissao, blocos, cliente} = req.body;
 
         if (req.body.nome !== undefined) pedido.nome = req.body.nome || '';
+        if (req.body.cliente_id !== undefined) pedido.cliente_id = req.body.cliente_id || null;
         if (tipo !== undefined) pedido.tipo = tipo;
         if (cabecalho !== undefined) { pedido.cabecalho = cabecalho; pedido.cliente = cabecalho.cliente || pedido.cliente; }
         if (cliente !== undefined && !cabecalho) pedido.cliente = cliente;

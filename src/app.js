@@ -12,6 +12,7 @@ const estoqueRoutes = require('./routes/estoque');
 const movimentosRoutes = require('./routes/movimentos');
 const authRoutes = require('./routes/auth');
 const auditoriaRoutes = require('./routes/auditoria');
+const clientesRoutes = require('./routes/clientes');
 const { requireAuth } = require('./middleware/sessao');
 const { auditoria } = require('./middleware/auditoria');
 const { permissoesMiddleware } = require('./middleware/permissoes');
@@ -60,6 +61,7 @@ function createApp() {
     app.use('/api/contagens', contagensRoutes);
     app.use('/api/estoque', estoqueRoutes);
     app.use('/api/movimentos', movimentosRoutes);
+    app.use('/api/clientes', clientesRoutes);
 
     // ─── Rotas Bot (protegidas) ──────────────────────────────────────────────────
     app.use('/bot', botRoutes);
@@ -75,6 +77,10 @@ function createApp() {
 
     app.get('/produtos', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'produtos.html'));
+    });
+
+    app.get('/clientes', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'clientes.html'));
     });
 
     app.get('/pedidos', (req, res) => {

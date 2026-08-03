@@ -16,6 +16,7 @@ const PAGINAS = {
     '/estoque':      'estoque',
     '/contagem':     'contagem',
     '/produtos':     'produtos',
+    '/clientes':     'clientes',
     '/equipamentos': 'equipamentos',
     '/etiquetas':    'etiquetas',
     '/coletor':      'coletor',
@@ -67,6 +68,15 @@ function permissoesMiddleware(req, res, next) {
         }
         // Etiquetas salva video_id via PUT /item/:id — permite com etiquetas OU produtos
         return (perm.telas.produtos || perm.telas.etiquetas) ? next() : negarApi();
+    }
+
+    if (p.startsWith('/api/clientes')) {
+        // Leitura serve o emitir (autocomplete/preços) e o hall (agrupamento por cliente)
+        if (m === 'GET') {
+            const t = perm.telas;
+            return (t.clientes || t.emitir || t.pedidos) ? next() : negarApi();
+        }
+        return perm.telas.clientes ? next() : negarApi();
     }
 
     if (p.startsWith('/api/estoque'))

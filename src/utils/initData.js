@@ -28,6 +28,9 @@ const DEFAULTS = {
     'config-pedidos.json': {
         proximo_numero: 1
     },
+    'clientes.json': {
+        proximo_id: 1, clientes: []
+    },
 };
 
 function initData() {

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js?v=20260729"></script>
+    <style>
+        body { overflow: auto; background: #09090a; }
+        .page { max-width: 900px; margin: 0 auto; padding: 28px 24px 80px; }
+
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap; }
+        .page-header h1 { font-size:22px; font-weight:700; color:#fff; }
+        .page-header .sub { font-size:11px; color:#555; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; margin-top:2px; }
+        .header-actions { display:flex; gap:10px; }
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; transition:.15s; font-family:inherit; text-decoration:none; white-space:nowrap; }
+        .btn-white { background:#fff; color:#000; }
+        .btn-white:hover { background:#e0e0e0; }
+        .btn-ghost { background:transparent; border:1px solid #333; color:#888; }
+        .btn-ghost:hover { border-color:#555; color:#fff; }
+
+        .grupo-titulo { font-size:11px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:1.2px; margin:22px 0 10px; }
+
+        .cliente-row {
+            display:flex; align-items:center; gap:14px;
+            background:#111113; border:1px solid #29292e; border-radius:12px;
+            padding:14px 16px; margin-bottom:8px; transition:.15s;
+        }
+        .cliente-row:hover { border-color:#3a3a42; }
+        .cliente-avatar {
+            width:40px; height:40px; border-radius:10px; background:#1e1e24; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:800; color:#666;
+        }
+        .cliente-info { flex:1; min-width:0; }
+        .cliente-nome { font-size:14px; font-weight:700; color:#fff; }
+        .cliente-meta { font-size:11px; color:#555; margin-top:2px; }
+        .cliente-precos-badge {
+            font-size:10px; font-weight:700; color:#4ade80; background:rgba(74,222,128,.1);
+            border-radius:10px; padding:2px 9px; white-space:nowrap;
+        }
+        .cliente-precos-badge.vazio { color:#555; background:rgba(255,255,255,.04); }
+        .cliente-actions { display:flex; gap:4px; }
+        .btn-icon {
+            width:34px; height:34px; border-radius:8px; border:none; background:transparent;
+            color:#444; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.15s;
+        }
+        .btn-icon:hover { background:rgba(255,255,255,.06); color:#ccc; }
+        .btn-icon.danger:hover { color:#ff6060; background:rgba(255,80,80,.08); }
+        .btn-icon .lucide { width:16px; height:16px; }
+
+        .empty { text-align:center; padding:60px 20px; color:#444; }
+
+        /* Modal */
+        .modal-overlay {
+            display:none; position:fixed; inset:0; z-index:500;
+            background:rgba(0,0,0,.78); backdrop-filter:blur(4px);
+            align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;
+        }
+        .modal-overlay.visivel { display:flex; }
+        .modal-box {
+            width:100%; max-width:560px; background:#121214;
+            border:1px solid #29292e; border-radius:16px; padding:26px;
+            margin:20px 0; box-shadow:0 24px 80px rgba(0,0,0,.8);
+        }
+        .modal-titulo { font-size:16px; font-weight:700; color:#fff; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; }
+        .modal-fechar { background:none; border:none; color:#555; cursor:pointer; font-size:18px; padding:4px; }
+        .modal-fechar:hover { color:#fff; }
+
+        .campo { margin-bottom:14px; }
+        .campo label { display:block; font-size:10px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+        .campo input, .campo select, .campo textarea {
+            width:100%; background:#1a1a1e; border:1px solid #2a2a30; border-radius:8px;
+            padding:11px 14px; color:#fff; font-size:14px; font-family:var(--font);
+            outline:none; transition:.15s; box-sizing:border-box;
+        }
+        .campo input:focus, .campo select:focus, .campo textarea:focus { border-color:#555; }
+        .campo-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+        .secao-precos { border-top:1px solid #1e1e22; margin-top:20px; padding-top:16px; }
+        .secao-precos-titulo { font-size:12px; font-weight:700; color:#ccc; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+        .secao-precos-sub { font-size:11px; color:#555; margin-bottom:12px; }
+
+        .preco-row { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+        .preco-row select, .preco-row input {
+            background:#1a1a1e; border:1px solid #2a2a30; border-radius:8px;
+            padding:9px 12px; color:#fff; font-size:13px; font-family:var(--font); outline:none;
+        }
+        .preco-row select { flex:1; min-width:0; }
+        .preco-row input.preco-valor { width:110px; font-family:var(--mono); text-align:right; }
+        .preco-row input.preco-cod { flex:1; min-width:0; font-family:var(--mono); text-transform:uppercase; position:relative; }
+        .preco-remove { width:32px; height:36px; flex-shrink:0; border:none; background:transparent; color:#444; cursor:pointer; border-radius:6px; }
+        .preco-remove:hover { color:#ff6060; background:rgba(255,80,80,.08); }
+        .btn-add-preco {
+            background:transparent; border:1px dashed #333; color:#666; width:100%;
+            padding:9px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:.15s;
+        }
+        .btn-add-preco:hover { border-color:#555; color:#ccc; }
+
+        .cod-wrap { position:relative; flex:1; min-width:0; display:flex; }
+        .cod-sugestoes {
+            position:absolute; top:100%; left:0; right:0; z-index:50;
+            background:#1a1a1e; border:1px solid #333; border-radius:8px; margin-top:4px;
+            max-height:180px; overflow-y:auto; display:none;
+        }
+        .cod-sugestoes.aberto { display:block; }
+        .cod-sugestao { padding:8px 12px; font-size:12px; color:#ccc; cursor:pointer; font-family:var(--mono); }
+        .cod-sugestao:hover { background:rgba(255,255,255,.06); }
+        .cod-sugestao small { color:#555; font-family:var(--font); }
+
+        @media (max-width:600px) {
+            .campo-row { grid-template-columns:1fr; }
+            .cliente-row { flex-wrap:wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1>Clientes</h1>
+            <div class="sub">Escritórios · Produtoras · Tabelas de preço</div>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn btn-ghost">← Início</a>
+            <button class="btn btn-white" onclick="abrirModal()"><i data-lucide="plus"></i> Novo Cliente</button>
+        </div>
+    </div>
+
+    <div id="listaClientes"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modalCliente">
+    <div class="modal-box">
+        <div class="modal-titulo">
+            <span id="modalTitulo">Novo Cliente</span>
+            <button class="modal-fechar" onclick="fecharModal()">✕</button>
+        </div>
+        <input type="hidden" id="cId">
+        <div class="campo-row">
+            <div class="campo">
+                <label>Nome *</label>
+                <input type="text" id="cNome" placeholder="Ex: LOOPTALENTS" autocomplete="off">
+            </div>
+            <div class="campo">
+                <label>Tipo</label>
+                <select id="cTipo">
+                    <option value="escritorio">Escritório</option>
+                    <option value="produtora">Produtora</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+        </div>
+        <div class="campo-row">
+            <div class="campo">
+                <label>Contato</label>
+                <input type="text" id="cContato" placeholder="Telefone / e-mail" autocomplete="off">
+            </div>
+            <div class="campo">
+                <label>Cidade</label>
+                <input type="text" id="cCidade" autocomplete="off">
+            </div>
+        </div>
+        <div class="campo">
+            <label>Observações</label>
+            <textarea id="cObs" rows="2"></textarea>
+        </div>
+
+        <div class="secao-precos">
+            <div class="secao-precos-titulo"><i data-lucide="tags" style="width:14px;height:14px;"></i> Preços por categoria</div>
+            <div class="secao-precos-sub">Preço padrão deste cliente para cada categoria (ex: MFSSS = R$ 25,00). Vale para todos os produtos da categoria.</div>
+            <div id="precosCategorias"></div>
+            <button class="btn-add-preco" onclick="addPrecoCategoria()">+ Adicionar categoria</button>
+        </div>
+
+        <div class="secao-precos">
+            <div class="secao-precos-titulo"><i data-lucide="crosshair" style="width:14px;height:14px;"></i> Exceções por produto</div>
+            <div class="secao-precos-sub">Sobrepõe o preço da categoria para um produto específico.</div>
+            <div id="precosProdutos"></div>
+            <button class="btn-add-preco" onclick="addPrecoProduto()">+ Adicionar produto</button>
+        </div>
+
+        <button class="btn btn-white" onclick="salvarCliente()" style="width:100%;justify-content:center;margin-top:20px;">
+            <i data-lucide="check"></i> Salvar cliente
+        </button>
+    </div>
+</div>
+
+<script>
+    let clientes = [];
+    let categorias = [];
+
+    const TIPO_LABEL = { escritorio: 'Escritórios', produtora: 'Produtoras', outro: 'Outros' };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        lucide.createIcons();
+        try {
+            const cat = await fetch('/api/catalogo/catalogo').then(r => r.json());
+            if (cat.success) categorias = Object.keys(cat.data || {}).sort();
+        } catch {}
+        carregar();
+    });
+
+    async function carregar() {
+        try {
+            const json = await fetch('/api/clientes').then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            clientes = json.data;
+            render();
+        } catch (err) {
+            document.getElementById('listaClientes').innerHTML = `<div class="empty">Erro: ${esc(err.message)}</div>`;
+        }
+    }
+
+    function contarPrecos(c) {
+        return Object.keys(c.precos?.categorias || {}).length + Object.keys(c.precos?.produtos || {}).length;
+    }
+
+    function render() {
+        const el = document.getElementById('listaClientes');
+        if (clientes.length === 0) {
+            el.innerHTML = `<div class="empty">
+                <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px;">Nenhum cliente cadastrado</div>
+                <p style="font-size:12px;">Cadastre escritórios e produtoras para agrupar pedidos e aplicar tabelas de preço automáticas</p>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        for (const tipo of ['escritorio', 'produtora', 'outro']) {
+            const grupo = clientes.filter(c => (c.tipo || 'escritorio') === tipo);
+            if (!grupo.length) continue;
+            html += `<div class="grupo-titulo">${TIPO_LABEL[tipo]}</div>`;
+            html += grupo.map(c => {
+                const nPrecos = contarPrecos(c);
+                const meta = [c.cidade, c.contato].filter(Boolean).join(' · ') || '—';
+                return `<div class="cliente-row">
+                    <div class="cliente-avatar">${esc((c.nome || '?').trim()[0].toUpperCase())}</div>
+                    <div class="cliente-info">
+                        <div class="cliente-nome">${esc(c.nome)}</div>
+                        <div class="cliente-meta">${esc(meta)}</div>
+                    </div>
+                    <span class="cliente-precos-badge ${nPrecos ? '' : 'vazio'}">${nPrecos ? nPrecos + ' preço' + (nPrecos > 1 ? 's' : '') : 'sem tabela'}</span>
+                    <div class="cliente-actions">
+                        <button class="btn-icon" onclick="abrirModal(${c.id})" title="Editar"><i data-lucide="pencil"></i></button>
+                        <button class="btn-icon danger" onclick="excluir(${c.id})" title="Excluir"><i data-lucide="trash-2"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        el.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    // ── MODAL ──
+    function abrirModal(id) {
+        const c = id ? clientes.find(x => x.id === id) : null;
+        document.getElementById('modalTitulo').textContent = c ? `Editar — ${c.nome}` : 'Novo Cliente';
+        document.getElementById('cId').value = c?.id || '';
+        document.getElementById('cNome').value = c?.nome || '';
+        document.getElementById('cTipo').value = c?.tipo || 'escritorio';
+        document.getElementById('cContato').value = c?.contato || '';
+        document.getElementById('cCidade').value = c?.cidade || '';
+        document.getElementById('cObs').value = c?.observacoes || '';
+
+        document.getElementById('precosCategorias').innerHTML = '';
+        document.getElementById('precosProdutos').innerHTML = '';
+        Object.entries(c?.precos?.categorias || {}).forEach(([cat, val]) => addPrecoCategoria(cat, val));
+        Object.entries(c?.precos?.produtos || {}).forEach(([cod, val]) => addPrecoProduto(cod, val));
+
+        document.getElementById('modalCliente').classList.add('visivel');
+        lucide.createIcons();
+    }
+
+    function fecharModal() {
+        document.getElementById('modalCliente').classList.remove('visivel');
+    }
+    document.getElementById('modalCliente').addEventListener('click', function(e) {
+        if (e.target === this) fecharModal();
+    });
+
+    function addPrecoCategoria(cat, val) {
+        const div = document.createElement('div');
+        div.className = 'preco-row';
+        div.innerHTML = `
+            <select class="pc-cat">${categorias.map(c => `<option value="${esc(c)}" ${c === cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+            <input type="number" class="preco-valor pc-val" placeholder="R$" step="0.01" min="0" value="${val ?? ''}">
+            <button class="preco-remove" onclick="this.parentElement.remove()">✕</button>`;
+        document.getElementById('precosCategorias').appendChild(div);
+    }
+
+    function addPrecoProduto(cod, val) {
+        const div = document.createElement('div');
+        div.className = 'preco-row';
+        div.innerHTML = `
+            <div class="cod-wrap">
+                <input type="text" class="preco-cod pp-cod" placeholder="Código do produto" value="${esc(cod || '')}" autocomplete="off"
+                       oninput="sugerirProduto(this)" onblur="setTimeout(() => this.parentElement.querySelector('.cod-sugestoes').classList.remove('aberto'), 200)">
+                <div class="cod-sugestoes"></div>
+            </div>
+            <input type="number" class="preco-valor pp-val" placeholder="R$" step="0.01" min="0" value="${val ?? ''}">
+            <button class="preco-remove" onclick="this.parentElement.remove()">✕</button>`;
+        document.getElementById('precosProdutos').appendChild(div);
+    }
+
+    let buscaTimer = null;
+    function sugerirProduto(input) {
+        clearTimeout(buscaTimer);
+        const box = input.parentElement.querySelector('.cod-sugestoes');
+        const q = input.value.trim();
+        if (q.length < 2) { box.classList.remove('aberto'); return; }
+        buscaTimer = setTimeout(async () => {
+            try {
+                const json = await fetch(`/api/catalogo/buscar?q=${encodeURIComponent(q)}`).then(r => r.json());
+                const itens = json.data || [];
+                if (!itens.length) { box.classList.remove('aberto'); return; }
+                box.innerHTML = itens.map(p => `<div class="cod-sugestao" onmousedown="this.closest('.cod-wrap').querySelector('input').value='${esc(p.codigo)}'">
+                    ${esc(p.codigo)} <small>— ${esc(p.nome)}</small></div>`).join('');
+                box.classList.add('aberto');
+            } catch {}
+        }, 250);
+    }
+
+    async function salvarCliente() {
+        const id = document.getElementById('cId').value;
+        const precos = { categorias: {}, produtos: {} };
+        document.querySelectorAll('#precosCategorias .preco-row').forEach(r => {
+            const cat = r.querySelector('.pc-cat').value;
+            const val = parseFloat(r.querySelector('.pc-val').value);
+            if (cat && val > 0) precos.categorias[cat] = val;
+        });
+        document.querySelectorAll('#precosProdutos .preco-row').forEach(r => {
+            const cod = r.querySelector('.pp-cod').value.trim().toUpperCase();
+            const val = parseFloat(r.querySelector('.pp-val').value);
+            if (cod && val > 0) precos.produtos[cod] = val;
+        });
+
+        const payload = {
+            nome: document.getElementById('cNome').value.trim(),
+            tipo: document.getElementById('cTipo').value,
+            contato: document.getElementById('cContato').value.trim(),
+            cidade: document.getElementById('cCidade').value.trim(),
+            observacoes: document.getElementById('cObs').value.trim(),
+            precos,
+        };
+        if (!payload.nome) { MF.alert('Informe o nome do cliente', 'warning', 'Campo obrigatório'); return; }
+
+        try {
+            const url = id ? `/api/clientes/item/${id}` : '/api/clientes/item';
+            const res = await fetch(url, {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            MF.toast(id ? 'Cliente atualizado!' : 'Cliente criado!');
+            fecharModal();
+            carregar();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    async function excluir(id) {
+        const c = clientes.find(x => x.id === id);
+        const ok = await MF.confirm(`Excluir o cliente "${c?.nome}"?\n\nOs pedidos já emitidos continuam existindo, apenas perdem o vínculo.`, { title: 'Excluir cliente', confirmText: 'Excluir', danger: true });
+        if (!ok) return;
+        try {
+            const json = await fetch(`/api/clientes/item/${id}`, { method: 'DELETE' }).then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            MF.toast('Cliente excluído');
+            carregar();
+        } catch (err) {
+            MF.alert(err.message);
+        }
+    }
+
+    function esc(s) {
+        if (s === null || s === undefined) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>
