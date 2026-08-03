@@ -84,6 +84,7 @@ router.post('/item', (req, res) => {
             contato: (req.body.contato || '').trim(),
             cidade: (req.body.cidade || '').trim(),
             observacoes: (req.body.observacoes || '').trim(),
+            cor: /^#[0-9a-fA-F]{6}$/.test(req.body.cor || '') ? req.body.cor : null,
             precos: normalizarPrecos(req.body.precos),
             data_cadastro: new Date().toISOString().split('T')[0],
         };
@@ -115,6 +116,7 @@ router.put('/item/:id', (req, res) => {
         if (req.body.contato !== undefined) c.contato = req.body.contato.trim();
         if (req.body.cidade !== undefined) c.cidade = req.body.cidade.trim();
         if (req.body.observacoes !== undefined) c.observacoes = req.body.observacoes.trim();
+        if (req.body.cor !== undefined) c.cor = /^#[0-9a-fA-F]{6}$/.test(req.body.cor || '') ? req.body.cor : null;
         if (req.body.precos !== undefined) c.precos = normalizarPrecos(req.body.precos);
 
         writeJSONAtomic(CLIENTES_FILE, db);

@@ -197,6 +197,20 @@ router.get('/:numero', (req, res) => {
     }
 });
 
+// PUT /api/pedidos/:numero/cliente — move o pedido para a pasta de um cliente
+// (só organização — permitido em qualquer status)
+router.put('/:numero/cliente', (req, res) => {
+    try {
+        const pedido = readJSON(pedidoPath(req.params.numero), null);
+        if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+        pedido.cliente_id = req.body.cliente_id || null;
+        writeJSONAtomic(pedidoPath(req.params.numero), pedido);
+        res.json({success: true, cliente_id: pedido.cliente_id});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 // PUT /api/pedidos/:numero — edita (só rascunho)
 router.put('/:numero', (req, res) => {
     try {
