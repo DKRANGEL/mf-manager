@@ -99,8 +99,25 @@ function gerarPedidoMFHTML(pedido) {
         </div>`;
     if (semValores) {
         rodapeBancario = '';
-        // Mantém só observações e "incluso" (sem valores)
+        // Mantém observações, "incluso" e a QUANTIDADE de kits (sem valores)
         const r = pedido.resumo || {};
+
+        // Kits — só a contagem
+        let kitsArr = [];
+        if (r.kits) {
+            if (r.kits_itens?.length) kitsArr = r.kits_itens.filter(k => k.qtd > 0);
+            else if (r.kits_qtd > 0) kitsArr = [{ qtd: r.kits_qtd, secao_titulo: '' }];
+        }
+        if (kitsArr.length) {
+            extrasHTML += `<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+                <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KITS</td></tr></thead>
+                <tbody>${kitsArr.map((k, i) => `<tr style="${i % 2 === 0 ? 'background:#f5f5f5;' : ''}">
+                    <td style="padding:9px 14px;font-size:12px;color:#333;">${k.secao_titulo ? esc(k.secao_titulo.toUpperCase()) : 'KITS'}</td>
+                    <td style="padding:9px 14px;text-align:right;font-size:14px;font-weight:700;color:#000;font-family:monospace;">${k.qtd} KIT${k.qtd > 1 ? 'S' : ''}</td>
+                </tr>`).join('')}</tbody>
+            </table>`;
+        }
+
         if (r.incluso && r.incluso_texto) {
             const li = r.incluso_texto.split('\n').filter(l => l.trim());
             extrasHTML += `<table style="width:100%;border-collapse:collapse;margin-top:14px;">

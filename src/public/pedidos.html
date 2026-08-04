@@ -340,6 +340,25 @@
         .status-select.aberto    { color: #ef4444; }
         .status-select.concluido { color: #4ade80; }
 
+        /* ── CLIENTE DROPDOWN no card ── */
+        .cliente-select {
+            width: 100%; border: none; border-top: 1px solid #1e1e22;
+            background: #0c0c0e; color: #7a7a82; font-size: 11px; font-weight: 600;
+            padding: 8px 30px 8px 14px; font-family: inherit; cursor: pointer;
+            appearance: none; -webkit-appearance: none; text-align: center;
+            outline: none; transition: .15s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+        .cliente-select:hover { background-color: #141416; color: #ccc; }
+        .cliente-select.vinculado { color: #a3a3ff; }
+        .kits-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 10px; font-weight: 700; color: #c084fc;
+            background: rgba(192,132,252,.1); border-radius: 8px;
+            padding: 1px 7px; margin-left: 6px; vertical-align: middle;
+        }
+
         .pedidos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1161,6 +1180,12 @@
                 </select>`
                 : `<div class="status-select ${selectClass}" style="cursor:default;">${statusLabel === 'PENDENTE' ? '🟡 Pendente' : statusLabel === 'ABERTO' ? '🔴 Aberto' : '🟢 Concluído'}</div>`;
 
+            const kitsHTML = ped.total_kits > 0
+                ? `<span class="kits-badge"><i data-lucide="package" style="width:11px;height:11px;"></i>${ped.total_kits} kit${ped.total_kits > 1 ? 's' : ''}</span>`
+                : '';
+
+            const clienteHTML = PERM.criar_editar ? clienteSelectHTML(ped) : '';
+
             const acoesHTML = `
                 <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
                 ${PERM.criar_editar ? `<button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>` : ''}
@@ -1173,9 +1198,10 @@
             </div>
             <div class="card-info" onclick="${cliqueInfo}">
                 <div class="card-cliente">${esc(cliente || 'Sem cliente')}</div>
-                <div class="card-meta">${data} · ${ped.total_itens} ${ped.total_itens === 1 ? 'item' : 'itens'}</div>
+                <div class="card-meta">${data} · ${ped.total_itens} ${ped.total_itens === 1 ? 'item' : 'itens'}${kitsHTML}</div>
                 ${semValores ? '' : `<div class="card-total ${totalClass}">${totalStr}</div>`}
             </div>
+            ${clienteHTML}
             ${statusHTML}
             <div class="card-actions">${acoesHTML}</div>
         </div>`;
@@ -1185,6 +1211,37 @@
 
     function abrirEditar(numero) {
         window.location.href = `/emitir?numero=${encodeURIComponent(numero)}`;
+    }
+
+    // ── DROPDOWN DE CLIENTE POR CARD ──
+    function clienteSelectHTML(ped) {
+        const atual = chaveCliente(ped); // 'c<id>' ou 'avulsos' (respeita match por nome)
+        const opts = [`<option value="" ${atual === 'avulsos' ? 'selected' : ''}>— Avulso —</option>`]
+            .concat(todosClientes.map(c =>
+                `<option value="${c.id}" ${atual === 'c' + c.id ? 'selected' : ''}>${esc(c.nome)}</option>`
+            )).join('');
+        const vinc = atual !== 'avulsos' ? 'vinculado' : '';
+        return `<select class="cliente-select ${vinc}" onchange="mudarCliente('${esc(ped.numero)}', this.value)" title="Cliente / pasta do pedido">${opts}</select>`;
+    }
+
+    async function mudarCliente(numero, valor) {
+        const cliente_id = valor ? parseInt(valor) : null;
+        try {
+            const json = await fetch(`/api/pedidos/${encodeURIComponent(numero)}/cliente`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cliente_id }),
+            }).then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            const p = todosPedidos.find(x => x.numero === numero);
+            if (p) p.cliente_id = cliente_id;
+            const nome = cliente_id ? (todosClientes.find(c => c.id === cliente_id)?.nome || 'cliente') : 'Avulsos';
+            MF.toast(`Pedido movido para ${nome}`);
+            renderTabs();
+            renderGrid();
+        } catch (err) {
+            MF.alert(err.message);
+        }
     }
 
     async function mudarStatus(numero, novoStatus, selectEl) {
@@ -1323,6 +1380,6 @@
 
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
-<script src="/public/js/documento.js?v=20260802"></script>
+<script src="/public/js/documento.js?v=20260803"></script>
 </body>
 </html>

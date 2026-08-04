@@ -43,29 +43,44 @@ function ocultarValoresPedido(original) {
     pedido.valores_ocultos = true;
     pedido.total_valor = null;
 
+    const limparItem = (item) => {
+        delete item.v_unit;
+        delete item.total;
+        delete item.total_kit;
+        delete item.preco_unit;
+        delete item.preco_total;
+    };
+
     (pedido.secoes || []).forEach(sec => {
         delete sec.preco_padrao;
         sec.preco_padrao_ativo = false;
         delete sec.preco_rotulo;
-        (sec.itens || []).forEach(item => {
-            delete item.v_unit;
-            delete item.total;
-            delete item.total_kit;
-            delete item.preco_unit;
-            delete item.preco_total;
-        });
+        (sec.itens || []).forEach(limparItem);
     });
+    // Schema antigo: lista plana no topo (referência quebrada pelo clone)
+    if (pedido.itens) pedido.itens.forEach(limparItem);
 
-    // Resumo carrega só dinheiro (pagamentos, parcelas, kits, NF, desconto) — some inteiro.
-    // Mantém apenas observações e "incluso", que não têm valores.
+    // Resumo carrega dinheiro (pagamentos, parcelas, NF, desconto) — some.
+    // Mantém observações, "incluso" e a CONTAGEM de kits (kit é quantidade,
+    // não valor), para o operador saber quantos kits o pedido tem.
     const res = pedido.resumo || {};
     pedido.resumo = {
         obs: !!res.obs, obs_texto: res.obs_texto || '',
         incluso: !!res.incluso, incluso_texto: res.incluso_texto || '',
+        kits: !!res.kits,
+        kits_itens: (res.kits_itens || []).map(k => ({ secao_titulo: k.secao_titulo || '', qtd: k.qtd || 0 })),
+        kits_qtd: res.kits_qtd || 0,
     };
     delete pedido.blocos; // schema antigo também carrega nf/desconto/parcelas
 
     return pedido;
+}
+
+// Total de kits do pedido (só contagem — visível para todos)
+function contarKits(pedido) {
+    const r = pedido.resumo || {};
+    if (r.kits_itens?.length) return r.kits_itens.reduce((s, k) => s + (k.qtd || 0), 0);
+    return r.kits_qtd || 0;
 }
 
 // ===================== PARSE =====================
@@ -159,6 +174,7 @@ router.get('/', (req, res) => {
                     data_atualizacao: pedido.data_atualizacao,
                     cliente,
                     total_itens: pedido.total_itens || itens.length,
+                    total_kits: contarKits(pedido),
                     total_valor: podeVerValores(req) ? subtotal : null
                 };
             } catch {
