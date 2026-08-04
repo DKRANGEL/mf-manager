@@ -769,12 +769,15 @@
     }
 
     // A qual cliente cadastrado o pedido pertence?
-    // 1º pelo cliente_id gravado; 2º pelo nome (pedidos antigos: "LOOPTALENTS – CINTIA" casa com "LOOPTALENTS")
+    // 1º cliente_id gravado; 2º escolha manual "Avulso"; 3º match por nome
+    // (pedidos antigos: "LOOPTALENTS – CINTIA" casa com "LOOPTALENTS")
     function chaveCliente(ped) {
         if (ped.cliente_id) {
             const c = todosClientes.find(x => x.id === ped.cliente_id);
             if (c) return 'c' + c.id;
         }
+        // Escolha manual de "Avulso" vence o match automático por nome
+        if (ped.cliente_avulso) return 'avulsos';
         const nome = (ped.cliente || '').toLowerCase().trim();
         if (nome) {
             const match = todosClientes
@@ -1234,7 +1237,7 @@
             }).then(r => r.json());
             if (!json.success) throw new Error(json.error);
             const p = todosPedidos.find(x => x.numero === numero);
-            if (p) p.cliente_id = cliente_id;
+            if (p) { p.cliente_id = cliente_id; p.cliente_avulso = !cliente_id; }
             const nome = cliente_id ? (todosClientes.find(c => c.id === cliente_id)?.nome || 'cliente') : 'Avulsos';
             MF.toast(`Pedido movido para ${nome}`);
             renderTabs();

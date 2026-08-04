@@ -173,6 +173,7 @@ router.get('/', (req, res) => {
                     data_emissao: pedido.data_emissao,
                     data_atualizacao: pedido.data_atualizacao,
                     cliente,
+                    cliente_avulso: !!pedido.cliente_avulso,
                     total_itens: pedido.total_itens || itens.length,
                     total_kits: contarKits(pedido),
                     total_valor: podeVerValores(req) ? subtotal : null
@@ -219,9 +220,12 @@ router.put('/:numero/cliente', (req, res) => {
     try {
         const pedido = readJSON(pedidoPath(req.params.numero), null);
         if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
-        pedido.cliente_id = req.body.cliente_id || null;
+        const cid = req.body.cliente_id || null;
+        pedido.cliente_id = cid;
+        // Escolha manual é autoritária: "Avulso" explícito ignora o match por nome
+        pedido.cliente_avulso = cid ? false : true;
         writeJSONAtomic(pedidoPath(req.params.numero), pedido);
-        res.json({success: true, cliente_id: pedido.cliente_id});
+        res.json({success: true, cliente_id: pedido.cliente_id, cliente_avulso: pedido.cliente_avulso});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
