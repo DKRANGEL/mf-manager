@@ -397,10 +397,7 @@
                        oninput="buscarCliente(this.value)"
                        onblur="setTimeout(() => document.getElementById('clienteSugestoes').style.display='none', 200)">
                 <div id="clienteSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:#1a1a1e;border:1px solid #333;border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;"></div>
-                <div id="clienteVinculo" style="display:none;margin-top:8px;font-size:11px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:8px;padding:7px 12px;align-items:center;gap:8px;">
-                    <span id="clienteVinculoNome"></span>
-                    <button onclick="desvincularCliente()" style="background:none;border:none;color:#666;cursor:pointer;font-size:13px;margin-left:auto;padding:0 2px;">✕</button>
-                </div>
+                <div id="clienteVinculo" style="display:none;margin-top:8px;font-size:11px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:8px;padding:7px 12px;align-items:center;gap:10px;flex-wrap:wrap;"></div>
             </div>
             <div class="campo-row">
                 <div class="campo">
@@ -700,6 +697,12 @@ let buscaTimer = null;
 document.addEventListener('DOMContentLoaded', async () => {
     renderTipos();
     document.getElementById('fData').value = estado.cabecalho.data;
+
+    // Carrega clientes cadastrados (para auto-vincular por nome e aplicar preços)
+    try {
+        const cli = await fetch('/api/clientes').then(r => r.json());
+        todosClientes = cli?.data || [];
+    } catch {}
 
     const params = new URLSearchParams(location.search);
     const num = params.get('numero');
@@ -1037,12 +1040,37 @@ function toggleColuna(secId, colId) {
 // AUTOCOMPLETE
 // ── CLIENTE VINCULADO (tabela de preços) ──
 let clienteVinculado = null;
+let todosClientes = [];
 let buscaClienteTimer = null;
+
+// Normaliza para casar nomes: sem acento, sem espaço, minúsculo
+function normalizarNome(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+// Auto-vincula quando o texto do cliente casa com um cadastrado.
+// Ex.: "LOOP TALENTS" ou "looptalents – fulano" casam com "LOOPTALENTS".
+function tentarAutoVincular(texto) {
+    const alvo = normalizarNome(texto);
+    if (!alvo) return;
+    // já vinculado e o texto ainda começa com esse cliente → mantém
+    if (clienteVinculado && alvo.startsWith(normalizarNome(clienteVinculado.nome))) return;
+    // acha o cliente cujo nome é prefixo do texto (o mais longo vence)
+    const match = todosClientes
+        .filter(c => c.nome && alvo.startsWith(normalizarNome(c.nome)))
+        .sort((a, b) => normalizarNome(b.nome).length - normalizarNome(a.nome).length)[0];
+    if (match && match.id !== clienteVinculado?.id) {
+        estado.cliente_id = match.id;
+        clienteVinculado = match;
+        renderVinculoCliente();
+    }
+}
 
 function buscarCliente(q) {
     clearTimeout(buscaClienteTimer);
     const box = document.getElementById('clienteSugestoes');
     q = (q || '').trim();
+    tentarAutoVincular(q);
     if (q.length < 2) { box.style.display = 'none'; return; }
     buscaClienteTimer = setTimeout(async () => {
         try {
@@ -1081,25 +1109,67 @@ function desvincularCliente() {
 
 function renderVinculoCliente() {
     const el = document.getElementById('clienteVinculo');
-    if (clienteVinculado) {
-        const n = Object.keys(clienteVinculado.precos?.categorias || {}).length + Object.keys(clienteVinculado.precos?.produtos || {}).length;
-        document.getElementById('clienteVinculoNome').textContent =
-            `Vinculado a ${clienteVinculado.nome}${n ? ` — ${n} preço${n > 1 ? 's' : ''} na tabela` : ' (sem tabela de preços)'}`;
-        el.style.display = 'flex';
-    } else {
-        el.style.display = 'none';
-    }
+    if (!clienteVinculado) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+    const p = clienteVinculado.precos || {};
+    const nPrecos = Object.keys(p.categorias || {}).length + Object.keys(p.produtos || {}).length;
+    const nItens = estado.secoes.reduce((s, sec) => s + sec.itens.filter(i => i.codigo && !i.sem_valor).length, 0);
+
+    const btnAplicar = (nPrecos && nItens)
+        ? `<button onclick="reaplicarPrecosCliente()" style="background:#4ade80;border:none;color:#000;font-weight:700;font-size:10px;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit;">Aplicar aos ${nItens} iten${nItens > 1 ? 's' : ''}</button>`
+        : '';
+
+    el.innerHTML = `
+        <span>Vinculado a <strong>${esc(clienteVinculado.nome)}</strong>${nPrecos ? ` — ${nPrecos} preço${nPrecos > 1 ? 's' : ''} na tabela` : ' (sem tabela de preços)'}</span>
+        ${btnAplicar}
+        <button onclick="desvincularCliente()" title="Desvincular" style="background:none;border:none;color:#666;cursor:pointer;font-size:13px;margin-left:auto;padding:0 2px;">✕</button>`;
+    el.style.display = 'flex';
 }
 
 // Preço do produto para o cliente vinculado:
 // exceção por produto > preço da categoria > preço padrão do catálogo
-function precoCliente(prod) {
+// (case-insensitive — a tabela do cliente guarda as chaves em maiúsculas)
+function precoClienteRaw(codigo, categoria, fallback) {
     const p = clienteVinculado?.precos;
     if (p) {
-        if (p.produtos?.[prod.codigo] > 0) return p.produtos[prod.codigo];
-        if (p.categorias?.[prod.categoria] > 0) return p.categorias[prod.categoria];
+        const cod = (codigo || '').toUpperCase();
+        const cat = (categoria || '').toUpperCase();
+        if (p.produtos?.[cod] > 0) return p.produtos[cod];
+        if (p.categorias?.[cat] > 0) return p.categorias[cat];
     }
-    return prod.preco || 0;
+    return fallback || 0;
+}
+function precoCliente(prod) {
+    return precoClienteRaw(prod.codigo, prod.categoria, prod.preco);
+}
+
+// Aplica a tabela do cliente aos itens já adicionados (botão no selo de vínculo)
+async function reaplicarPrecosCliente() {
+    if (!clienteVinculado) return;
+    // resolve a categoria de itens antigos (que não a guardaram) via catálogo
+    let catPorCodigo = {};
+    try {
+        const cat = await fetch('/api/catalogo/catalogo').then(r => r.json());
+        Object.values(cat.data || {}).flat().forEach(pr => { catPorCodigo[pr.codigo] = pr.categoria; });
+    } catch {}
+
+    let n = 0;
+    estado.secoes.forEach(sec => {
+        sec.itens.forEach(item => {
+            if (!item.codigo || item.sem_valor) return;
+            const categoria = item.categoria || catPorCodigo[item.codigo] || '';
+            const novo = precoClienteRaw(item.codigo, categoria, item.v_unit || 0);
+            item.categoria = categoria;
+            if (novo !== (item.v_unit || 0)) {
+                item.v_unit = novo;
+                item.total = (item.qtd || 1) * novo;
+                n++;
+            }
+        });
+    });
+    estado.secoes.forEach(sec => renderItensSecao(sec.id));
+    renderVinculoCliente();
+    MF.toast(n ? `Preços de ${clienteVinculado.nome} aplicados a ${n} iten${n > 1 ? 's' : ''}` : 'Nenhum item precisou mudar', n ? 'success' : 'info');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1160,7 +1230,8 @@ function adicionarItemDoAC(secId, prod) {
     }
     const precoAplicado = precoCliente(prod);
     sec.itens.push({
-        codigo: prod.codigo, descricao: prod.nome, imagem: prod.imagem || null,
+        codigo: prod.codigo, descricao: prod.nome, categoria: prod.categoria || '',
+        imagem: prod.imagem || null,
         imagem_v: prod.imagem_v || 1,
         qtd: 1, unidade: prod.unidade || 'UN', v_unit: precoAplicado,
         total: precoAplicado, fator: prod.fator || 1,
@@ -1729,9 +1800,8 @@ async function carregarPedido(numero) {
         estado.cliente_id = ped.cliente_id || null;
         estado.tipo = ped.tipo || 'PEDIDO DE VENDA';
         if (estado.cliente_id) {
-            fetch(`/api/clientes/${estado.cliente_id}`).then(r => r.json()).then(j => {
-                if (j.success) { clienteVinculado = j.data; renderVinculoCliente(); }
-            }).catch(() => {});
+            const j = await fetch(`/api/clientes/${estado.cliente_id}`).then(r => r.json()).catch(() => null);
+            if (j?.success) { clienteVinculado = j.data; }
         }
         estado.cabecalho = ped.cabecalho || { cliente: ped.cliente || '', data: ped.data_emissao || hoje(), campos: {}, valores: {} };
         if (!estado.cabecalho.campos) estado.cabecalho.campos = {};
@@ -1752,6 +1822,11 @@ async function carregarPedido(numero) {
         renderTipos();
         renderSecoes();
         restaurarEstadoUI();
+
+        // Vínculo do cliente: pelo cliente_id gravado ou, se não houver,
+        // tenta casar pelo nome (ex.: "LOOP TALENTS" → cliente "LOOPTALENTS")
+        if (!clienteVinculado) tentarAutoVincular(estado.cabecalho.cliente);
+        renderVinculoCliente();
     } catch (e) { console.error(e); }
 }
 
