@@ -391,12 +391,16 @@
                 <label>Nome do pedido (aparece na listagem)</label>
                 <input type="text" id="fNomePedido" placeholder="Ex: Show Chicote de Luxo — BSB 25/07" autocomplete="off">
             </div>
-            <div class="campo" style="position:relative;">
-                <label>Cliente *</label>
-                <input type="text" id="fCliente" placeholder="Ex: Marcio Santana, AGF..." autocomplete="off"
-                       oninput="buscarCliente(this.value)"
-                       onblur="setTimeout(() => document.getElementById('clienteSugestoes').style.display='none', 200)">
-                <div id="clienteSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:60;background:#1a1a1e;border:1px solid #333;border-radius:8px;margin-top:4px;max-height:200px;overflow-y:auto;"></div>
+            <div class="campo">
+                <label>Cliente <span style="color:#555;font-weight:400;text-transform:none;">(nome que aparece no documento)</span> *</label>
+                <input type="text" id="fCliente" placeholder="Ex: DJ Tubas, Marcio Santana..." autocomplete="off"
+                       oninput="onClienteTextoInput(this.value)">
+            </div>
+            <div class="campo">
+                <label>Escritório / Produtora <span style="color:#555;font-weight:400;text-transform:none;">(define a tabela de preços e a pasta)</span></label>
+                <select id="fClienteVinculo" onchange="selecionarClienteVinculo(this.value)">
+                    <option value="">— Nenhum (avulso) —</option>
+                </select>
                 <div id="clienteVinculo" style="display:none;margin-top:8px;font-size:11px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:8px;padding:7px 12px;align-items:center;gap:10px;flex-wrap:wrap;"></div>
             </div>
             <div class="campo-row">
@@ -698,11 +702,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderTipos();
     document.getElementById('fData').value = estado.cabecalho.data;
 
-    // Carrega clientes cadastrados (para auto-vincular por nome e aplicar preços)
+    // Carrega clientes cadastrados (dropdown de escritório + auto-vínculo por nome)
     try {
         const cli = await fetch('/api/clientes').then(r => r.json());
         todosClientes = cli?.data || [];
     } catch {}
+    popularDropdownClientes();
 
     const params = new URLSearchParams(location.search);
     const num = params.get('numero');
@@ -1038,24 +1043,58 @@ function toggleColuna(secId, colId) {
 
 // ══════════════════════════════════════════════════════════════
 // AUTOCOMPLETE
-// ── CLIENTE VINCULADO (tabela de preços) ──
+// ── CLIENTE VINCULADO (tabela de preços + pasta) ──
+// O campo "Cliente" é texto livre (vai no documento — ex.: o artista "DJ Tubas").
+// O vínculo com escritório/produtora é SEPARADO, feito pelo dropdown, e é ele
+// que define os preços e a pasta. O auto-vínculo por nome só age como atalho
+// quando o dropdown não foi tocado.
 let clienteVinculado = null;
 let todosClientes = [];
-let buscaClienteTimer = null;
+let vinculoManual = false; // true quando o usuário escolhe no dropdown
 
-// Normaliza para casar nomes: sem acento, sem espaço, minúsculo
 function normalizarNome(s) {
     return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
-// Auto-vincula quando o texto do cliente casa com um cadastrado.
-// Ex.: "LOOP TALENTS" ou "looptalents – fulano" casam com "LOOPTALENTS".
+// Preenche o dropdown de escritório/produtora
+function popularDropdownClientes() {
+    const sel = document.getElementById('fClienteVinculo');
+    if (!sel) return;
+    const atual = clienteVinculado ? String(clienteVinculado.id) : '';
+    sel.innerHTML = `<option value="">— Nenhum (avulso) —</option>` +
+        [...todosClientes].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+            .map(c => `<option value="${c.id}" ${String(c.id) === atual ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
+}
+
+// Escolha explícita no dropdown — é autoritária
+function selecionarClienteVinculo(valor) {
+    if (valor) {
+        const c = todosClientes.find(x => x.id === parseInt(valor));
+        estado.cliente_id = c ? c.id : null;
+        clienteVinculado = c || null;
+        vinculoManual = true;
+    } else {
+        estado.cliente_id = null;
+        clienteVinculado = null;
+        vinculoManual = false;
+        // sem escolha manual: tenta casar pelo texto do cliente
+        tentarAutoVincular(document.getElementById('fCliente').value);
+    }
+    renderVinculoCliente();
+}
+
+// Digitou no campo Cliente (texto livre): só tenta auto-vincular se o dropdown
+// não foi usado — nunca sobrescreve uma escolha manual
+function onClienteTextoInput(v) {
+    if (!vinculoManual) tentarAutoVincular(v);
+}
+
+// Auto-vincula quando o texto casa com um cadastrado ("LOOP TALENTS" → "LOOPTALENTS")
 function tentarAutoVincular(texto) {
+    if (vinculoManual) return;
     const alvo = normalizarNome(texto);
     if (!alvo) return;
-    // já vinculado e o texto ainda começa com esse cliente → mantém
     if (clienteVinculado && alvo.startsWith(normalizarNome(clienteVinculado.nome))) return;
-    // acha o cliente cujo nome é prefixo do texto (o mais longo vence)
     const match = todosClientes
         .filter(c => c.nome && alvo.startsWith(normalizarNome(c.nome)))
         .sort((a, b) => normalizarNome(b.nome).length - normalizarNome(a.nome).length)[0];
@@ -1066,48 +1105,18 @@ function tentarAutoVincular(texto) {
     }
 }
 
-function buscarCliente(q) {
-    clearTimeout(buscaClienteTimer);
-    const box = document.getElementById('clienteSugestoes');
-    q = (q || '').trim();
-    tentarAutoVincular(q);
-    if (q.length < 2) { box.style.display = 'none'; return; }
-    buscaClienteTimer = setTimeout(async () => {
-        try {
-            const json = await fetch(`/api/clientes/buscar?q=${encodeURIComponent(q)}`).then(r => r.json());
-            const lista = json.data || [];
-            if (!lista.length) { box.style.display = 'none'; return; }
-            box.innerHTML = lista.map(c => `
-                <div onmousedown='vincularCliente(${JSON.stringify(c).replace(/'/g, "&#39;")})'
-                     style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #222;"
-                     onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">
-                    <div style="font-size:13px;font-weight:700;color:#fff;">${esc(c.nome)}</div>
-                    <div style="font-size:10px;color:#555;">${c.tipo === 'produtora' ? 'Produtora' : c.tipo === 'outro' ? 'Outro' : 'Escritório'}${Object.keys(c.precos?.categorias || {}).length + Object.keys(c.precos?.produtos || {}).length ? ' · tabela de preços própria' : ''}</div>
-                </div>`).join('');
-            box.style.display = 'block';
-        } catch {}
-    }, 250);
-}
-
-function vincularCliente(c) {
-    estado.cliente_id = c.id;
-    clienteVinculado = c;
-    document.getElementById('clienteSugestoes').style.display = 'none';
-    const input = document.getElementById('fCliente');
-    if (!input.value.toLowerCase().startsWith(c.nome.toLowerCase())) {
-        input.value = c.nome + ' – ';
-    }
-    input.focus();
-    renderVinculoCliente();
-}
-
 function desvincularCliente() {
     estado.cliente_id = null;
     clienteVinculado = null;
+    vinculoManual = false;
     renderVinculoCliente();
 }
 
 function renderVinculoCliente() {
+    // mantém o dropdown em sincronia com o vínculo atual
+    const sel = document.getElementById('fClienteVinculo');
+    if (sel) sel.value = clienteVinculado ? String(clienteVinculado.id) : '';
+
     const el = document.getElementById('clienteVinculo');
     if (!clienteVinculado) { el.style.display = 'none'; el.innerHTML = ''; return; }
 
@@ -1800,8 +1809,13 @@ async function carregarPedido(numero) {
         estado.cliente_id = ped.cliente_id || null;
         estado.tipo = ped.tipo || 'PEDIDO DE VENDA';
         if (estado.cliente_id) {
-            const j = await fetch(`/api/clientes/${estado.cliente_id}`).then(r => r.json()).catch(() => null);
-            if (j?.success) { clienteVinculado = j.data; }
+            // vínculo explícito já gravado — usa o cadastro atual (não o snapshot)
+            clienteVinculado = todosClientes.find(c => c.id === estado.cliente_id) || null;
+            if (!clienteVinculado) {
+                const j = await fetch(`/api/clientes/${estado.cliente_id}`).then(r => r.json()).catch(() => null);
+                if (j?.success) clienteVinculado = j.data;
+            }
+            if (clienteVinculado) vinculoManual = true;
         }
         estado.cabecalho = ped.cabecalho || { cliente: ped.cliente || '', data: ped.data_emissao || hoje(), campos: {}, valores: {} };
         if (!estado.cabecalho.campos) estado.cabecalho.campos = {};
