@@ -761,6 +761,7 @@
             todosPedidos = (json.data || []).sort((a, b) =>
                 new Date(b.data_atualizacao || b.data_emissao) - new Date(a.data_atualizacao || a.data_emissao)
             );
+            restaurarNav();
             renderTabs();
             renderGrid();
         } catch (err) {
@@ -890,7 +891,29 @@
         return nome.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
     }
 
+    // Lembra em qual pasta/aba o usuário está, para voltar aqui depois de
+    // entrar num pedido (sessionStorage = dura enquanto a aba estiver aberta)
+    const NAV_KEY = 'mfPedidosNav';
+    function salvarNav() {
+        try {
+            sessionStorage.setItem(NAV_KEY, JSON.stringify({
+                pasta: pastaAtual, sub: subPastaAtual, tipo: filtroTipo,
+            }));
+        } catch {}
+    }
+    function restaurarNav() {
+        try {
+            const s = JSON.parse(sessionStorage.getItem(NAV_KEY) || 'null');
+            if (s) {
+                pastaAtual = s.pasta || null;
+                subPastaAtual = s.sub || null;
+                filtroTipo = s.tipo || 'todos';
+            }
+        } catch {}
+    }
+
     function renderGrid() {
+        salvarNav();
         const base = filtrarPedidos(todosPedidos);
         const pastasEl = document.getElementById('pastasGrid');
         const headerEl = document.getElementById('pastaHeader');
