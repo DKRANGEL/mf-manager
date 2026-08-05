@@ -26,6 +26,24 @@ function normalizarTipo(tipo) {
     return MAPA[t] || 'PEDIDO DE VENDA';
 }
 
+// Migra os tipos de cliente: escritorio permanece; produtora/outro/legado → empresa.
+// (evento é atribuído manualmente pelo usuário)
+function migrarTiposClientes() {
+    const fp = path.join(__dirname, '..', 'data', 'clientes.json');
+    if (!fs.existsSync(fp)) return;
+    try {
+        const db = JSON.parse(fs.readFileSync(fp, 'utf8'));
+        let mudou = 0;
+        (db.clientes || []).forEach(c => {
+            if (!['escritorio', 'empresa', 'evento'].includes(c.tipo)) {
+                c.tipo = 'empresa';
+                mudou++;
+            }
+        });
+        if (mudou > 0) { writeJSONAtomic(fp, db); console.log(`[migracaoTipos] ${mudou} cliente(s) migrado(s) para empresa`); }
+    } catch { /* ignora */ }
+}
+
 // Reescreve os arquivos de pedido cujo tipo mudou
 function migrarTiposPedidos() {
     const dir = path.join(__dirname, '..', 'data', 'pedidos');
@@ -48,4 +66,4 @@ function migrarTiposPedidos() {
     if (migrados > 0) console.log(`[migracaoTipos] ${migrados} pedido(s) migrado(s) para 2 tipos`);
 }
 
-module.exports = { normalizarTipo, migrarTiposPedidos, VALIDOS };
+module.exports = { normalizarTipo, migrarTiposPedidos, migrarTiposClientes, VALIDOS };

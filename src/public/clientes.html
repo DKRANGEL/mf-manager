@@ -125,7 +125,7 @@
     <div class="page-header">
         <div>
             <h1>Clientes</h1>
-            <div class="sub">Escritórios · Produtoras · Tabelas de preço</div>
+            <div class="sub">Escritórios · Empresas · Eventos · Tabelas de preço</div>
         </div>
         <div class="header-actions">
             <a href="/" class="btn btn-ghost">← Início</a>
@@ -153,8 +153,8 @@
                 <label>Tipo</label>
                 <select id="cTipo">
                     <option value="escritorio">Escritório</option>
-                    <option value="produtora">Produtora</option>
-                    <option value="outro">Outro</option>
+                    <option value="empresa">Empresa</option>
+                    <option value="evento">Evento</option>
                 </select>
             </div>
         </div>
@@ -197,7 +197,7 @@
     let clientes = [];
     let categorias = [];
 
-    const TIPO_LABEL = { escritorio: 'Escritórios', produtora: 'Produtoras', outro: 'Outros' };
+    const TIPO_LABEL = { escritorio: 'Escritórios', empresa: 'Empresas', evento: 'Eventos' };
 
     document.addEventListener('DOMContentLoaded', async () => {
         lucide.createIcons();
@@ -228,14 +228,17 @@
         if (clientes.length === 0) {
             el.innerHTML = `<div class="empty">
                 <div style="font-size:15px;font-weight:600;color:#555;margin-bottom:6px;">Nenhum cliente cadastrado</div>
-                <p style="font-size:12px;">Cadastre escritórios e produtoras para agrupar pedidos e aplicar tabelas de preço automáticas</p>
+                <p style="font-size:12px;">Cadastre escritórios, empresas e eventos para agrupar pedidos e aplicar tabelas de preço automáticas</p>
             </div>`;
             return;
         }
 
         let html = '';
-        for (const tipo of ['escritorio', 'produtora', 'outro']) {
-            const grupo = clientes.filter(c => (c.tipo || 'escritorio') === tipo);
+        for (const tipo of ['escritorio', 'empresa', 'evento']) {
+            const grupo = clientes.filter(c => {
+                const t = c.tipo || 'escritorio';
+                return t === tipo || (tipo === 'empresa' && !['escritorio', 'empresa', 'evento'].includes(t));
+            });
             if (!grupo.length) continue;
             html += `<div class="grupo-titulo">${TIPO_LABEL[tipo]}</div>`;
             html += grupo.map(c => {

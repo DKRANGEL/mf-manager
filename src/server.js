@@ -3,11 +3,12 @@ require('dotenv').config();
 const {createApp} = require('./app');
 const {initData} = require('./utils/initData');
 const {initUsuarios} = require('./routes/auth');
-const {migrarTiposPedidos} = require('./utils/migracaoTipos');
+const {migrarTiposPedidos, migrarTiposClientes} = require('./utils/migracaoTipos');
 
 initData();
 initUsuarios();
 migrarTiposPedidos();
+migrarTiposClientes();
 
 const app = createApp();
 const PORT = process.env.PORT || 3003;

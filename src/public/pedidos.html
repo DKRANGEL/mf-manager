@@ -724,8 +724,9 @@
 <script>
     let todosPedidos = [];
     let todosClientes = [];
-    let pastaAtual = null;    // null = pastas de status | 'pendente' | 'aberto' | 'concluido'
-    let subPastaAtual = null; // null = sub-pastas de cliente | 'c<id>' | 'avulsos'
+    let pastaAtual = null;      // null = pastas de status | 'pendente' | 'aberto' | 'concluido'
+    let categoriaAtual = null;  // null = pastas de categoria | 'escritorio' | 'empresa' | 'evento' | 'sem'
+    let subPastaAtual = null;   // null = sub-pastas de cliente | 'c<id>'
     let filtroPeriodo = 'todos';
     let filtroTipo = 'todos';
 
@@ -734,6 +735,20 @@
         aberto:    { nome: 'Abertos',    cor: '#ef4444', match: s => s === 'emitido'  || s === 'aberto' },
         concluido: { nome: 'Concluídos', cor: '#4ade80', match: s => s === 'concluido' },
     };
+
+    // Categorias de cliente → pasta e tipo de documento
+    const CATEGORIAS = {
+        escritorio: { nome: 'Escritórios', icone: 'briefcase',  tipo: 'PEDIDO DE VENDA' },
+        empresa:    { nome: 'Empresas',    icone: 'building-2',  tipo: 'PEDIDO DE VENDA' },
+        evento:     { nome: 'Eventos',     icone: 'party-popper', tipo: 'PRESTAÇÃO DE SERVIÇO' },
+    };
+
+    // Categorias visíveis conforme a aba de tipo de documento ativa
+    function categoriasVisiveis() {
+        if (filtroTipo === 'PRESTAÇÃO DE SERVIÇO') return ['evento'];
+        if (filtroTipo === 'PEDIDO DE VENDA') return ['escritorio', 'empresa'];
+        return ['escritorio', 'empresa', 'evento'];
+    }
 
     // Permissões do usuário logado (a segurança real é no servidor;
     // aqui só escondemos o que ele não pode usar)
@@ -769,24 +784,35 @@
         }
     }
 
-    // A qual cliente cadastrado o pedido pertence?
-    // 1º cliente_id gravado; 2º escolha manual "Avulso"; 3º match por nome
-    // (pedidos antigos: "LOOPTALENTS – CINTIA" casa com "LOOPTALENTS")
-    function chaveCliente(ped) {
+    // Resolve o CLIENTE cadastrado de um pedido (ou null se órfão)
+    // 1º cliente_id gravado; 2º escolha manual "sem cliente"; 3º match por nome
+    function clienteDoPedido(ped) {
         if (ped.cliente_id) {
             const c = todosClientes.find(x => x.id === ped.cliente_id);
-            if (c) return 'c' + c.id;
+            if (c) return c;
         }
-        // Escolha manual de "Avulso" vence o match automático por nome
-        if (ped.cliente_avulso) return 'avulsos';
+        if (ped.cliente_avulso) return null; // escolha manual de "sem cliente"
         const nome = (ped.cliente || '').toLowerCase().trim();
         if (nome) {
             const match = todosClientes
                 .filter(c => nome.startsWith((c.nome || '').toLowerCase().trim()) && c.nome)
                 .sort((a, b) => b.nome.length - a.nome.length)[0];
-            if (match) return 'c' + match.id;
+            if (match) return match;
         }
-        return 'avulsos';
+        return null;
+    }
+
+    // Chave da pasta de cliente ('c<id>' ou 'sem' para órfão)
+    function chaveCliente(ped) {
+        const c = clienteDoPedido(ped);
+        return c ? 'c' + c.id : 'sem';
+    }
+
+    // Categoria do pedido pela categoria do cliente (órfão → 'sem')
+    function categoriaDoPedido(ped) {
+        const c = clienteDoPedido(ped);
+        if (!c) return 'sem';
+        return CATEGORIAS[c.tipo] ? c.tipo : 'empresa';
     }
 
     // ── ABAS POR TIPO DE DOCUMENTO ──
@@ -820,6 +846,13 @@
     // ── PASTAS ──
     function abrirPasta(chave) {
         pastaAtual = chave;
+        categoriaAtual = null;
+        subPastaAtual = null;
+        renderGrid();
+    }
+
+    function abrirCategoria(cat) {
+        categoriaAtual = cat;
         subPastaAtual = null;
         renderGrid();
     }
@@ -831,6 +864,7 @@
 
     function voltarPasta() {
         if (subPastaAtual !== null) subPastaAtual = null;
+        else if (categoriaAtual !== null) categoriaAtual = null;
         else pastaAtual = null;
         renderGrid();
     }
@@ -897,7 +931,7 @@
     function salvarNav() {
         try {
             sessionStorage.setItem(NAV_KEY, JSON.stringify({
-                pasta: pastaAtual, sub: subPastaAtual, tipo: filtroTipo,
+                pasta: pastaAtual, categoria: categoriaAtual, sub: subPastaAtual, tipo: filtroTipo,
             }));
         } catch {}
     }
@@ -906,6 +940,7 @@
             const s = JSON.parse(sessionStorage.getItem(NAV_KEY) || 'null');
             if (s) {
                 pastaAtual = s.pasta || null;
+                categoriaAtual = s.categoria || null;
                 subPastaAtual = s.sub || null;
                 filtroTipo = s.tipo || 'todos';
             }
@@ -946,80 +981,116 @@
         // Dentro de uma pasta de status
         const pasta = PASTAS[pastaAtual];
         const lista = base.filter(ped => pasta.match(ped.status || 'rascunho'));
-
-        // Agrupa por cliente cadastrado (+ Avulsos)
-        const grupos = new Map();
-        lista.forEach(ped => {
-            const k = chaveCliente(ped);
-            if (!grupos.has(k)) grupos.set(k, []);
-            grupos.get(k).push(ped);
-        });
-        const soAvulsos = grupos.size === 0 || (grupos.size === 1 && grupos.has('avulsos'));
-
         headerEl.style.display = '';
 
-        if (subPastaAtual === null && !soAvulsos) {
-            // Nível 2: sub-pastas por cliente
-            gridEl.innerHTML = '';
-            headerEl.innerHTML = `
-                <button class="btn btn-ghost" onclick="voltarPasta()"><i data-lucide="arrow-left"></i> Pastas</button>
-                <div class="pasta-header-titulo">
-                    <span class="pasta-dot" style="background:${pasta.cor};"></span>
-                    ${pasta.nome} <span class="tab-count">${lista.length}</span>
-                </div>`;
+        const fmtMeta = (itens) => {
+            const soma = itens.reduce((s, p) => s + (p.total_valor || 0), 0);
+            const n = `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'}`;
+            return (PERM.ver_valores && soma > 0) ? `${n} · ${fmtMoney(soma)}` : n;
+        };
+        const breadcrumb = (extra) => `
+            <button class="btn btn-ghost" onclick="voltarPasta()"><i data-lucide="arrow-left"></i> Voltar</button>
+            <div class="pasta-header-titulo">
+                <span class="pasta-dot" style="background:${pasta.cor};"></span>
+                ${pasta.nome}${extra || ''}
+            </div>`;
 
-            const chaves = [...grupos.keys()].sort((a, b) => {
-                if (a === 'avulsos') return 1;
-                if (b === 'avulsos') return -1;
-                return nomeGrupo(a).localeCompare(nomeGrupo(b));
-            });
+        // ── Nível 1: pastas de CATEGORIA (Escritórios / Empresas / Eventos) ──
+        if (categoriaAtual === null) {
+            gridEl.innerHTML = '';
+            const orfaos = lista.filter(p => categoriaDoPedido(p) === 'sem');
+            const visiveis = categoriasVisiveis();
+            const presentes = new Set(lista.map(categoriaDoPedido));
+            const cats = ['escritorio', 'empresa', 'evento'].filter(c => visiveis.includes(c) || presentes.has(c));
+            headerEl.innerHTML = breadcrumb(` <span class="tab-count">${lista.length}</span>`);
             pastasEl.style.display = '';
-            pastasEl.innerHTML = chaves.map(k => {
-                const itens = grupos.get(k);
-                const soma = itens.reduce((s, p) => s + (p.total_valor || 0), 0);
-                const meta = PERM.ver_valores && soma > 0
-                    ? `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'} · ${fmtMoney(soma)}`
-                    : `${itens.length} ${itens.length === 1 ? 'pedido' : 'pedidos'}`;
-                const cor = corDaPasta(k);
-                const estAba   = cor ? ` style="background:${cor};"` : '';
-                const estCorpo = cor ? ` style="border-top-color:${cor};"` : '';
-                const estCard  = cor ? ` style="--pasta-cor:${cor};"` : '';
-                return `<div class="pasta-card sub ${pastaAtual} ${k === 'avulsos' ? 'avulsos' : ''} ${cor ? 'custom' : ''}" data-chave="${k}"${estCard} onclick="abrirSubPasta('${k}')">
-                    <button class="pasta-menu-btn" onclick="abrirMenuPasta(event, '${k}')" title="Opções da pasta">⋮</button>
-                    <div class="pasta-icone">
-                        <div class="pasta-aba"${estAba}></div>
-                        <div class="pasta-corpo"${estCorpo}></div>
-                        <div class="pasta-qtd">${itens.length}</div>
-                    </div>
-                    <div class="pasta-nome" title="${esc(nomeGrupo(k))}">${esc(nomeGrupo(k))}</div>
-                    <div class="pasta-meta">${meta}</div>
-                </div>`;
+            let html = cats.map(cat => {
+                const itens = lista.filter(p => categoriaDoPedido(p) === cat);
+                return cardCategoriaHTML(cat, itens.length, fmtMeta(itens));
             }).join('');
+            if (orfaos.length) html += cardSemClienteHTML(orfaos.length, fmtMeta(orfaos));
+            pastasEl.innerHTML = html;
             lucide.createIcons();
             return;
         }
 
-        // Nível 3: cards (dentro de sub-pasta, ou direto quando só há avulsos)
-        pastasEl.style.display = 'none';
-        pastasEl.innerHTML = '';
-        const listaFinal = (subPastaAtual !== null && !soAvulsos)
-            ? (grupos.get(subPastaAtual) || [])
-            : lista;
-        const tituloSub = (subPastaAtual !== null && !soAvulsos) ? nomeGrupo(subPastaAtual) : null;
+        // ── Categoria "sem cliente": vai direto aos cards (sem nível de cliente) ──
+        if (categoriaAtual === 'sem') {
+            pastasEl.style.display = 'none'; pastasEl.innerHTML = '';
+            const orfaos = lista.filter(p => categoriaDoPedido(p) === 'sem');
+            headerEl.innerHTML = breadcrumb(` <span style="color:#555;">/</span> Sem cliente <span class="tab-count">${orfaos.length}</span>`);
+            renderCards(orfaos);
+            lucide.createIcons();
+            return;
+        }
 
-        headerEl.innerHTML = `
-            <button class="btn btn-ghost" onclick="voltarPasta()"><i data-lucide="arrow-left"></i> ${tituloSub ? pasta.nome : 'Pastas'}</button>
-            <div class="pasta-header-titulo">
-                <span class="pasta-dot" style="background:${pasta.cor};"></span>
-                ${pasta.nome}${tituloSub ? ` <span style="color:#555;">/</span> ${esc(tituloSub)}` : ''}
-                <span class="tab-count">${listaFinal.length}</span>
-            </div>`;
+        // ── Dentro de uma categoria: agrupa por cliente ──
+        const catInfo = CATEGORIAS[categoriaAtual] || { nome: '' };
+        const listaCat = lista.filter(p => categoriaDoPedido(p) === categoriaAtual);
+        const grupos = new Map();
+        listaCat.forEach(ped => {
+            const k = chaveCliente(ped);
+            if (!grupos.has(k)) grupos.set(k, []);
+            grupos.get(k).push(ped);
+        });
+
+        // ── Nível 2: sub-pastas por cliente ──
+        if (subPastaAtual === null) {
+            gridEl.innerHTML = '';
+            headerEl.innerHTML = breadcrumb(` <span style="color:#555;">/</span> ${esc(catInfo.nome)} <span class="tab-count">${listaCat.length}</span>`);
+            const chaves = [...grupos.keys()].sort((a, b) => nomeGrupo(a).localeCompare(nomeGrupo(b)));
+            if (!chaves.length) {
+                pastasEl.style.display = 'none'; pastasEl.innerHTML = '';
+                gridEl.innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="folder-open"></i></div>
+                    <div style="color:#555;font-size:14px;font-weight:600;">Nenhum pedido de ${esc(catInfo.nome.toLowerCase())} aqui</div></div>`;
+                lucide.createIcons();
+                return;
+            }
+            pastasEl.style.display = '';
+            pastasEl.innerHTML = chaves.map(k => cardClienteHTML(k, grupos.get(k), fmtMeta(grupos.get(k)))).join('');
+            lucide.createIcons();
+            return;
+        }
+
+        // ── Nível 3: cards do cliente ──
+        pastasEl.style.display = 'none'; pastasEl.innerHTML = '';
+        const listaFinal = grupos.get(subPastaAtual) || [];
+        headerEl.innerHTML = breadcrumb(` <span style="color:#555;">/</span> ${esc(catInfo.nome)} <span style="color:#555;">/</span> ${esc(nomeGrupo(subPastaAtual))} <span class="tab-count">${listaFinal.length}</span>`);
         renderCards(listaFinal);
         lucide.createIcons();
     }
 
+    // Cartões de pasta reutilizáveis
+    function cardCategoriaHTML(cat, count, meta) {
+        const info = CATEGORIAS[cat];
+        return `<div class="pasta-card sub ${pastaAtual}" onclick="abrirCategoria('${cat}')">
+            <div class="pasta-icone"><div class="pasta-aba"></div><div class="pasta-corpo"></div><div class="pasta-qtd">${count}</div></div>
+            <div class="pasta-nome"><i data-lucide="${info.icone}" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;"></i>${info.nome}</div>
+            <div class="pasta-meta">${meta}</div>
+        </div>`;
+    }
+    function cardSemClienteHTML(count, meta) {
+        return `<div class="pasta-card sub avulsos" onclick="abrirCategoria('sem')" title="Pedidos sem cliente vinculado — vincule para organizar">
+            <div class="pasta-icone"><div class="pasta-aba"></div><div class="pasta-corpo"></div><div class="pasta-qtd">${count}</div></div>
+            <div class="pasta-nome" style="color:#e0e0e0;">⚠ Sem cliente</div>
+            <div class="pasta-meta">${meta}</div>
+        </div>`;
+    }
+    function cardClienteHTML(k, itens, meta) {
+        const cor = corDaPasta(k);
+        const estAba   = cor ? ` style="background:${cor};"` : '';
+        const estCorpo = cor ? ` style="border-top-color:${cor};"` : '';
+        const estCard  = cor ? ` style="--pasta-cor:${cor};"` : '';
+        return `<div class="pasta-card sub ${pastaAtual} ${cor ? 'custom' : ''}" data-chave="${k}"${estCard} onclick="abrirSubPasta('${k}')">
+            <button class="pasta-menu-btn" onclick="abrirMenuPasta(event, '${k}')" title="Opções da pasta">⋮</button>
+            <div class="pasta-icone"><div class="pasta-aba"${estAba}></div><div class="pasta-corpo"${estCorpo}></div><div class="pasta-qtd">${itens.length}</div></div>
+            <div class="pasta-nome" title="${esc(nomeGrupo(k))}">${esc(nomeGrupo(k))}</div>
+            <div class="pasta-meta">${meta}</div>
+        </div>`;
+    }
+
     function nomeGrupo(chave) {
-        if (chave === 'avulsos') return 'Avulsos';
+        if (chave === 'sem') return 'Sem cliente';
         const c = todosClientes.find(x => 'c' + x.id === chave);
         return c?.nome || 'Cliente';
     }
@@ -1028,7 +1099,6 @@
     const CORES_PASTA = ['#fbbf24', '#fb923c', '#ef4444', '#f472b6', '#c084fc', '#60a5fa', '#22d3ee', '#4ade80', '#a3e635', '#e5e5e5'];
 
     function corDaPasta(chave) {
-        if (chave === 'avulsos') return localStorage.getItem('mfCorPastaAvulsos') || null;
         const c = todosClientes.find(x => 'c' + x.id === chave);
         return c?.cor || null;
     }
@@ -1047,7 +1117,7 @@
                     onclick="setCorPasta(event, '${chave}', '${c}')" title="${c}"></button>`).join('')
             + `<button class="cor-swatch reset" onclick="setCorPasta(event, '${chave}', null)" title="Cor automática (status)">✕</button>`;
 
-        const podeAdd = chave !== 'avulsos' && PERM.criar_editar;
+        const podeAdd = chave.startsWith('c') && PERM.criar_editar;
         const menu = document.createElement('div');
         menu.className = 'pasta-menu';
         menu.onclick = e => e.stopPropagation();
@@ -1069,20 +1139,15 @@
     async function setCorPasta(ev, chave, cor) {
         ev.stopPropagation();
         try {
-            if (chave === 'avulsos') {
-                if (cor) localStorage.setItem('mfCorPastaAvulsos', cor);
-                else localStorage.removeItem('mfCorPastaAvulsos');
-            } else {
-                const id = parseInt(chave.slice(1));
-                const json = await fetch(`/api/clientes/item/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ cor: cor || null }),
-                }).then(r => r.json());
-                if (!json.success) throw new Error(json.error);
-                const c = todosClientes.find(x => x.id === id);
-                if (c) c.cor = cor || null;
-            }
+            const id = parseInt(chave.slice(1));
+            const json = await fetch(`/api/clientes/item/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cor: cor || null }),
+            }).then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            const c = todosClientes.find(x => x.id === id);
+            if (c) c.cor = cor || null;
             fecharMenusPasta();
             renderGrid();
         } catch (err) {
@@ -1239,15 +1304,21 @@
         window.location.href = `/emitir?numero=${encodeURIComponent(numero)}`;
     }
 
-    // ── DROPDOWN DE CLIENTE POR CARD ──
+    // ── DROPDOWN DE CLIENTE POR CARD (agrupado por categoria) ──
     function clienteSelectHTML(ped) {
-        const atual = chaveCliente(ped); // 'c<id>' ou 'avulsos' (respeita match por nome)
-        const opts = [`<option value="" ${atual === 'avulsos' ? 'selected' : ''}>— Avulso —</option>`]
-            .concat(todosClientes.map(c =>
-                `<option value="${c.id}" ${atual === 'c' + c.id ? 'selected' : ''}>${esc(c.nome)}</option>`
-            )).join('');
-        const vinc = atual !== 'avulsos' ? 'vinculado' : '';
-        return `<select class="cliente-select ${vinc}" onchange="mudarCliente('${esc(ped.numero)}', this.value)" title="Cliente / pasta do pedido">${opts}</select>`;
+        const atual = chaveCliente(ped); // 'c<id>' ou 'sem'
+        const porCat = { escritorio: [], empresa: [], evento: [] };
+        todosClientes.forEach(c => { (porCat[c.tipo] || porCat.empresa).push(c); });
+        const grupo = (cat, label) => porCat[cat].length
+            ? `<optgroup label="${label}">` + porCat[cat]
+                .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+                .map(c => `<option value="${c.id}" ${atual === 'c' + c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')
+              + `</optgroup>`
+            : '';
+        const opts = `<option value="" ${atual === 'sem' ? 'selected' : ''}>— Sem cliente —</option>`
+            + grupo('escritorio', 'Escritórios') + grupo('empresa', 'Empresas') + grupo('evento', 'Eventos');
+        const vinc = atual !== 'sem' ? 'vinculado' : '';
+        return `<select class="cliente-select ${vinc}" onchange="mudarCliente('${esc(ped.numero)}', this.value)" title="Escritório / Empresa / Evento do pedido">${opts}</select>`;
     }
 
     async function mudarCliente(numero, valor) {
@@ -1261,7 +1332,7 @@
             if (!json.success) throw new Error(json.error);
             const p = todosPedidos.find(x => x.numero === numero);
             if (p) { p.cliente_id = cliente_id; p.cliente_avulso = !cliente_id; }
-            const nome = cliente_id ? (todosClientes.find(c => c.id === cliente_id)?.nome || 'cliente') : 'Avulsos';
+            const nome = cliente_id ? (todosClientes.find(c => c.id === cliente_id)?.nome || 'cliente') : 'Sem cliente';
             MF.toast(`Pedido movido para ${nome}`);
             renderTabs();
             renderGrid();

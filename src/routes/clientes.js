@@ -80,7 +80,7 @@ router.post('/item', (req, res) => {
         const novo = {
             id: db.proximo_id || 1,
             nome,
-            tipo: ['escritorio', 'produtora', 'outro'].includes(req.body.tipo) ? req.body.tipo : 'escritorio',
+            tipo: ['escritorio', 'empresa', 'evento'].includes(req.body.tipo) ? req.body.tipo : 'escritorio',
             contato: (req.body.contato || '').trim(),
             cidade: (req.body.cidade || '').trim(),
             observacoes: (req.body.observacoes || '').trim(),
@@ -112,7 +112,7 @@ router.put('/item/:id', (req, res) => {
             }
             c.nome = nome;
         }
-        if (req.body.tipo !== undefined && ['escritorio', 'produtora', 'outro'].includes(req.body.tipo)) c.tipo = req.body.tipo;
+        if (req.body.tipo !== undefined && ['escritorio', 'empresa', 'evento'].includes(req.body.tipo)) c.tipo = req.body.tipo;
         if (req.body.contato !== undefined) c.contato = req.body.contato.trim();
         if (req.body.cidade !== undefined) c.cidade = req.body.cidade.trim();
         if (req.body.observacoes !== undefined) c.observacoes = req.body.observacoes.trim();

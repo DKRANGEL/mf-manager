@@ -1060,6 +1060,16 @@ function popularDropdownClientes() {
             .map(c => `<option value="${c.id}" ${String(c.id) === atual ? 'selected' : ''}>${esc(c.nome)}</option>`).join('');
 }
 
+// Tipo de documento derivado da categoria do cliente
+function tipoDocDoCliente(c) {
+    return (c && c.tipo === 'evento') ? 'PRESTAÇÃO DE SERVIÇO' : 'PEDIDO DE VENDA';
+}
+function aplicarTipoDoCliente() {
+    if (!clienteVinculado) return;
+    const novo = tipoDocDoCliente(clienteVinculado);
+    if (novo !== estado.tipo) { estado.tipo = novo; renderTipos(); }
+}
+
 // Escolha explícita no dropdown — é autoritária
 function selecionarClienteVinculo(valor) {
     if (valor) {
@@ -1067,6 +1077,7 @@ function selecionarClienteVinculo(valor) {
         estado.cliente_id = c ? c.id : null;
         clienteVinculado = c || null;
         vinculoManual = true;
+        aplicarTipoDoCliente();
     } else {
         estado.cliente_id = null;
         clienteVinculado = null;
@@ -1080,7 +1091,7 @@ function selecionarClienteVinculo(valor) {
 // Digitou no campo Cliente (texto livre): só tenta auto-vincular se o dropdown
 // não foi usado — nunca sobrescreve uma escolha manual
 function onClienteTextoInput(v) {
-    if (!vinculoManual) tentarAutoVincular(v);
+    if (!vinculoManual) { tentarAutoVincular(v); aplicarTipoDoCliente(); }
 }
 
 // Auto-vincula quando o texto casa com um cadastrado ("LOOP TALENTS" → "LOOPTALENTS")
