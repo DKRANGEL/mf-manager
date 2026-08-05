@@ -4,6 +4,7 @@ const path = require('path');
 const {readJSON, writeJSONAtomic, listJSON} = require('../utils/storage');
 const {parsearTexto} = require('../utils/parserPedido');
 const {validarItens} = require('../utils/validadorCatalogo');
+const {normalizarTipo} = require('../utils/migracaoTipos');
 
 const router = express.Router();
 
@@ -122,7 +123,7 @@ router.post('/', (req, res) => {
         const pedido = {
             numero,
             nome: req.body.nome || '',
-            tipo: tipo || 'PEDIDO DE VENDA',
+            tipo: normalizarTipo(tipo),
             status: 'rascunho',
             data_emissao: data_emissao || new Date().toISOString(),
             data_atualizacao: new Date().toISOString(),
@@ -167,7 +168,7 @@ router.get('/', (req, res) => {
 
                 return {
                     numero: pedido.numero,
-                    tipo: pedido.tipo || 'PEDIDO DE VENDA',
+                    tipo: normalizarTipo(pedido.tipo),
                     status: pedido.status || 'rascunho',
                     cliente_id: pedido.cliente_id || null,
                     data_emissao: pedido.data_emissao,
@@ -194,6 +195,8 @@ router.get('/:numero', (req, res) => {
     try {
         const pedido = readJSON(pedidoPath(req.params.numero), null);
         if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+
+        pedido.tipo = normalizarTipo(pedido.tipo);
 
         // Normaliza pedidos antigos (lista plana → secoes)
         if (!pedido.secoes && pedido.itens) {
@@ -247,7 +250,7 @@ router.put('/:numero', (req, res) => {
 
         if (req.body.nome !== undefined) pedido.nome = req.body.nome || '';
         if (req.body.cliente_id !== undefined) pedido.cliente_id = req.body.cliente_id || null;
-        if (tipo !== undefined) pedido.tipo = tipo;
+        if (tipo !== undefined) pedido.tipo = normalizarTipo(tipo);
         if (cabecalho !== undefined) { pedido.cabecalho = cabecalho; pedido.cliente = cabecalho.cliente || pedido.cliente; }
         if (cliente !== undefined && !cabecalho) pedido.cliente = cliente;
         if (secoes !== undefined) pedido.secoes = secoes;
