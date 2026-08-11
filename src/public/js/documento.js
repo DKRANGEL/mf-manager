@@ -435,6 +435,15 @@ function _mfGerarResumoHTML(pedido) {
         </div>`;
     }
 
+    // Frete — caixa azul (mesmo formato da NF)
+    if (res.frete && res.frete_valor > 0) {
+        extras += `<div style="margin-top:10px;padding:10px 14px;background:#e3f2fd;border:1px solid #64b5f6;border-radius:6px;font-size:11px;color:#555;">
+            <strong>VALOR SEM FRETE:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
+            <strong>FRETE:</strong> + R$ ${_mfFmt(res.frete_valor)} &nbsp;|&nbsp;
+            <strong>VALOR TOTAL COM FRETE:</strong> R$ ${_mfFmt(totalFinal + res.frete_valor)}
+        </div>`;
+    }
+
     // Condição / Pagamento
     const condicao = res.condicao_texto || '';
     if (condicao) extras += `<div style="margin-top:10px;font-size:11px;color:#555;">

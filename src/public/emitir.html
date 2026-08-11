@@ -491,6 +491,20 @@
                     <input type="number" id="fNFPercent" value="18" min="0" max="100">
                 </div>
             </div>
+            <!-- Frete -->
+            <div class="resumo-item">
+                <div class="resumo-item-label">
+                    Frete
+                    <span class="resumo-item-sub">Mostra o valor do frete (caixa azul no documento)</span>
+                </div>
+                <div class="toggle-sw" id="toggleFrete" onclick="toggleResumo('frete',this)"></div>
+            </div>
+            <div class="resumo-extra resumo-extra-hidden" id="extraFrete">
+                <div class="campo"><label>Valor do frete (R$)</label>
+                    <input type="text" id="fFreteValor" placeholder="0,00" inputmode="decimal"
+                           oninput="mascaraMoeda(this)">
+                </div>
+            </div>
             <!-- Pagamento -->
             <div style="border-bottom:1px solid #1e1e22;padding-bottom:12px;margin-bottom:4px;">
                 <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Pagamento</div>
@@ -632,7 +646,7 @@
     <div id="previewContent"></div>
 </div>
 
-<script src="/public/js/documento.js?v=20260803"></script>
+<script src="/public/js/documento.js?v=20260806"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -676,6 +690,7 @@ let estado = {
         desconto: false, desconto_valor: 0, desconto_label: 'DESCONTO',
         pagamentos: false, pagamentos_itens: [],
         nf: false, nf_percent: 18,
+        frete: false, frete_valor: 0,
         condicao: true, condicao_valor: '',
         kits: false, kits_itens: [],
         incluso: false, incluso_texto: '',
@@ -1404,7 +1419,7 @@ function salvarModalItem() {
 function toggleResumo(campo, swEl) {
     const mapaExtra = {
         subtotais: null, desconto: 'extraDesconto', pagamentos: 'extraPagamentos',
-        nf: 'extraNF', kits: 'extraKits', incluso: 'extraIncluso', obs: 'extraObs'
+        nf: 'extraNF', frete: 'extraFrete', kits: 'extraKits', incluso: 'extraIncluso', obs: 'extraObs'
     };
     estado.resumo[campo] = !estado.resumo[campo];
     swEl.classList.toggle('on', estado.resumo[campo]);
@@ -1747,6 +1762,7 @@ function coletarEstado() {
     estado.resumo.desconto_valor = parseMoeda(document.getElementById('fDescontoValor')?.value || '0');
     estado.resumo.desconto_label = document.getElementById('fDescontoLabel')?.value || 'DESCONTO';
     estado.resumo.nf_percent = parseFloat(document.getElementById('fNFPercent')?.value) || 18;
+    estado.resumo.frete_valor = parseMoeda(document.getElementById('fFreteValor')?.value || '0');
     // Kits vinculados: sincroniza valor e título com o subtotal atual da seção
     estado.resumo.kits_itens = (estado.resumo.kits_itens || []).map(k => {
         if (k.secao_id) {
@@ -1876,6 +1892,7 @@ function restaurarEstadoUI() {
         desconto:  { sw: 'toggleDesconto',  extra: 'extraDesconto' },
         pagamentos:{ sw: 'togglePagamentos',extra: 'extraPagamentos' },
         nf:        { sw: 'toggleNF',        extra: 'extraNF' },
+        frete:     { sw: 'toggleFrete',     extra: 'extraFrete' },
         kits:      { sw: 'toggleKits',      extra: 'extraKits' },
         incluso:   { sw: 'toggleIncluso',   extra: 'extraIncluso' },
         obs:       { sw: 'toggleObs',       extra: 'extraObs' }
@@ -1892,6 +1909,7 @@ function restaurarEstadoUI() {
     if (res.desconto_valor) { g('fDescontoValor').value = fmtNEditar(res.desconto_valor); }
     if (res.desconto_label) { g('fDescontoLabel').value = res.desconto_label; }
     if (res.nf_percent)     { g('fNFPercent').value = res.nf_percent; }
+    if (res.frete_valor)    { g('fFreteValor').value = fmtNEditar(res.frete_valor); }
     if (res.incluso_texto)  { g('fIncluso').value = res.incluso_texto; }
     if (res.obs_texto)      { g('fObs').value = res.obs_texto; }
 
