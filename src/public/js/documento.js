@@ -418,29 +418,34 @@ function _mfGerarResumoHTML(pedido) {
 
     let extras = '';
 
-    // NF Fiscal — calculada sobre o total final
-    if (res.nf && res.nf_percent > 0) {
-        const nfVal = totalFinal * (res.nf_percent / 100);
-        extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
-            <strong>VALOR SEM NF:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
-            <strong>NF FISCAL (${res.nf_percent}%):</strong> + R$ ${_mfFmt(nfVal)} &nbsp;|&nbsp;
-            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(totalFinal + nfVal)}
+    // Frete e NF Fiscal — a NF incide sobre (total do pedido + frete)
+    const freteVal = (res.frete && res.frete_valor > 0) ? res.frete_valor : 0;
+
+    // Frete — caixa azul (mesmo formato da NF)
+    if (freteVal > 0) {
+        extras += `<div style="margin-top:10px;padding:10px 14px;background:#e3f2fd;border:1px solid #64b5f6;border-radius:6px;font-size:11px;color:#555;">
+            <strong>VALOR SEM FRETE:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
+            <strong>FRETE:</strong> + R$ ${_mfFmt(freteVal)} &nbsp;|&nbsp;
+            <strong>VALOR TOTAL COM FRETE:</strong> R$ ${_mfFmt(totalFinal + freteVal)}
         </div>`;
     }
-    // Compatibilidade NF antigo
+
+    // NF Fiscal — incide sobre o total + frete
+    if (res.nf && res.nf_percent > 0) {
+        const baseNF = totalFinal + freteVal;
+        const nfVal = baseNF * (res.nf_percent / 100);
+        const labelBase = freteVal > 0 ? 'VALOR SEM NF (PEDIDO + FRETE)' : 'VALOR SEM NF';
+        extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
+            <strong>${labelBase}:</strong> R$ ${_mfFmt(baseNF)} &nbsp;|&nbsp;
+            <strong>NF FISCAL (${res.nf_percent}%):</strong> + R$ ${_mfFmt(nfVal)} &nbsp;|&nbsp;
+            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(baseNF + nfVal)}
+        </div>`;
+    }
+    // Compatibilidade NF antigo (schema sem frete)
     if (!res.nf && blocos.nf?.ativo) {
         const nfVal = totalFinal * ((blocos.nf.percent || 18) / 100);
         extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
             <strong>NF FISCAL (${blocos.nf.percent || 18}%):</strong> + R$ ${_mfFmt(nfVal)}
-        </div>`;
-    }
-
-    // Frete — caixa azul (mesmo formato da NF)
-    if (res.frete && res.frete_valor > 0) {
-        extras += `<div style="margin-top:10px;padding:10px 14px;background:#e3f2fd;border:1px solid #64b5f6;border-radius:6px;font-size:11px;color:#555;">
-            <strong>VALOR SEM FRETE:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
-            <strong>FRETE:</strong> + R$ ${_mfFmt(res.frete_valor)} &nbsp;|&nbsp;
-            <strong>VALOR TOTAL COM FRETE:</strong> R$ ${_mfFmt(totalFinal + res.frete_valor)}
         </div>`;
     }
 
