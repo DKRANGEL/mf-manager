@@ -287,6 +287,9 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
         .pgto-remove:hover { color: #ff6060; }
+        .pgto-grip { width: 16px; height: 16px; color: #555; cursor: grab; flex: none; }
+        .pgto-item.sortable-ghost { opacity: 0.4; }
+        .pgto-item.sortable-chosen { outline: 1px solid #444; border-radius: 8px; }
 
         /* ── BOTTOM BAR ── */
         .bottom-bar {
@@ -1478,13 +1481,17 @@ function adicionarPagamento() {
     renderPagamentos();
 }
 
+let _pgtoSortable = null;
 function renderPagamentos() {
     const wrap = document.getElementById('pagamentosList');
     wrap.innerHTML = estado.resumo.pagamentos_itens.map((p, i) => `
-        <div class="pgto-item" style="flex-wrap:wrap;">
-            <input type="text" value="${esc(p.label)}" placeholder="Descrição"
-                   oninput="estado.resumo.pagamentos_itens[${i}].label=this.value"
-                   style="flex:1 1 100%;">
+        <div class="pgto-item" data-idx="${i}" style="flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;flex:1 1 100%;">
+                <i data-lucide="grip-vertical" class="pgto-grip"></i>
+                <input type="text" value="${esc(p.label)}" placeholder="Descrição"
+                       oninput="estado.resumo.pagamentos_itens[${i}].label=this.value"
+                       style="flex:1;">
+            </div>
             <input type="date" value="${esc(p.data || '')}"
                    oninput="estado.resumo.pagamentos_itens[${i}].data=this.value"
                    title="Data do pagamento (opcional)"
@@ -1498,6 +1505,18 @@ function renderPagamentos() {
         </div>
     `).join('');
     lucide.createIcons();
+
+    if (_pgtoSortable) { try { _pgtoSortable.destroy(); } catch(e){} }
+    _pgtoSortable = new Sortable(wrap, {
+        handle: '.pgto-grip', animation: 150,
+        ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+        onEnd: () => {
+            const nova = [...wrap.querySelectorAll('.pgto-item')]
+                .map(el => estado.resumo.pagamentos_itens[+el.dataset.idx]);
+            estado.resumo.pagamentos_itens = nova;
+            renderPagamentos();
+        }
+    });
 }
 
 function removerPagamento(idx) {
