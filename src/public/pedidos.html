@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
           rel="stylesheet">
+    <!-- Fontes do recibo (Claude Design) -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -254,6 +256,16 @@
         .add-ped-meta { font-size: 10px; color: #555; font-family: var(--mono, monospace); }
         .add-ped-status { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; flex-shrink: 0; }
         .pasta-meta { font-size: 11px; color: #555; font-family: var(--mono, 'JetBrains Mono', monospace); }
+
+        /* Campos do modal de recibo */
+        .rc-f { display: flex; flex-direction: column; gap: 5px; }
+        .rc-f label { font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.6px; }
+        .rc-f input, .rc-f textarea {
+            background: #1a1a1e; border: 1px solid #2a2a30; border-radius: 8px;
+            padding: 9px 11px; color: #fff; font-size: 13px; font-family: inherit; outline: none;
+            width: 100%; resize: vertical;
+        }
+        .rc-f input:focus, .rc-f textarea:focus { border-color: #444; }
 
         /* Cabeçalho dentro da pasta */
         .pasta-header {
@@ -718,6 +730,39 @@
         <button class="btn btn-white" onclick="confirmarAddPedidos()" style="width:100%;justify-content:center;margin-top:14px;">
             Adicionar selecionados
         </button>
+    </div>
+</div>
+
+<!-- MODAL RECIBO DE PAGAMENTO -->
+<div id="modalRecibo" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;background:#121214;border:1px solid #29292e;border-radius:16px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.8);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:15px;font-weight:700;color:#fff;">Recibo de pagamento — <span id="rcPedNum" style="color:#888;"></span></div>
+            <button onclick="fecharModalRecibo()" style="background:none;border:none;color:#555;cursor:pointer;font-size:18px;">✕</button>
+        </div>
+        <div style="font-size:11px;color:#555;margin-bottom:14px;">Declaração de quitação em PDF. Fica salva no pedido.</div>
+        <div id="rcCampos" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px;">
+            <div class="rc-f"><label>Nº do recibo</label><input type="text" id="rcNumero" placeholder="Ex.: 001"></div>
+            <div class="rc-f"><label>Recebemos de (pagador)</label><input type="text" id="rcPagador" placeholder="Nome / razão social"></div>
+            <div class="rc-f"><label>CNPJ / CPF do pagador</label><input type="text" id="rcPagadorDoc" placeholder="Opcional"></div>
+            <div style="display:flex;gap:10px;">
+                <div class="rc-f" style="flex:1;"><label>Valor (R$)</label><input type="text" id="rcValor" placeholder="0,00" inputmode="decimal" oninput="mascaraMoedaRc(this);atualizarExtensoRc()"></div>
+                <div class="rc-f" style="flex:1;"><label>Data</label><input type="date" id="rcData"></div>
+            </div>
+            <div class="rc-f"><label>Valor por extenso</label><input type="text" id="rcExtenso" placeholder="preenchido automaticamente"></div>
+            <div style="display:flex;gap:10px;">
+                <div class="rc-f" style="flex:1;"><label>Forma de pagamento</label><input type="text" id="rcForma" placeholder="Pix — Banco do Brasil"></div>
+                <div class="rc-f" style="flex:1;"><label>Hora (opcional)</label><input type="text" id="rcHora" placeholder="14:50:43"></div>
+            </div>
+            <div class="rc-f"><label>Autenticação (opcional)</label><input type="text" id="rcAut" placeholder="AUT. SISBB ..."></div>
+            <div class="rc-f"><label>ID da transação (opcional)</label><input type="text" id="rcTransacao" placeholder="E0000..."></div>
+            <div class="rc-f"><label>Referente a</label><textarea id="rcReferente" rows="2" placeholder="Fornecimento e execução de efeitos pirotécnicos para o show..."></textarea></div>
+            <div class="rc-f"><label>Cidade</label><input type="text" id="rcCidade" placeholder="BRASÍLIA/DF"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+            <button class="btn" onclick="salvarReciboHall()" style="flex:1;justify-content:center;border:1px solid #333;color:#ccc;"><i data-lucide="save"></i> Salvar</button>
+            <button class="btn btn-white" onclick="gerarReciboPDFHall()" style="flex:1;justify-content:center;"><i data-lucide="eye"></i> Gerar PDF</button>
+        </div>
     </div>
 </div>
 
@@ -1277,9 +1322,11 @@
 
             const clienteHTML = PERM.criar_editar ? clienteSelectHTML(ped) : '';
 
+            const podeRecibo = (isAberto || isConcluido) && PERM.criar_editar;
             const acoesHTML = `
                 <button class="card-btn" onclick="abrirPreview('${esc(ped.numero)}', '${esc(cliente)}')" title="Preview"><i data-lucide="eye"></i></button>
                 ${PERM.criar_editar ? `<button class="card-btn" onclick="abrirEditar('${esc(ped.numero)}')" title="Editar"><i data-lucide="pencil"></i></button>` : ''}
+                ${podeRecibo ? `<button class="card-btn" onclick="abrirModalRecibo('${esc(ped.numero)}')" title="Recibo de pagamento"><i data-lucide="receipt-text"></i></button>` : ''}
                 ${PERM.excluir ? `<button class="card-btn danger" onclick="deletarPedido('${esc(ped.numero)}', '${esc(cliente)}')" title="Excluir"><i data-lucide="trash-2"></i></button>` : ''}`;
 
             return `<div class="pedido-card ${sClass}">
@@ -1440,6 +1487,110 @@
         }, 1000);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // RECIBO DE PAGAMENTO (a partir do card — pedido aberto/concluído)
+    // ══════════════════════════════════════════════════════════════
+    let _reciboPedido = null;
+
+    function parseMoedaRc(str) {
+        if (typeof str === 'number') return str;
+        if (!str) return 0;
+        return parseFloat(String(str).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    function fmtMoedaRc(v) {
+        return (parseFloat(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function mascaraMoedaRc(input) {
+        let d = input.value.replace(/\D/g, '');
+        if (!d) { input.value = ''; return; }
+        input.value = fmtMoedaRc((parseInt(d, 10) / 100).toFixed(2));
+    }
+    function hojeRc() { return new Date().toISOString().split('T')[0]; }
+    function atualizarExtensoRc() {
+        const valor = parseMoedaRc(document.getElementById('rcValor').value);
+        document.getElementById('rcExtenso').value = valor ? valorPorExtenso(valor) : '';
+    }
+
+    async function abrirModalRecibo(numero) {
+        try {
+            const resP = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json());
+            if (!resP.success) throw new Error(resP.error);
+            _reciboPedido = resP.data;
+            const ped = resP.data;
+            const r = ped.recibo || {};
+            const total = ped.total_valor || 0;
+            const g = id => document.getElementById(id);
+            g('rcPedNum').textContent = ped.numero;
+            g('rcNumero').value = r.numero || ped.numero.replace(/^PED-\d{4}-/, '');
+            g('rcPagador').value = r.recebemos_de || ped.cliente || '';
+            g('rcPagadorDoc').value = r.pagador_cnpj || '';
+            const valor = (r.valor != null && r.valor !== '') ? r.valor : total;
+            g('rcValor').value = valor ? fmtMoedaRc(valor) : '';
+            g('rcExtenso').value = r.valor_extenso || (valor ? valorPorExtenso(valor) : '');
+            g('rcData').value = r.data || hojeRc();
+            g('rcHora').value = r.hora || '';
+            g('rcForma').value = r.forma_pagamento || 'Pix';
+            g('rcAut').value = r.autenticacao || '';
+            g('rcTransacao').value = r.transacao_id || '';
+            g('rcReferente').value = r.referente_a || '';
+            g('rcCidade').value = r.cidade || 'BRASÍLIA/DF';
+            g('modalRecibo').style.display = 'flex';
+            lucide.createIcons();
+        } catch (err) {
+            MF.alert('Erro ao abrir recibo: ' + err.message);
+        }
+    }
+
+    function fecharModalRecibo() {
+        document.getElementById('modalRecibo').style.display = 'none';
+    }
+    document.getElementById('modalRecibo').addEventListener('click', function(e) {
+        if (e.target === this) fecharModalRecibo();
+    });
+
+    function coletarReciboHall() {
+        const g = id => (document.getElementById(id)?.value || '').trim();
+        return {
+            numero: g('rcNumero'),
+            recebemos_de: g('rcPagador'),
+            pagador_cnpj: g('rcPagadorDoc'),
+            valor: parseMoedaRc(document.getElementById('rcValor').value),
+            valor_extenso: g('rcExtenso'),
+            data: g('rcData'),
+            hora: g('rcHora'),
+            forma_pagamento: g('rcForma'),
+            autenticacao: g('rcAut'),
+            transacao_id: g('rcTransacao'),
+            referente_a: g('rcReferente'),
+            cidade: g('rcCidade'),
+        };
+    }
+
+    async function salvarReciboHall() {
+        if (!_reciboPedido) return;
+        const recibo = coletarReciboHall();
+        try {
+            const res = await fetch(`/api/pedidos/${_reciboPedido.numero}/recibo`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recibo })
+            });
+            const j = await res.json();
+            if (!j.success) throw new Error(j.error);
+            _reciboPedido.recibo = recibo;
+            if (window.MF && MF.toast) MF.toast('Recibo salvo'); else MF.alert('Recibo salvo', 'success');
+        } catch (e) { MF.alert('Erro ao salvar recibo: ' + e.message); }
+    }
+
+    function gerarReciboPDFHall() {
+        const recibo = coletarReciboHall();
+        document.getElementById('previewContent').innerHTML = gerarReciboMFHTML(recibo);
+        document.getElementById('nomeArquivo').value = `Recibo ${recibo.recebemos_de || (_reciboPedido && _reciboPedido.numero) || ''}`.trim();
+        fecharModalRecibo();
+        document.getElementById('previewModal').classList.add('ativo');
+        setTimeout(escalarPreview, 50);
+        lucide.createIcons();
+    }
+
     async function deletarPedido(numero, cliente) {
         const _ok = await MF.confirm(`Excluir pedido ${numero}${cliente ? ` de "${cliente}"` : ''}?`, { title: 'Excluir pedido', confirmText: 'Excluir', danger: true });
         if (!_ok) return;
@@ -1478,5 +1629,6 @@
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
 <script src="/public/js/documento.js?v=20260817b"></script>
+<script src="/public/js/recibo.js?v=20260817"></script>
 </body>
 </html>
