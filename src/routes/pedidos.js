@@ -132,6 +132,7 @@ router.post('/', (req, res) => {
             cabecalho: cabecalho || {cliente: cliente || '', data: new Date().toISOString().split('T')[0]},
             secoes: todasSecoes,
             resumo: resumo || {},
+            ordem_blocos: Array.isArray(req.body.ordem_blocos) ? req.body.ordem_blocos : [],
             total_valor: total_valor || 0,
             total_itens: nItens,
             movimentos: []
@@ -255,6 +256,7 @@ router.put('/:numero', (req, res) => {
         if (cliente !== undefined && !cabecalho) pedido.cliente = cliente;
         if (secoes !== undefined) pedido.secoes = secoes;
         if (resumo !== undefined) pedido.resumo = resumo;
+        if (req.body.ordem_blocos !== undefined) pedido.ordem_blocos = Array.isArray(req.body.ordem_blocos) ? req.body.ordem_blocos : [];
         if (total_valor !== undefined) pedido.total_valor = total_valor;
         if (total_itens !== undefined) pedido.total_itens = total_itens;
         if (data_emissao !== undefined) pedido.data_emissao = data_emissao;

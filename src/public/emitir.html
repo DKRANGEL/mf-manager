@@ -237,6 +237,19 @@
         }
         .btn-add-sec:hover { border-color: #444; color: #888; }
 
+        /* ── ORDEM DO DOCUMENTO ── */
+        .ordem-doc-list { display: flex; flex-direction: column; gap: 6px; }
+        .ordem-doc-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 8px;
+            background: var(--fundo-input, #161618); border: 1px solid #26262c;
+            font-size: 13px; color: #ddd; user-select: none;
+        }
+        .ordem-doc-item span { flex: 1; }
+        .ordem-doc-grip { width: 16px; height: 16px; color: #555; cursor: grab; flex: none; }
+        .ordem-doc-item.sortable-ghost { opacity: 0.4; }
+        .ordem-doc-item.sortable-chosen { border-color: #444; }
+
         /* ── RESUMO TOGGLES ── */
         .resumo-item {
             display: flex; align-items: center; gap: 10px;
@@ -595,6 +608,24 @@
         </div>
     </div>
 
+    <!-- ORDEM DO DOCUMENTO -->
+    <div class="bloco" style="margin-top:4px;">
+        <div class="bloco-header" onclick="toggleBloco(this)">
+            <span class="bloco-icon"><i data-lucide="list-ordered"></i></span>
+            <span class="bloco-titulo">Ordem do documento</span>
+            <i data-lucide="chevron-down" class="bloco-chevron"></i>
+        </div>
+        <div class="bloco-body">
+            <div style="font-size:11px;color:#777;margin-bottom:10px;line-height:1.5;">
+                Arraste para definir a posição de cada tabela no PDF. O cabeçalho e os <strong>dados do cliente</strong> ficam sempre no topo. Blocos sem conteúdo não aparecem no documento.
+            </div>
+            <div id="ordemDocList" class="ordem-doc-list"></div>
+            <button class="btn-add-sec" style="margin-top:8px;" onclick="resetarOrdemDocumento()">
+                <i data-lucide="rotate-ccw"></i> Restaurar ordem padrão
+            </button>
+        </div>
+    </div>
+
 </div><!-- /editor -->
 
 <!-- BOTTOM BAR -->
@@ -646,7 +677,7 @@
     <div id="previewContent"></div>
 </div>
 
-<script src="/public/js/documento.js?v=20260807"></script>
+<script src="/public/js/documento.js?v=20260817"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -685,6 +716,7 @@ let estado = {
         valores: {}
     },
     secoes: [],
+    ordem_blocos: [],
     resumo: {
         subtotais: true,
         desconto: false, desconto_valor: 0, desconto_label: 'DESCONTO',
@@ -699,6 +731,11 @@ let estado = {
 };
 
 let secaoIdCounter = 0;
+let _ordemSortable = null;
+// Gera um id estável (uid) para a seção, usado na ordenação dos blocos do documento
+function gerarUid() {
+    return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
 let modalItemSecaoId = null;
 let modalItemIdx = null;
 let buscaSecaoId = null;
@@ -791,10 +828,11 @@ function renderCamposOpcionais() {
 function adicionarSecao(dados) {
     const id = `sec_${++secaoIdCounter}`;
     const secao = dados || {
-        id, titulo: '', preco_padrao_ativo: false, preco_padrao: 0, preco_rotulo: '',
+        id, uid: gerarUid(), titulo: '', preco_padrao_ativo: false, preco_padrao: 0, preco_rotulo: '',
         grupo: '', colunas: { ...COLUNAS_PADRAO }, itens: []
     };
     if (!dados) secao.id = id;
+    if (!secao.uid) secao.uid = gerarUid();
     estado.secoes.push(secao);
     renderSecoes();
     // abre a nova seção
@@ -813,6 +851,7 @@ async function removerSecao(id) {
 
 function renderSecoes() {
     const container = document.getElementById('secoesContainer');
+    renderOrdemDocumento();
     if (estado.secoes.length === 0) { container.innerHTML = ''; return; }
 
     // Limpa instâncias antigas
@@ -1800,6 +1839,7 @@ async function salvarRascunho() {
         cabecalho: estado.cabecalho,
         secoes: estado.secoes,
         resumo: estado.resumo,
+        ordem_blocos: estado.ordem_blocos || [],
         total_valor: totalGeral,
         total_itens: totalItens,
         data_emissao: estado.cabecalho.data,
@@ -1845,8 +1885,10 @@ async function carregarPedido(numero) {
 
         estado.secoes = (ped.secoes || []).map(s => ({
             ...s,
-            id: `sec_${++secaoIdCounter}`
+            id: `sec_${++secaoIdCounter}`,
+            uid: s.uid || gerarUid()
         }));
+        estado.ordem_blocos = Array.isArray(ped.ordem_blocos) ? ped.ordem_blocos : [];
 
         document.getElementById('topbarNumero').textContent = numero;
         document.getElementById('fNomePedido').value = ped.nome || '';
@@ -2392,6 +2434,62 @@ function esc(s) {
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ORDEM DO DOCUMENTO — arrastar as tabelas/blocos do PDF
+// ══════════════════════════════════════════════════════════════
+const BLOCOS_DOC = [
+    { key: 'pagamentos', label: 'Pagamentos já realizados', icon: 'wallet' },
+    { key: 'resumo',     label: 'Resumo do pedido',          icon: 'receipt' },
+    { key: 'nf_frete',   label: 'NF / Frete',                icon: 'file-text' },
+    { key: 'condicao',   label: 'Condição / Parcelas',       icon: 'calendar' },
+    { key: 'incluso',    label: 'Incluso',                   icon: 'list-checks' },
+    { key: 'obs',        label: 'Observações',               icon: 'message-square' },
+    { key: 'banco',      label: 'Dados bancários',           icon: 'landmark' },
+];
+
+function renderOrdemDocumento() {
+    const cont = document.getElementById('ordemDocList');
+    if (!cont) return;
+
+    const secBlocos = estado.secoes.map(s => ({
+        key: 'sec:' + (s.uid || s.id),
+        label: (s.titulo || 'Seção sem título') + (s.total_separado ? ' · total separado' : ''),
+        icon: s.total_separado ? 'box' : 'table'
+    }));
+    const disponiveis = [...secBlocos, ...BLOCOS_DOC];
+    const mapa = {};
+    disponiveis.forEach(b => { mapa[b.key] = b; });
+
+    // Mantém a ordem salva (blocos que ainda existem) e adiciona os novos no fim
+    const salva = (estado.ordem_blocos || []).filter(k => mapa[k]);
+    const ordenados = [
+        ...salva.map(k => mapa[k]),
+        ...disponiveis.filter(b => !salva.includes(b.key))
+    ];
+
+    cont.innerHTML = ordenados.map(b => `
+        <div class="ordem-doc-item" data-key="${b.key}">
+            <i data-lucide="grip-vertical" class="ordem-doc-grip"></i>
+            <i data-lucide="${b.icon}" style="width:15px;height:15px;color:#888;flex:none;"></i>
+            <span>${esc(b.label)}</span>
+        </div>`).join('');
+    if (window.lucide) lucide.createIcons();
+
+    if (_ordemSortable) { try { _ordemSortable.destroy(); } catch(e){} }
+    _ordemSortable = new Sortable(cont, {
+        handle: '.ordem-doc-grip', animation: 150,
+        ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+        onEnd: () => {
+            estado.ordem_blocos = [...cont.querySelectorAll('.ordem-doc-item')].map(el => el.dataset.key);
+        }
+    });
+}
+
+function resetarOrdemDocumento() {
+    estado.ordem_blocos = [];
+    renderOrdemDocumento();
 }
 function mostrarToast(msg) {
     const t = document.createElement('div');

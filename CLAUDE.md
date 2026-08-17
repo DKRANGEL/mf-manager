@@ -238,6 +238,7 @@ Três papéis (presets em `utils/permissoes.js`), customizáveis por usuário no
 - [x] Abas por tipo de documento no hall de pedidos
 - [x] Item sem valor com motivo selecionável (Pago pelo evento / Isento)
 - [x] Compartilhar PDF pelo share sheet nativo do mobile (html2canvas + jsPDF)
+- [x] Ordem dos blocos do documento reordenável por pedido (`pedido.ordem_blocos`) — lista arrastável em `/emitir`; cabeçalho e dados do cliente ficam fixos no topo
 
 ## O que ainda pode ser feito
 

@@ -59,21 +59,20 @@ function gerarPedidoMFHTML(pedido) {
     const numDocHTML = cab.num_doc && cab.valores?.num_doc
         ? `<div style="font-size:12px;color:#666;margin-top:2px;">Nº: ${esc(cab.valores.num_doc)}</div>` : '';
 
-    // Seções — as com total_separado (ex: Máquinas) renderizam DEPOIS do resumo
-    let secoesHTML = '';
-    let separadasHTML = '';
-    const secoes = pedido.secoes || [];
-    const gruposVistos = new Set();
-
-    // Kits vinculados por seção (para exibir a multiplicação junto ao subtotal)
-    const kitsItens = (pedido.resumo?.kits && pedido.resumo?.kits_itens) ? pedido.resumo.kits_itens : [];
-
     // Modo sem valores (romaneio): API removeu os preços e marcou a flag.
     // Renderiza só cliente + produtos com quantidades — sem colunas de valor,
     // sem subtotais, sem resumo, sem pagamentos, sem dados bancários.
     const semValores = !!pedido.valores_ocultos;
 
-    for (const sec of secoes) {
+    // Kits vinculados por seção (para exibir a multiplicação junto ao subtotal)
+    const kitsItens = (pedido.resumo?.kits && pedido.resumo?.kits_itens) ? pedido.resumo.kits_itens : [];
+
+    // ── Cada seção vira um bloco reordenável, com chave estável (uid) ──
+    const secBlocos = {};
+    const nonSepKeys = [], sepKeys = [];
+    const gruposVistos = new Set();
+    (pedido.secoes || []).forEach(sec => {
+        const key = 'sec:' + (sec.uid || sec.id || sec.titulo || nonSepKeys.length + sepKeys.length);
         let bloco = '';
         if (sec.grupo && !gruposVistos.has(sec.grupo)) {
             gruposVistos.add(sec.grupo);
@@ -86,57 +85,29 @@ function gerarPedidoMFHTML(pedido) {
             (k.secao_titulo && k.secao_titulo === (sec.titulo || ''))
         );
         bloco += _mfGerarSecaoHTML(sec, semValores ? null : kit, semValores);
+        secBlocos[key] = bloco;
+        (sec.total_separado ? sepKeys : nonSepKeys).push(key);
+    });
 
-        if (sec.total_separado) separadasHTML += bloco;
-        else secoesHTML += bloco;
-    }
+    // ── Blocos do resumo ──
+    const RB = _mfBlocosResumo(pedido);
+    const blocos = semValores
+        ? { ...secBlocos, pagamentos: '', resumo: '', nf_frete: '', condicao: '', banco: '',
+            incluso: RB.incluso, obs: RB.obs, kits: _mfBlocoKitsRomaneio(pedido) }
+        : { ...secBlocos, ...RB, kits: '' };
 
-    // Resumo em duas partes: tabela principal (antes das separadas)
-    // e extras — condição, parcelas, obs (depois das separadas)
-    let resumoHTML = '', extrasHTML = '', rodapeBancario = `
-        <div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
-            <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
-        </div>`;
-    if (semValores) {
-        rodapeBancario = '';
-        // Mantém observações, "incluso" e a QUANTIDADE de kits (sem valores)
-        const r = pedido.resumo || {};
+    // ── Ordem padrão (idêntica ao layout clássico) ──
+    // Cabeçalho e DADOS DO CLIENTE ficam fixos no topo, fora da reordenação.
+    const ordemPadrao = [
+        ...nonSepKeys, 'pagamentos', 'resumo',
+        ...sepKeys, 'kits', 'nf_frete', 'condicao', 'incluso', 'obs', 'banco'
+    ];
+    let ordem = (Array.isArray(pedido.ordem_blocos) && pedido.ordem_blocos.length)
+        ? pedido.ordem_blocos.slice() : ordemPadrao.slice();
+    // Qualquer bloco ausente da ordem salva (seção nova, bloco recém-ativado) entra no fim
+    ordemPadrao.forEach(k => { if (!ordem.includes(k)) ordem.push(k); });
 
-        // Kits — só a contagem
-        let kitsArr = [];
-        if (r.kits) {
-            if (r.kits_itens?.length) kitsArr = r.kits_itens.filter(k => k.qtd > 0);
-            else if (r.kits_qtd > 0) kitsArr = [{ qtd: r.kits_qtd, secao_titulo: '' }];
-        }
-        if (kitsArr.length) {
-            extrasHTML += `<table style="width:100%;border-collapse:collapse;margin-top:16px;">
-                <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KITS</td></tr></thead>
-                <tbody>${kitsArr.map((k, i) => `<tr style="${i % 2 === 0 ? 'background:#f5f5f5;' : ''}">
-                    <td style="padding:9px 14px;font-size:12px;color:#333;">${k.secao_titulo ? esc(k.secao_titulo.toUpperCase()) : 'KITS'}</td>
-                    <td style="padding:9px 14px;text-align:right;font-size:14px;font-weight:700;color:#000;font-family:monospace;">${k.qtd} KIT${k.qtd > 1 ? 'S' : ''}</td>
-                </tr>`).join('')}</tbody>
-            </table>`;
-        }
-
-        if (r.incluso && r.incluso_texto) {
-            const li = r.incluso_texto.split('\n').filter(l => l.trim());
-            extrasHTML += `<table style="width:100%;border-collapse:collapse;margin-top:14px;">
-                <tr><td style="background:#f0f0f0;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:0.5px;">INCLUSO</td></tr>
-                <tr><td style="padding:10px 14px;font-size:11px;color:#333;">
-                    ${li.map(l => `<div style="margin-bottom:4px;">• ${esc(l.replace(/^[•·\-]\s*/, ''))}</div>`).join('')}
-                </td></tr>
-            </table>`;
-        }
-        if (r.obs && r.obs_texto) {
-            extrasHTML += `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
-                <strong>OBS:</strong> ${esc(r.obs_texto)}
-            </div>`;
-        }
-    } else {
-        const partes = _mfGerarResumoHTML(pedido);
-        resumoHTML = partes.principal;
-        extrasHTML = partes.extras;
-    }
+    const corpoHTML = ordem.map(k => blocos[k] || '').join('\n');
 
     return `<div class="recibo">
         <div class="recibo-header">
@@ -160,11 +131,7 @@ function gerarPedidoMFHTML(pedido) {
             <tbody>${camposHTML}</tbody>
         </table>
 
-        ${secoesHTML}
-        ${resumoHTML}
-        ${separadasHTML}
-        ${extrasHTML}
-        ${rodapeBancario}
+        ${corpoHTML}
     </div>`;
 }
 
@@ -300,7 +267,39 @@ function _mfGerarSecaoHTML(sec, kit, semValores) {
     </table>${totalBand}`;
 }
 
+// Dados bancários (bloco reordenável)
+function _mfBlocoBanco() {
+    return `<div style="margin-top:14px;font-size:10px;color:#555;border-top:1px solid #eee;padding-top:10px;">
+        <strong>DADOS BANCÁRIOS:</strong> C6 BANK (336) | CNPJ: 22.748.770/0001-50 | AG: 0001 | CC: 12665143-4 | PIX (CNPJ): 22.748.770/0001-50
+    </div>`;
+}
+
+// Tabela de KITS do romaneio (só contagem — modo sem valores)
+function _mfBlocoKitsRomaneio(pedido) {
+    const r = pedido.resumo || {};
+    let kitsArr = [];
+    if (r.kits) {
+        if (r.kits_itens?.length) kitsArr = r.kits_itens.filter(k => k.qtd > 0);
+        else if (r.kits_qtd > 0) kitsArr = [{ qtd: r.kits_qtd, secao_titulo: '' }];
+    }
+    if (!kitsArr.length) return '';
+    return `<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+        <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KITS</td></tr></thead>
+        <tbody>${kitsArr.map((k, i) => `<tr style="${i % 2 === 0 ? 'background:#f5f5f5;' : ''}">
+            <td style="padding:9px 14px;font-size:12px;color:#333;">${k.secao_titulo ? esc(k.secao_titulo.toUpperCase()) : 'KITS'}</td>
+            <td style="padding:9px 14px;text-align:right;font-size:14px;font-weight:700;color:#000;font-family:monospace;">${k.qtd} KIT${k.qtd > 1 ? 'S' : ''}</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// Compat: renderer antigo — retorna {principal, extras} montando os blocos na ordem clássica
 function _mfGerarResumoHTML(pedido) {
+    const b = _mfBlocosResumo(pedido);
+    return { principal: b.pagamentos + b.resumo, extras: b.nf_frete + b.condicao + b.incluso + b.obs };
+}
+
+// Divide o resumo em blocos independentes (para permitir reordenar no documento)
+function _mfBlocosResumo(pedido) {
     const res = pedido.resumo || {};
     // Seções com total separado (ex: Máquinas) ficam fora do resumo e do total
     const secoes = (pedido.secoes || []).filter(sec => !sec.total_separado);
@@ -416,92 +415,10 @@ function _mfGerarResumoHTML(pedido) {
         <td style="padding:12px 16px;text-align:right;font-size:16px;font-weight:700;color:#fff;font-family:monospace;">R$ ${_mfFmt(totalFinal)}</td>
     </tr>`;
 
-    let extras = '';
-
-    // Frete e NF Fiscal — a NF incide sobre (total do pedido + frete)
-    const freteVal = (res.frete && res.frete_valor > 0) ? res.frete_valor : 0;
-
-    // Frete — caixa azul (mesmo formato da NF)
-    if (freteVal > 0) {
-        extras += `<div style="margin-top:10px;padding:10px 14px;background:#e3f2fd;border:1px solid #64b5f6;border-radius:6px;font-size:11px;color:#555;">
-            <strong>VALOR SEM FRETE:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
-            <strong>FRETE:</strong> + R$ ${_mfFmt(freteVal)} &nbsp;|&nbsp;
-            <strong>VALOR TOTAL COM FRETE:</strong> R$ ${_mfFmt(totalFinal + freteVal)}
-        </div>`;
-    }
-
-    // NF Fiscal — incide sobre o total + frete
-    if (res.nf && res.nf_percent > 0) {
-        const baseNF = totalFinal + freteVal;
-        const nfVal = baseNF * (res.nf_percent / 100);
-        const labelBase = freteVal > 0 ? 'VALOR SEM NF (PEDIDO + FRETE)' : 'VALOR SEM NF';
-        extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
-            <strong>${labelBase}:</strong> R$ ${_mfFmt(baseNF)} &nbsp;|&nbsp;
-            <strong>NF FISCAL (${res.nf_percent}%):</strong> + R$ ${_mfFmt(nfVal)} &nbsp;|&nbsp;
-            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(baseNF + nfVal)}
-        </div>`;
-    }
-    // Compatibilidade NF antigo (schema sem frete)
-    if (!res.nf && blocos.nf?.ativo) {
-        const nfVal = totalFinal * ((blocos.nf.percent || 18) / 100);
-        extras += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
-            <strong>NF FISCAL (${blocos.nf.percent || 18}%):</strong> + R$ ${_mfFmt(nfVal)}
-        </div>`;
-    }
-
-    // Condição / Pagamento
-    const condicao = res.condicao_texto || '';
-    if (condicao) extras += `<div style="margin-top:10px;font-size:11px;color:#555;">
-        <strong>CONDIÇÃO DE PAGAMENTO:</strong> ${esc(condicao.toUpperCase())}
-    </div>`;
-
-    // Parcelas
-    if (res.pag_tipo === 'parcelado' && res.pag_parcelas_lista?.length > 0) {
-        extras += `<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:11px;">
-            <thead><tr style="background:#f0f0f0;">
-                <th style="padding:6px 10px;text-align:left;">PARCELA</th>
-                <th style="padding:6px 10px;text-align:center;">VENCIMENTO</th>
-                <th style="padding:6px 10px;text-align:right;">VALOR</th>
-            </tr></thead>
-            <tbody>${res.pag_parcelas_lista.map(p => `
-                <tr>
-                    <td style="padding:6px 10px;">${p.num}ª Parcela</td>
-                    <td style="padding:6px 10px;text-align:center;font-family:monospace;">${p.data ? new Date(p.data+'T12:00:00').toLocaleDateString('pt-BR') : '-'}</td>
-                    <td style="padding:6px 10px;text-align:right;font-family:monospace;font-weight:700;">R$ ${_mfFmt(p.valor)}</td>
-                </tr>`).join('')}
-            </tbody>
-        </table>`;
-    }
-
-    // Bloco INCLUSO
-    if (res.incluso && res.incluso_texto) {
-        const linhasIncluso = res.incluso_texto.split('\n').filter(l => l.trim());
-        extras += `<table style="width:100%;border-collapse:collapse;margin-top:14px;">
-            <tr><td style="background:#f0f0f0;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:0.5px;">INCLUSO</td></tr>
-            <tr><td style="padding:10px 14px;font-size:11px;color:#333;">
-                ${linhasIncluso.map(l => `<div style="margin-bottom:4px;">• ${esc(l.replace(/^[•·\-]\s*/, ''))}</div>`).join('')}
-            </td></tr>
-        </table>`;
-    }
-
-    // Observações
-    if (res.obs && res.obs_texto) {
-        extras += `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
-            <strong>OBS:</strong> ${esc(res.obs_texto)}
-        </div>`;
-    }
-    // Compatibilidade obs antigo
-    if (!res.obs && blocos.observacoes) {
-        extras += `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
-            <strong>OBS:</strong> ${esc(blocos.observacoes)}
-        </div>`;
-    }
-
-    // Banda TOTAL GERAL quando o parcelamento inclui os totais separados
+    // ── Banda TOTAL GERAL (quando o parcelamento inclui os totais separados) ──
     const totalSeparadosVal = (pedido.secoes || [])
         .filter(sec => sec.total_separado)
         .reduce((s, sec) => s + _mfCalcSubtotal(sec), 0);
-
     let totalGeralHTML = '';
     if (res.pag_incluir_separado && totalSeparadosVal > 0) {
         const nomesSeparados = (pedido.secoes || [])
@@ -517,12 +434,97 @@ function _mfGerarResumoHTML(pedido) {
         </table>`;
     }
 
-    const principal = `${pagamentosHTML}<table style="width:100%;border-collapse:collapse;margin-top:16px;">
+    // ── BLOCO: NF / FRETE (a banda TOTAL GERAL entra no topo, como no layout clássico) ──
+    // A NF incide sobre (total do pedido + frete).
+    let nf_frete = totalGeralHTML;
+    const freteVal = (res.frete && res.frete_valor > 0) ? res.frete_valor : 0;
+    if (freteVal > 0) {
+        nf_frete += `<div style="margin-top:10px;padding:10px 14px;background:#e3f2fd;border:1px solid #64b5f6;border-radius:6px;font-size:11px;color:#555;">
+            <strong>VALOR SEM FRETE:</strong> R$ ${_mfFmt(totalFinal)} &nbsp;|&nbsp;
+            <strong>FRETE:</strong> + R$ ${_mfFmt(freteVal)} &nbsp;|&nbsp;
+            <strong>VALOR TOTAL COM FRETE:</strong> R$ ${_mfFmt(totalFinal + freteVal)}
+        </div>`;
+    }
+    if (res.nf && res.nf_percent > 0) {
+        const baseNF = totalFinal + freteVal;
+        const nfVal = baseNF * (res.nf_percent / 100);
+        const labelBase = freteVal > 0 ? 'VALOR SEM NF (PEDIDO + FRETE)' : 'VALOR SEM NF';
+        nf_frete += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
+            <strong>${labelBase}:</strong> R$ ${_mfFmt(baseNF)} &nbsp;|&nbsp;
+            <strong>NF FISCAL (${res.nf_percent}%):</strong> + R$ ${_mfFmt(nfVal)} &nbsp;|&nbsp;
+            <strong>VALOR TOTAL COM NF:</strong> R$ ${_mfFmt(baseNF + nfVal)}
+        </div>`;
+    }
+    // Compatibilidade NF antigo (schema sem frete)
+    if (!res.nf && blocos.nf?.ativo) {
+        const nfVal = totalFinal * ((blocos.nf.percent || 18) / 100);
+        nf_frete += `<div style="margin-top:10px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;font-size:11px;color:#555;">
+            <strong>NF FISCAL (${blocos.nf.percent || 18}%):</strong> + R$ ${_mfFmt(nfVal)}
+        </div>`;
+    }
+
+    // ── BLOCO: CONDIÇÃO DE PAGAMENTO / PARCELAS ──
+    let condicaoHTML = '';
+    const condicaoTexto = res.condicao_texto || '';
+    if (condicaoTexto) condicaoHTML += `<div style="margin-top:10px;font-size:11px;color:#555;">
+        <strong>CONDIÇÃO DE PAGAMENTO:</strong> ${esc(condicaoTexto.toUpperCase())}
+    </div>`;
+    if (res.pag_tipo === 'parcelado' && res.pag_parcelas_lista?.length > 0) {
+        condicaoHTML += `<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:11px;">
+            <thead><tr style="background:#f0f0f0;">
+                <th style="padding:6px 10px;text-align:left;">PARCELA</th>
+                <th style="padding:6px 10px;text-align:center;">VENCIMENTO</th>
+                <th style="padding:6px 10px;text-align:right;">VALOR</th>
+            </tr></thead>
+            <tbody>${res.pag_parcelas_lista.map(p => `
+                <tr>
+                    <td style="padding:6px 10px;">${p.num}ª Parcela</td>
+                    <td style="padding:6px 10px;text-align:center;font-family:monospace;">${p.data ? new Date(p.data+'T12:00:00').toLocaleDateString('pt-BR') : '-'}</td>
+                    <td style="padding:6px 10px;text-align:right;font-family:monospace;font-weight:700;">R$ ${_mfFmt(p.valor)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    }
+
+    // ── BLOCO: INCLUSO ──
+    let inclusoHTML = '';
+    if (res.incluso && res.incluso_texto) {
+        const linhasIncluso = res.incluso_texto.split('\n').filter(l => l.trim());
+        inclusoHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px;">
+            <tr><td style="background:#f0f0f0;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:0.5px;">INCLUSO</td></tr>
+            <tr><td style="padding:10px 14px;font-size:11px;color:#333;">
+                ${linhasIncluso.map(l => `<div style="margin-bottom:4px;">• ${esc(l.replace(/^[•·\-]\s*/, ''))}</div>`).join('')}
+            </td></tr>
+        </table>`;
+    }
+
+    // ── BLOCO: OBSERVAÇÕES ──
+    let obsHTML = '';
+    if (res.obs && res.obs_texto) {
+        obsHTML = `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
+            <strong>OBS:</strong> ${esc(res.obs_texto)}
+        </div>`;
+    } else if (!res.obs && blocos.observacoes) {
+        obsHTML = `<div style="margin-top:10px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:10px;">
+            <strong>OBS:</strong> ${esc(blocos.observacoes)}
+        </div>`;
+    }
+
+    // ── BLOCO: RESUMO DO PEDIDO ──
+    const resumoHTML = `<table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <thead><tr><td colspan="2" class="bg-black-title" style="text-align:center;font-size:11px;letter-spacing:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">RESUMO DO PEDIDO</td></tr></thead>
         <tbody>${linhas}</tbody>
     </table>`;
 
-    return { principal, extras: totalGeralHTML + extras };
+    return {
+        pagamentos: pagamentosHTML,
+        resumo: resumoHTML,
+        nf_frete,
+        condicao: condicaoHTML,
+        incluso: inclusoHTML,
+        obs: obsHTML,
+        banco: _mfBlocoBanco()
+    };
 }
 
 function _mfFmt(v) {
