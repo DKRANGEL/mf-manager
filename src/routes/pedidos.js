@@ -73,6 +73,7 @@ function ocultarValoresPedido(original) {
         kits_qtd: res.kits_qtd || 0,
     };
     delete pedido.blocos; // schema antigo também carrega nf/desconto/parcelas
+    delete pedido.recibo; // recibo carrega valores — some para quem não vê valores
 
     return pedido;
 }
@@ -230,6 +231,25 @@ router.put('/:numero/cliente', (req, res) => {
         pedido.cliente_avulso = cid ? false : true;
         writeJSONAtomic(pedidoPath(req.params.numero), pedido);
         res.json({success: true, cliente_id: pedido.cliente_id, cliente_avulso: pedido.cliente_avulso});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// PUT /api/pedidos/:numero/recibo — salva os dados do recibo de pagamento
+// Disponível apenas para pedidos já emitidos (aberto) ou concluídos.
+router.put('/:numero/recibo', (req, res) => {
+    try {
+        const pedido = readJSON(pedidoPath(req.params.numero), null);
+        if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+        const st = pedido.status || 'rascunho';
+        if (!['emitido', 'aberto', 'concluido'].includes(st)) {
+            return res.status(400).json({success: false, error: 'Recibo disponível apenas para pedidos abertos ou concluídos'});
+        }
+        pedido.recibo = req.body.recibo || {};
+        pedido.data_atualizacao = new Date().toISOString();
+        writeJSONAtomic(pedidoPath(req.params.numero), pedido);
+        res.json({success: true, data: pedido.recibo});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }

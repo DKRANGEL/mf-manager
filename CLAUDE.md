@@ -85,6 +85,7 @@ src/
 | POST | `/api/pedidos` | Salva rascunho |
 | PUT | `/api/pedidos/:numero` | Atualiza pedido |
 | PUT | `/api/pedidos/:numero/baixa` | Ativa ou reverte baixa de estoque |
+| PUT | `/api/pedidos/:numero/recibo` | Salva o recibo de pagamento (só pedido aberto/concluído) |
 | DELETE | `/api/pedidos/:numero` | Exclui rascunho |
 | POST | `/api/contagens` | Salva contagem física |
 | GET | `/api/contagens/ultima` | Retorna contagem mais recente |
@@ -239,6 +240,8 @@ Três papéis (presets em `utils/permissoes.js`), customizáveis por usuário no
 - [x] Item sem valor com motivo selecionável (Pago pelo evento / Isento)
 - [x] Compartilhar PDF pelo share sheet nativo do mobile (html2canvas + jsPDF)
 - [x] Ordem dos blocos do documento reordenável por pedido (`pedido.ordem_blocos`) — lista arrastável em `/emitir`; cabeçalho e dados do cliente ficam fixos no topo
+- [x] Reordenar pagamentos já feitos por arraste (SortableJS) — reflete na tabela do documento
+- [x] Recibo de pagamento em PDF (`js/recibo.js`, estilo próprio com valor por extenso) — bloco em `/emitir` visível só para pedido `aberto`/`concluido`; salvo em `pedido.recibo` via `PUT /api/pedidos/:numero/recibo`
 
 ## O que ainda pode ser feito
 

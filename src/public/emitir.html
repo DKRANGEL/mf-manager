@@ -7,6 +7,8 @@
     <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Fontes do recibo (Claude Design) -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <link rel="stylesheet" href="/public/css/documento.css">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -629,6 +631,40 @@
         </div>
     </div>
 
+    <!-- RECIBO DE PAGAMENTO (só aparece com pedido aberto/concluído) -->
+    <div class="bloco" id="blocoRecibo" style="margin-top:4px;display:none;">
+        <div class="bloco-header" onclick="toggleBloco(this)">
+            <span class="bloco-icon"><i data-lucide="receipt-text"></i></span>
+            <span class="bloco-titulo">Recibo de pagamento</span>
+            <i data-lucide="chevron-down" class="bloco-chevron"></i>
+        </div>
+        <div class="bloco-body">
+            <div style="font-size:11px;color:#777;margin-bottom:12px;line-height:1.5;">
+                Preencha os dados e gere um recibo de pagamento em PDF (declaração de quitação). Fica salvo no pedido.
+            </div>
+            <div class="campo"><label>Nº do recibo</label><input type="text" id="rcNumero" placeholder="Ex.: 001"></div>
+            <div class="campo"><label>Recebemos de (pagador)</label><input type="text" id="rcPagador" placeholder="Nome / razão social"></div>
+            <div class="campo"><label>CNPJ / CPF do pagador</label><input type="text" id="rcPagadorDoc" placeholder="Opcional"></div>
+            <div style="display:flex;gap:8px;">
+                <div class="campo" style="flex:1;"><label>Valor (R$)</label><input type="text" id="rcValor" placeholder="0,00" inputmode="decimal" oninput="mascaraMoeda(this);atualizarExtenso()"></div>
+                <div class="campo" style="flex:1;"><label>Data</label><input type="date" id="rcData"></div>
+            </div>
+            <div class="campo"><label>Valor por extenso</label><input type="text" id="rcExtenso" placeholder="preenchido automaticamente"></div>
+            <div style="display:flex;gap:8px;">
+                <div class="campo" style="flex:1;"><label>Forma de pagamento</label><input type="text" id="rcForma" placeholder="Pix — Banco do Brasil"></div>
+                <div class="campo" style="flex:1;"><label>Hora (opcional)</label><input type="text" id="rcHora" placeholder="14:50:43"></div>
+            </div>
+            <div class="campo"><label>Autenticação (opcional)</label><input type="text" id="rcAut" placeholder="AUT. SISBB ..."></div>
+            <div class="campo"><label>ID da transação (opcional)</label><input type="text" id="rcTransacao" placeholder="E0000..."></div>
+            <div class="campo"><label>Referente a</label><textarea id="rcReferente" rows="2" placeholder="Fornecimento e execução de efeitos pirotécnicos para o show..."></textarea></div>
+            <div class="campo"><label>Cidade</label><input type="text" id="rcCidade" placeholder="BRASÍLIA/DF"></div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+                <button class="btn-add-sec" style="margin:0;flex:1;" onclick="salvarRecibo()"><i data-lucide="save"></i> Salvar recibo</button>
+                <button class="btn-add-sec" style="margin:0;flex:1;" onclick="abrirPreviewRecibo()"><i data-lucide="eye"></i> Gerar PDF</button>
+            </div>
+        </div>
+    </div>
+
 </div><!-- /editor -->
 
 <!-- BOTTOM BAR -->
@@ -681,6 +717,7 @@
 </div>
 
 <script src="/public/js/documento.js?v=20260817b"></script>
+<script src="/public/js/recibo.js?v=20260817"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -711,6 +748,8 @@ const COLUNAS_PADRAO = { imagem: true, codigo: true, complemento: false, ncm: fa
 let estado = {
     numero: null,
     cliente_id: null,
+    status: 'rascunho',
+    recibo: null,
     tipo: 'PEDIDO DE VENDA',
     cabecalho: {
         cliente: '', data: hoje(),
@@ -1887,6 +1926,8 @@ async function carregarPedido(numero) {
         const ped = json.data;
         estado.numero = ped.numero;
         estado.cliente_id = ped.cliente_id || null;
+        estado.status = ped.status || 'rascunho';
+        estado.recibo = ped.recibo || null;
         estado.tipo = ped.tipo || 'PEDIDO DE VENDA';
         if (estado.cliente_id) {
             // vínculo explícito já gravado — usa o cadastro atual (não o snapshot)
@@ -1923,6 +1964,10 @@ async function carregarPedido(numero) {
         // tenta casar pelo nome (ex.: "LOOP TALENTS" → cliente "LOOPTALENTS")
         if (!clienteVinculado) tentarAutoVincular(estado.cabecalho.cliente);
         renderVinculoCliente();
+
+        // Recibo — visível só para pedidos aberto/concluído
+        atualizarVisibilidadeRecibo();
+        preencherReciboUI();
     } catch (e) { console.error(e); }
 }
 
@@ -2061,6 +2106,84 @@ function abrirPreview() {
 
 function fecharPreview() {
     document.getElementById('previewModal').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RECIBO DE PAGAMENTO — só para pedidos aberto/concluído
+// ══════════════════════════════════════════════════════════════
+function atualizarVisibilidadeRecibo() {
+    const st = estado.status || 'rascunho';
+    const mostra = ['emitido', 'aberto', 'concluido'].includes(st);
+    const bloco = document.getElementById('blocoRecibo');
+    if (bloco) bloco.style.display = mostra ? '' : 'none';
+}
+
+function preencherReciboUI() {
+    const g = id => document.getElementById(id);
+    if (!g('rcNumero')) return;
+    const r = estado.recibo || {};
+    const total = calcTotalGeral();
+    g('rcNumero').value = r.numero || (estado.numero ? estado.numero.replace(/^PED-\d{4}-/, '') : '');
+    g('rcPagador').value = r.recebemos_de || estado.cabecalho.cliente || '';
+    g('rcPagadorDoc').value = r.pagador_cnpj || (clienteVinculado && clienteVinculado.cnpj) || '';
+    const valor = (r.valor != null && r.valor !== '') ? r.valor : total;
+    g('rcValor').value = valor ? fmtNEditar(valor) : '';
+    g('rcExtenso').value = r.valor_extenso || (valor ? valorPorExtenso(valor) : '');
+    g('rcData').value = r.data || hoje();
+    g('rcHora').value = r.hora || '';
+    g('rcForma').value = r.forma_pagamento || 'Pix';
+    g('rcAut').value = r.autenticacao || '';
+    g('rcTransacao').value = r.transacao_id || '';
+    g('rcReferente').value = r.referente_a || '';
+    g('rcCidade').value = r.cidade || 'BRASÍLIA/DF';
+}
+
+function atualizarExtenso() {
+    const valor = parseMoeda(document.getElementById('rcValor').value || '0');
+    document.getElementById('rcExtenso').value = valor ? valorPorExtenso(valor) : '';
+}
+
+function coletarRecibo() {
+    const g = id => (document.getElementById(id)?.value || '').trim();
+    estado.recibo = {
+        numero: g('rcNumero'),
+        recebemos_de: g('rcPagador'),
+        pagador_cnpj: g('rcPagadorDoc'),
+        valor: parseMoeda(document.getElementById('rcValor')?.value || '0'),
+        valor_extenso: g('rcExtenso'),
+        data: g('rcData'),
+        hora: g('rcHora'),
+        forma_pagamento: g('rcForma'),
+        autenticacao: g('rcAut'),
+        transacao_id: g('rcTransacao'),
+        referente_a: g('rcReferente'),
+        cidade: g('rcCidade'),
+    };
+    return estado.recibo;
+}
+
+async function salvarRecibo() {
+    if (!estado.numero) { MF.alert('Salve o pedido antes de emitir o recibo.', 'warning'); return; }
+    coletarRecibo();
+    try {
+        const res = await fetch(`/api/pedidos/${estado.numero}/recibo`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recibo: estado.recibo })
+        });
+        const j = await res.json();
+        if (!j.success) throw new Error(j.error);
+        if (window.MF && MF.toast) MF.toast('Recibo salvo'); else MF.alert('Recibo salvo', 'success');
+    } catch (e) { MF.alert('Erro ao salvar recibo: ' + e.message); }
+}
+
+function abrirPreviewRecibo() {
+    coletarRecibo();
+    document.getElementById('previewContent').innerHTML = gerarReciboMFHTML({ ...estado.recibo });
+    const nomeArq = document.getElementById('nomeArquivo');
+    if (nomeArq) nomeArq.value = `Recibo ${estado.recibo.recebemos_de || estado.numero || ''}`.trim();
+    document.getElementById('previewModal').classList.add('active');
+    escalarPreview();
+    lucide.createIcons();
 }
 
 window.addEventListener('resize', escalarPreview);
