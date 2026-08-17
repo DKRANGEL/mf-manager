@@ -6,6 +6,13 @@
 // para casar com compartilharDocumentoPDF() e a escala do preview.
 // ══════════════════════════════════════════════════════════════
 
+// Node (geração de PDF no servidor): importa esc/_mfFmt do renderer de documento
+if (typeof module !== 'undefined' && module.exports) {
+    var _docUtils = require('./documento.js');
+    var esc = _docUtils.esc;
+    var _mfFmt = _docUtils._mfFmt;
+}
+
 // Valor por extenso (reais e centavos) — pt-BR, até centenas de milhão
 function _rcPorExtensoInt(n) {
     if (n === 0) return 'zero';
@@ -148,4 +155,9 @@ function gerarReciboMFHTML(r) {
             </footer>
         </article>
     </div>`;
+}
+
+// Node (geração de PDF no servidor)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { gerarReciboMFHTML, valorPorExtenso };
 }

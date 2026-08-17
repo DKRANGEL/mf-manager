@@ -5,6 +5,9 @@ const {readJSON, writeJSONAtomic, listJSON} = require('../utils/storage');
 const {parsearTexto} = require('../utils/parserPedido');
 const {validarItens} = require('../utils/validadorCatalogo');
 const {normalizarTipo} = require('../utils/migracaoTipos');
+const {gerarPDFDeHTML} = require('../utils/pdf');
+const {gerarPedidoMFHTML} = require('../public/js/documento.js');
+const {gerarReciboMFHTML} = require('../public/js/recibo.js');
 
 const router = express.Router();
 
@@ -214,6 +217,58 @@ router.get('/:numero', (req, res) => {
 
         const data = podeVerValores(req) ? pedido : ocultarValoresPedido(pedido);
         res.json({success: true, data});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// Nome de arquivo seguro para o header Content-Disposition
+function nomeArquivoSeguro(nome, fallback) {
+    return (String(nome || fallback || 'documento').replace(/[^\w.\- ]+/g, '').trim() || 'documento').slice(0, 80);
+}
+
+// POST /api/pedidos/pdf — gera PDF (vetorial, Chrome) a partir do JSON enviado.
+// Usado pelo editor (estado atual, ainda não salvo). Requer criar_editar.
+router.post('/pdf', async (req, res) => {
+    try {
+        const doc = req.body.doc === 'recibo' ? 'recibo' : 'pedido';
+        let corpo;
+        if (doc === 'recibo') {
+            corpo = gerarReciboMFHTML(req.body.recibo || (req.body.pedido && req.body.pedido.recibo) || {});
+        } else {
+            corpo = gerarPedidoMFHTML(req.body.pedido || {});
+        }
+        const buf = await gerarPDFDeHTML(corpo, {tipo: doc});
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${nomeArquivoSeguro(req.body.nome)}.pdf"`);
+        res.send(buf);
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// GET /api/pedidos/:numero/pdf?doc=pedido|recibo — gera PDF do pedido salvo.
+// Usado pelo hall. Honra a ocultação de valores (romaneio) para quem não vê valores.
+router.get('/:numero/pdf', async (req, res) => {
+    try {
+        let pedido = readJSON(pedidoPath(req.params.numero), null);
+        if (!pedido) return res.status(404).json({success: false, error: 'Pedido não encontrado'});
+        pedido.tipo = normalizarTipo(pedido.tipo);
+        const doc = req.query.doc === 'recibo' ? 'recibo' : 'pedido';
+        const podeValores = podeVerValores(req);
+
+        let corpo;
+        if (doc === 'recibo') {
+            if (!podeValores) return res.status(403).json({success: false, error: 'Sem permissão'});
+            corpo = gerarReciboMFHTML(pedido.recibo || {});
+        } else {
+            if (!podeValores) pedido = ocultarValoresPedido(pedido);
+            corpo = gerarPedidoMFHTML(pedido);
+        }
+        const buf = await gerarPDFDeHTML(corpo, {tipo: doc});
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${nomeArquivoSeguro(req.query.nome, pedido.numero)}.pdf"`);
+        res.send(buf);
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }

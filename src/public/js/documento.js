@@ -12,6 +12,10 @@ function formatDate(d) {
 
 function esc(s) {
     if (s === null || s === undefined) return '';
+    // Node (geração de PDF no servidor) não tem DOM — escapa via string
+    if (typeof document === 'undefined') {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
     const div = document.createElement('div');
     div.textContent = s;
     return div.innerHTML;
@@ -610,27 +614,45 @@ async function compartilharDocumentoPDF(contentEl, nome) {
             restante -= pageH;
         }
 
-        const blob = pdf.output('blob');
-        const file = new File([blob], `${nome}.pdf`, { type: 'application/pdf' });
-
-        // Mobile: share sheet nativo | Desktop: download direto
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({ files: [file], title: nome });
-            } catch (err) {
-                if (err.name !== 'AbortError') throw err; // usuário cancelou = ok
-            }
-        } else {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${nome}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 5000);
-        }
+        await _mfCompartilharBlob(pdf.output('blob'), nome);
     } finally {
         holder.remove();
     }
+}
+
+// Compartilha/baixa um Blob de PDF: share sheet no mobile, download no desktop
+async function _mfCompartilharBlob(blob, nome) {
+    nome = (nome || 'Documento').replace(/[\\/:*?"<>|]/g, '-').trim();
+    const file = new File([blob], `${nome}.pdf`, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({ files: [file], title: nome });
+        } catch (err) {
+            if (err.name !== 'AbortError') throw err; // usuário cancelou = ok
+        }
+    } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${nome}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+}
+
+// Busca o PDF VETORIAL no servidor (Chrome headless) e compartilha/baixa.
+// Lança erro se o servidor não retornar um PDF — o chamador faz o fallback.
+async function baixarPDFServidor(url, fetchInit, nome) {
+    const res = await fetch(url, fetchInit || {});
+    if (!res.ok) throw new Error('PDF servidor HTTP ' + res.status);
+    const blob = await res.blob();
+    if (blob.type && blob.type.indexOf('application/pdf') === -1) throw new Error('resposta não é PDF');
+    await _mfCompartilharBlob(blob, nome);
+}
+
+// Node (geração de PDF no servidor): expõe o renderer e utilitários
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { gerarPedidoMFHTML, esc, _mfFmt, formatDate };
 }

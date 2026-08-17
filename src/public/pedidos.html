@@ -1429,12 +1429,17 @@
         }
     }
 
+    // O preview pode mostrar um pedido salvo ou um recibo do modal —
+    // o botão PDF usa isso para pedir o PDF vetorial certo ao servidor
+    let _previewPDF = null; // { url, init } ou null
+
     async function abrirPreview(numero, cliente) {
         try {
             const resP = await fetch(`/api/pedidos/${encodeURIComponent(numero)}`).then(r => r.json());
             if (!resP.success) throw new Error(resP.error);
             document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(resP.data);
             document.getElementById('nomeArquivo').value = cliente ? `Pedido ${cliente}` : numero;
+            _previewPDF = { url: `/api/pedidos/${encodeURIComponent(numero)}/pdf?doc=pedido`, init: null };
             document.getElementById('previewModal').classList.add('ativo');
             setTimeout(escalarPreview, 50);
         } catch (err) {
@@ -1468,7 +1473,14 @@
         btn.disabled = true;
         btn.innerHTML = 'Gerando...';
         try {
-            await compartilharDocumentoPDF(document.getElementById('previewContent'), nome);
+            // 1º: PDF vetorial do servidor (Chrome); fallback: html2canvas local
+            try {
+                if (!_previewPDF) throw new Error('sem rota de PDF para este preview');
+                await baixarPDFServidor(_previewPDF.url, _previewPDF.init, nome);
+            } catch (e) {
+                console.warn('PDF servidor indisponível, usando fallback local:', e.message);
+                await compartilharDocumentoPDF(document.getElementById('previewContent'), nome);
+            }
         } catch (err) {
             MF.alert('Erro ao gerar PDF: ' + err.message);
         } finally {
@@ -1584,6 +1596,10 @@
     function gerarReciboPDFHall() {
         const recibo = coletarReciboHall();
         document.getElementById('previewContent').innerHTML = gerarReciboMFHTML(recibo);
+        _previewPDF = {
+            url: '/api/pedidos/pdf',
+            init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ doc: 'recibo', recibo }) }
+        };
         document.getElementById('nomeArquivo').value = `Recibo ${recibo.recebemos_de || (_reciboPedido && _reciboPedido.numero) || ''}`.trim();
         fecharModalRecibo();
         document.getElementById('previewModal').classList.add('ativo');
@@ -1628,7 +1644,7 @@
 
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
 </script>
-<script src="/public/js/documento.js?v=20260817b"></script>
-<script src="/public/js/recibo.js?v=20260817"></script>
+<script src="/public/js/documento.js?v=20260817c"></script>
+<script src="/public/js/recibo.js?v=20260817c"></script>
 </body>
 </html>

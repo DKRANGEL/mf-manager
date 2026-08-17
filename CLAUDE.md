@@ -86,6 +86,8 @@ src/
 | PUT | `/api/pedidos/:numero` | Atualiza pedido |
 | PUT | `/api/pedidos/:numero/baixa` | Ativa ou reverte baixa de estoque |
 | PUT | `/api/pedidos/:numero/recibo` | Salva o recibo de pagamento (só pedido aberto/concluído) |
+| POST | `/api/pedidos/pdf` | PDF vetorial (Chrome headless) do JSON enviado — `{doc: 'pedido'\|'recibo', pedido/recibo, nome}` |
+| GET | `/api/pedidos/:numero/pdf?doc=` | PDF vetorial do pedido salvo (romaneio para quem não vê valores) |
 | DELETE | `/api/pedidos/:numero` | Exclui rascunho |
 | POST | `/api/contagens` | Salva contagem física |
 | GET | `/api/contagens/ultima` | Retorna contagem mais recente |
@@ -238,7 +240,7 @@ Três papéis (presets em `utils/permissoes.js`), customizáveis por usuário no
 - [x] Preview "romaneio" sem valores para usuários sem `ver_valores`
 - [x] Abas por tipo de documento no hall de pedidos
 - [x] Item sem valor com motivo selecionável (Pago pelo evento / Isento)
-- [x] Compartilhar PDF pelo share sheet nativo do mobile (html2canvas + jsPDF)
+- [x] Compartilhar PDF pelo share sheet nativo do mobile — PDF vetorial gerado no servidor (Chrome headless/puppeteer-core, `utils/pdf.js`; `documento.js`/`recibo.js` são isomórficos e rodam no Node); fallback html2canvas + jsPDF se o servidor falhar
 - [x] Ordem dos blocos do documento reordenável por pedido (`pedido.ordem_blocos`) — lista arrastável em `/emitir`; cabeçalho e dados do cliente ficam fixos no topo
 - [x] Reordenar pagamentos já feitos por arraste (SortableJS) — reflete na tabela do documento
 - [x] Recibo de pagamento em PDF (`js/recibo.js`, estilo próprio com valor por extenso) — bloco em `/emitir` visível só para pedido `aberto`/`concluido`; salvo em `pedido.recibo` via `PUT /api/pedidos/:numero/recibo`

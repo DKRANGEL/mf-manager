@@ -14,6 +14,12 @@ RUN npm ci --omit=dev
 # ── Imagem final ──────────────────────────────────────────────────────────────
 FROM base
 
+# Chromium + fontes para geração de PDF (Chrome headless via puppeteer-core)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium fonts-liberation fonts-dejavu-core ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

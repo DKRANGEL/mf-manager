@@ -716,8 +716,8 @@
     <div id="previewContent"></div>
 </div>
 
-<script src="/public/js/documento.js?v=20260817b"></script>
-<script src="/public/js/recibo.js?v=20260817"></script>
+<script src="/public/js/documento.js?v=20260817c"></script>
+<script src="/public/js/recibo.js?v=20260817c"></script>
 <script>
 // ══════════════════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -2064,6 +2064,9 @@ function restaurarEstadoUI() {
 // ══════════════════════════════════════════════════════════════
 // PREVIEW / DOCUMENT RENDER
 // ══════════════════════════════════════════════════════════════
+// O preview mostra pedido ou recibo — o botão PDF precisa saber qual
+let _previewDoc = 'pedido';
+
 async function compartilharPDFEmitir(btn) {
     const nome = document.getElementById('nomeArquivo')?.value.trim()
         || document.getElementById('fNomePedido')?.value.trim()
@@ -2072,7 +2075,20 @@ async function compartilharPDFEmitir(btn) {
     btn.disabled = true;
     btn.innerHTML = 'Gerando...';
     try {
-        await compartilharDocumentoPDF(document.getElementById('previewContent'), nome);
+        // 1º: PDF vetorial gerado no servidor (Chrome) — qualidade de impressão
+        try {
+            const payload = _previewDoc === 'recibo'
+                ? { doc: 'recibo', recibo: estado.recibo || coletarRecibo(), nome }
+                : { doc: 'pedido', pedido: estado, nome };
+            await baixarPDFServidor('/api/pedidos/pdf', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }, nome);
+        } catch (e) {
+            // Fallback: rasteriza no navegador (html2canvas)
+            console.warn('PDF servidor indisponível, usando fallback local:', e.message);
+            await compartilharDocumentoPDF(document.getElementById('previewContent'), nome);
+        }
     } catch (err) {
         MF.alert('Erro ao gerar PDF: ' + err.message);
     } finally {
@@ -2094,6 +2110,7 @@ function imprimirDoc() {
 
 function abrirPreview() {
     coletarEstado();
+    _previewDoc = 'pedido';
     document.getElementById('previewContent').innerHTML = gerarPedidoMFHTML(estado);
     // Pre-preenche nome do arquivo com nome do pedido
     const nomePedido = estado.nome || estado.cabecalho.cliente || '';
@@ -2178,6 +2195,7 @@ async function salvarRecibo() {
 
 function abrirPreviewRecibo() {
     coletarRecibo();
+    _previewDoc = 'recibo';
     document.getElementById('previewContent').innerHTML = gerarReciboMFHTML({ ...estado.recibo });
     const nomeArq = document.getElementById('nomeArquivo');
     if (nomeArq) nomeArq.value = `Recibo ${estado.recibo.recebemos_de || estado.numero || ''}`.trim();
