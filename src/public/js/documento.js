@@ -646,7 +646,11 @@ async function _mfCompartilharBlob(blob, nome) {
 // Lança erro se o servidor não retornar um PDF — o chamador faz o fallback.
 async function baixarPDFServidor(url, fetchInit, nome) {
     const res = await fetch(url, fetchInit || {});
-    if (!res.ok) throw new Error('PDF servidor HTTP ' + res.status);
+    if (!res.ok) {
+        let detalhe = 'HTTP ' + res.status;
+        try { const j = await res.json(); if (j && j.error) detalhe = j.error; } catch {}
+        throw new Error(detalhe);
+    }
     const blob = await res.blob();
     if (blob.type && blob.type.indexOf('application/pdf') === -1) throw new Error('resposta não é PDF');
     await _mfCompartilharBlob(blob, nome);

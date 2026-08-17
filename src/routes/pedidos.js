@@ -243,7 +243,8 @@ router.post('/pdf', async (req, res) => {
         res.setHeader('Content-Disposition', `inline; filename="${nomeArquivoSeguro(req.body.nome)}.pdf"`);
         res.send(buf);
     } catch (err) {
-        res.status(500).json({success: false, error: err.message});
+        console.error('[pdf] POST /pdf falhou:', err.stack || err.message);
+        res.status(500).json({success: false, error: 'Falha ao gerar PDF: ' + err.message});
     }
 });
 
@@ -270,7 +271,8 @@ router.get('/:numero/pdf', async (req, res) => {
         res.setHeader('Content-Disposition', `inline; filename="${nomeArquivoSeguro(req.query.nome, pedido.numero)}.pdf"`);
         res.send(buf);
     } catch (err) {
-        res.status(500).json({success: false, error: err.message});
+        console.error('[pdf] GET /:numero/pdf falhou:', err.stack || err.message);
+        res.status(500).json({success: false, error: 'Falha ao gerar PDF: ' + err.message});
     }
 });
 

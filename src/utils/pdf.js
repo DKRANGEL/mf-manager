@@ -39,7 +39,12 @@ async function getBrowser() {
     _lancando = puppeteer.launch({
         executablePath,
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+        protocolTimeout: 60000,
+        args: [
+            '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+            '--disable-gpu', '--disable-software-rasterizer', '--no-zygote',
+            '--disable-extensions', '--mute-audio',
+        ],
     }).then(b => {
         _browser = b;
         _lancando = null;
@@ -76,17 +81,19 @@ function inlineImagens(html) {
 let _docCss = null;
 function documentoCss() {
     if (_docCss === null) {
-        try { _docCss = fs.readFileSync(CSS_DOC, 'utf8'); } catch { _docCss = ''; }
+        try {
+            // Remove @import de fontes externas — o PDF NÃO pode depender de rede
+            // (senão o Chrome fica esperando fonts.googleapis.com e trava/timeout)
+            _docCss = fs.readFileSync(CSS_DOC, 'utf8').replace(/@import\s+url\([^)]*\)\s*;/g, '');
+        } catch { _docCss = ''; }
     }
     return _docCss;
 }
 
-const FONTS = `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">`;
-
 function montarPagina(corpoHTML, tipo) {
     const recibo = tipo === 'recibo';
-    // Recibo é auto-suficiente (estilos inline) e desenhado em 760px → margem 0 e centralizado.
-    // Pedido usa documento.css (que já traz @media print + @page A4 10mm).
+    // ZERO rede: sem <link>/@import de fontes. Usa as fontes do sistema
+    // (as próprias CSS já têm fallback sans-serif/monospace).
     const estilo = recibo
         ? `@page { size: A4; margin: 0; }
            html,body { margin:0; padding:0; background:#fff; }
@@ -94,7 +101,7 @@ function montarPagina(corpoHTML, tipo) {
         : `html,body { margin:0; padding:0; background:#fff; }
            body { -webkit-print-color-adjust:exact; print-color-adjust:exact; --mono:'JetBrains Mono',monospace; }
            ${documentoCss()}`;
-    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">${FONTS}
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <style>${estilo}</style></head><body><div class="doc-wrap">${corpoHTML}</div></body></html>`;
 }
 
@@ -104,12 +111,21 @@ async function gerarPDFDeHTML(corpoHTML, { tipo = 'pedido' } = {}) {
     const browser = await getBrowser();
     const page = await browser.newPage();
     try {
-        await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
-        try { await page.evaluate('document.fonts && document.fonts.ready'); } catch {}
+        // 'load' (não 'networkidle0'): sem rede externa, dispara em ms.
+        await page.setContent(html, { waitUntil: 'load', timeout: 20000 });
+        await page.emulateMediaType('print');
+        // fontes do sistema já estão prontas; corrida com timeout por segurança
+        try {
+            await Promise.race([
+                page.evaluate(() => document.fonts && document.fonts.ready),
+                new Promise(r => setTimeout(r, 2000)),
+            ]);
+        } catch {}
         const margin = tipo === 'recibo'
             ? { top: 0, right: 0, bottom: 0, left: 0 }
             : { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' };
-        return await page.pdf({ format: 'A4', printBackground: true, margin });
+        // page.pdf() retorna Uint8Array no puppeteer v23 — Express só envia Buffer
+        return Buffer.from(await page.pdf({ format: 'A4', printBackground: true, margin }));
     } finally {
         await page.close().catch(() => {});
     }
@@ -119,4 +135,10 @@ function pdfDisponivel() {
     return !!puppeteer && !!acharChrome();
 }
 
-module.exports = { gerarPDFDeHTML, inlineImagens, pdfDisponivel };
+// Pré-aquece o Chromium no boot para o primeiro PDF não pagar o cold start
+function warmup() {
+    if (!pdfDisponivel()) return;
+    getBrowser().catch(err => console.warn('[pdf] warmup falhou:', err.message));
+}
+
+module.exports = { gerarPDFDeHTML, inlineImagens, pdfDisponivel, warmup };
