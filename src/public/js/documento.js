@@ -335,7 +335,7 @@ function _mfBlocosResumo(pedido) {
     }
     if (res.desconto && res.desconto_valor > 0) {
         linhas += `<tr>
-            <td style="padding:8px 16px;font-size:11px;color:#c0392b;font-weight:600;">${esc((res.desconto_label || 'DESCONTO').toUpperCase())} (VALOR JÁ PAGO)</td>
+            <td style="padding:8px 16px;font-size:11px;color:#c0392b;font-weight:600;">${esc((res.desconto_label || 'DESCONTO').toUpperCase())}</td>
             <td style="padding:8px 16px;text-align:right;font-size:11px;color:#c0392b;font-weight:600;font-family:monospace;">- R$ ${_mfFmt(res.desconto_valor)}</td>
         </tr>`;
     }
