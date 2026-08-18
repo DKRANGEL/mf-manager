@@ -645,7 +645,17 @@ async function _mfCompartilharBlob(blob, nome) {
 // Busca o PDF VETORIAL no servidor (Chrome headless) e compartilha/baixa.
 // Lança erro se o servidor não retornar um PDF — o chamador faz o fallback.
 async function baixarPDFServidor(url, fetchInit, nome) {
-    const res = await fetch(url, fetchInit || {});
+    // Timeout: se o servidor demorar demais, aborta e deixa o chamador cair no fallback
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 25000);
+    let res;
+    try {
+        res = await fetch(url, { ...(fetchInit || {}), signal: ctrl.signal });
+    } catch (e) {
+        throw new Error(e.name === 'AbortError' ? 'servidor demorou demais (timeout)' : e.message);
+    } finally {
+        clearTimeout(timer);
+    }
     if (!res.ok) {
         let detalhe = 'HTTP ' + res.status;
         try { const j = await res.json(); if (j && j.error) detalhe = j.error; } catch {}

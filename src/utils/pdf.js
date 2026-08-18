@@ -36,15 +36,13 @@ async function getBrowser() {
     if (_lancando) return _lancando;
     const executablePath = acharChrome();
     if (!executablePath) throw new Error('Chromium não encontrado (defina PUPPETEER_EXECUTABLE_PATH)');
+    // Flags mínimas e comprovadas — já lançaram com sucesso na VPS.
+    // (--no-zygote e afins causam travas/falha de launch em container; fora)
     _lancando = puppeteer.launch({
         executablePath,
         headless: true,
         protocolTimeout: 60000,
-        args: [
-            '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
-            '--disable-gpu', '--disable-software-rasterizer', '--no-zygote',
-            '--disable-extensions', '--mute-audio',
-        ],
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
     }).then(b => {
         _browser = b;
         _lancando = null;
@@ -107,9 +105,12 @@ function montarPagina(corpoHTML, tipo) {
 
 // Gera o PDF a partir do corpo HTML já renderizado. tipo: 'pedido' | 'recibo'
 async function gerarPDFDeHTML(corpoHTML, { tipo = 'pedido' } = {}) {
+    const t0 = Date.now();
     const html = montarPagina(inlineImagens(corpoHTML), tipo);
+    const tBrowser = Date.now();
     const browser = await getBrowser();
     const page = await browser.newPage();
+    console.log(`[pdf] browser pronto em ${Date.now() - tBrowser}ms (${tipo})`);
     try {
         // 'load' (não 'networkidle0'): sem rede externa, dispara em ms.
         await page.setContent(html, { waitUntil: 'load', timeout: 20000 });
@@ -125,7 +126,9 @@ async function gerarPDFDeHTML(corpoHTML, { tipo = 'pedido' } = {}) {
             ? { top: 0, right: 0, bottom: 0, left: 0 }
             : { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' };
         // page.pdf() retorna Uint8Array no puppeteer v23 — Express só envia Buffer
-        return Buffer.from(await page.pdf({ format: 'A4', printBackground: true, margin }));
+        const buf = Buffer.from(await page.pdf({ format: 'A4', printBackground: true, margin }));
+        console.log(`[pdf] ${tipo} gerado em ${Date.now() - t0}ms (${buf.length} bytes)`);
+        return buf;
     } finally {
         await page.close().catch(() => {});
     }
