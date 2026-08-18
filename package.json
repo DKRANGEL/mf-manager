@@ -20,7 +20,8 @@
     "express": "^4.21.0",
     "multer": "^2.2.0",
     "node-fetch": "^2.7.0",
-    "puppeteer-core": "^23.11.1"
+    "puppeteer-core": "^23.11.1",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10"

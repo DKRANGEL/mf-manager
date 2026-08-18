@@ -13,6 +13,9 @@ const path = require('path');
 let puppeteer = null;
 try { puppeteer = require('puppeteer-core'); } catch { /* opcional — há fallback no cliente */ }
 
+let sharp = null;
+try { sharp = require('sharp'); } catch { /* sem sharp: embute imagem original */ }
+
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PRODUTOS_DIR = path.join(__dirname, '..', 'data', 'produtos');
 const CSS_DOC = path.join(PUBLIC_DIR, 'css', 'documento.css');
@@ -57,23 +60,63 @@ const MIME = {
     '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
 };
 
-// Substitui src="/public/..." e src="/data/produtos/..." por data URI do disco
-function inlineImagens(html) {
-    return html.replace(/src="(\/(?:public|data\/produtos)\/[^"]+)"/g, (m, url) => {
+// As imagens aparecem no documento em ~56px (produtos) e ~70px (logo).
+// Redimensionar para 180px derruba o tamanho do HTML de dezenas de MB para
+// centenas de KB — o que fazia o Chrome travar na VPS ao decodificar imagens
+// gigantes. Cache em memória por arquivo+mtime (o 1º PDF paga, os demais não).
+const THUMB_MAX = 180;
+const _imgCache = new Map(); // file -> { mtimeMs, uri }
+
+const IMG_RE = /src="(\/(?:public|data\/produtos)\/[^"]+)"/g;
+
+function urlParaArquivo(url) {
+    const rel = url.split('?')[0]; // remove ?v=
+    let file;
+    if (rel.startsWith('/public/')) file = path.join(PUBLIC_DIR, rel.slice('/public/'.length));
+    else file = path.join(PRODUTOS_DIR, rel.slice('/data/produtos/'.length));
+    file = path.normalize(file);
+    // guarda contra path traversal
+    if (!file.startsWith(PUBLIC_DIR) && !file.startsWith(PRODUTOS_DIR)) return null;
+    return file;
+}
+
+async function arquivoParaDataUri(file) {
+    const st = fs.statSync(file); // lança se não existir
+    const cache = _imgCache.get(file);
+    if (cache && cache.mtimeMs === st.mtimeMs) return cache.uri;
+
+    const mime = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
+    let buf = fs.readFileSync(file);
+    if (sharp && /image\/(png|jpeg|webp|gif)/.test(mime)) {
         try {
-            const rel = url.split('?')[0]; // remove ?v=
-            let file;
-            if (rel.startsWith('/public/')) file = path.join(PUBLIC_DIR, rel.slice('/public/'.length));
-            else file = path.join(PRODUTOS_DIR, rel.slice('/data/produtos/'.length));
-            file = path.normalize(file);
-            // guarda contra path traversal
-            if (!file.startsWith(PUBLIC_DIR) && !file.startsWith(PRODUTOS_DIR)) return m;
-            if (!fs.existsSync(file)) return m;
-            const mime = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
-            const b64 = fs.readFileSync(file).toString('base64');
-            return `src="data:${mime};base64,${b64}"`;
-        } catch { return m; }
-    });
+            buf = await sharp(buf)
+                .resize(THUMB_MAX, THUMB_MAX, { fit: 'inside', withoutEnlargement: true })
+                .toBuffer();
+        } catch { /* usa o original se o resize falhar */ }
+    }
+    const uri = `data:${mime};base64,${buf.toString('base64')}`;
+    _imgCache.set(file, { mtimeMs: st.mtimeMs, uri });
+    return uri;
+}
+
+// Substitui src="/public/..." e src="/data/produtos/..." por data URI (miniatura)
+async function inlineImagens(html) {
+    const urls = new Set();
+    let m;
+    IMG_RE.lastIndex = 0;
+    while ((m = IMG_RE.exec(html)) !== null) urls.add(m[1]);
+    if (!urls.size) return html;
+
+    const mapa = new Map();
+    await Promise.all([...urls].map(async url => {
+        try {
+            const file = urlParaArquivo(url);
+            if (file) mapa.set(url, await arquivoParaDataUri(file));
+        } catch { /* imagem faltando: mantém a URL original (img some via onerror) */ }
+    }));
+
+    IMG_RE.lastIndex = 0;
+    return html.replace(IMG_RE, (full, url) => mapa.has(url) ? `src="${mapa.get(url)}"` : full);
 }
 
 let _docCss = null;
@@ -106,7 +149,7 @@ function montarPagina(corpoHTML, tipo) {
 // Gera o PDF a partir do corpo HTML já renderizado. tipo: 'pedido' | 'recibo'
 async function gerarPDFDeHTML(corpoHTML, { tipo = 'pedido' } = {}) {
     const t0 = Date.now();
-    const html = montarPagina(inlineImagens(corpoHTML), tipo);
+    const html = montarPagina(await inlineImagens(corpoHTML), tipo);
     const tBrowser = Date.now();
     const browser = await getBrowser();
     const page = await browser.newPage();
