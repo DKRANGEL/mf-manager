@@ -362,33 +362,39 @@ router.put('/:numero/baixa', (req, res) => {
             error: 'Pedido não está emitido'
         });
 
-        // Monta os movimentos de saída/entrada — itera TODAS as seções
-        const itensTodos = (pedido.secoes || []).flatMap(sec => sec.itens || []);
-        const movimentos = itensTodos
-            .filter(item => item.codigo && !item.sem_valor)
-            .map(item => {
-                // Calcula qtd em unidades: qtd_un explícito > cx_100*100 > qtd*fator
-                const qtdUn = item.qtd_un
-                    || (item.cx_100 ? item.cx_100 * 100 : null)
-                    || ((item.qtd || 1) * (item.fator || 1));
-                return {
-                    codigo: item.codigo,
-                    descricao: item.descricao || item.nome || '',
-                    qtd_un: qtdUn,
-                    tipo: ativar ? 'saida' : 'entrada',
-                    origem: 'pedido',
-                    numero_pedido: pedido.numero,
-                    data: new Date().toISOString()
-                };
-            });
-
-        // Grava log de movimentos
+        // O estoque só trabalha com SAÍDAS. Dar baixa grava as saídas do pedido;
+        // reverter APAGA essas saídas (não cria "entrada" pra devolver).
         const LOG_DIR = path.join(__dirname, '..', 'data', 'movimentos');
         if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, {recursive: true});
         const logFile = path.join(LOG_DIR, `${pedido.numero}.json`);
-        const logExistente = fs.existsSync(logFile) ? JSON.parse(fs.readFileSync(logFile, 'utf8')) : {movimentos: []};
-        logExistente.movimentos.push(...movimentos);
-        fs.writeFileSync(logFile, JSON.stringify(logExistente, null, 2));
+
+        let movimentos = [];
+        if (ativar) {
+            // Monta as saídas — itera TODAS as seções
+            const itensTodos = (pedido.secoes || []).flatMap(sec => sec.itens || []);
+            movimentos = itensTodos
+                .filter(item => item.codigo && !item.sem_valor)
+                .map(item => {
+                    // Calcula qtd em unidades: qtd_un explícito > cx_100*100 > qtd*fator
+                    const qtdUn = item.qtd_un
+                        || (item.cx_100 ? item.cx_100 * 100 : null)
+                        || ((item.qtd || 1) * (item.fator || 1));
+                    return {
+                        codigo: item.codigo,
+                        descricao: item.descricao || item.nome || '',
+                        qtd_un: qtdUn,
+                        tipo: 'saida',
+                        origem: 'pedido',
+                        numero_pedido: pedido.numero,
+                        data: new Date().toISOString()
+                    };
+                });
+            // Grava (sobrescreve) as saídas do pedido
+            fs.writeFileSync(logFile, JSON.stringify({movimentos}, null, 2));
+        } else {
+            // Reverter: apaga as saídas gravadas para este pedido
+            if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
+        }
 
         // Atualiza status do pedido
         pedido.status = ativar ? 'emitido' : 'rascunho';

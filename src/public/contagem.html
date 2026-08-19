@@ -850,7 +850,10 @@
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            MF.toast(`Contagem salva: ${json.data.numero}`);
+            MF.alert(
+                `Contagem ${json.data.numero} salva como PENDENTE.\n\nEla ainda não mexe no estoque. Quando quiser, vá em Estoque e clique em "Aplicar ao estoque" — só então ela vira a base.`,
+                'success', 'Contagem salva (pendente)'
+            );
             carregarUltimaContagem();
         } catch (err) {
             MF.alert('Erro ao salvar: ' + err.message);

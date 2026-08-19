@@ -89,10 +89,11 @@ src/
 | POST | `/api/pedidos/pdf` | PDF vetorial (Chrome headless) do JSON enviado — `{doc: 'pedido'\|'recibo', pedido/recibo, nome}` |
 | GET | `/api/pedidos/:numero/pdf?doc=` | PDF vetorial do pedido salvo (romaneio para quem não vê valores) |
 | DELETE | `/api/pedidos/:numero` | Exclui rascunho |
-| POST | `/api/contagens` | Salva contagem física |
+| POST | `/api/contagens` | Salva contagem física (nasce `aplicada: false` — staged) |
+| PUT | `/api/contagens/:numero/aplicar` | Aplica/desaplica a contagem como base do estoque |
 | GET | `/api/contagens/ultima` | Retorna contagem mais recente |
-| GET | `/api/contagens` | Lista todas as contagens |
-| **GET** | `/api/estoque/atual` | **Saldo em tempo real (baseline + movimentos)** |
+| GET | `/api/contagens` | Lista todas as contagens (com `aplicada`) |
+| **GET** | `/api/estoque/atual` | **Saldo em tempo real (última contagem APLICADA − saídas posteriores; só saídas)** |
 | GET | `/api/equipamentos/catalogo` | Lista equipamentos por categoria |
 | POST/PUT/DELETE | `/api/equipamentos/item` | CRUD equipamentos |
 | GET | `/bot/catalogo` | Catálogo para FastZap (requer BOT_API_KEY) |

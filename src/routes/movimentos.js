@@ -71,11 +71,12 @@ router.post('/', (req, res) => {
             : { movimentos: [] };
 
         const agora = new Date().toISOString();
+        // O sistema só trabalha com SAÍDAS — entradas foram removidas.
         const novos = movimentos.map(m => ({
             codigo:      m.codigo,
             descricao:   m.descricao || '',
             qtd_un:      m.qtd_un,
-            tipo:        m.tipo,      // 'saida' ou 'entrada'
+            tipo:        'saida',
             origem:      'coletor',
             modo:        modo || 'manual',
             operador:    operador || 'Operador',

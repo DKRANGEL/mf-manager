@@ -10,6 +10,8 @@
           rel="stylesheet">
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js?v=20260729"></script>
     <style>
         body { overflow: auto; background: #050505; }
 
@@ -56,6 +58,23 @@
 
         .info-value { font-size: 13px; color: #e8e8e8; font-family: var(--mono); }
         .info-value.sem-baseline { color: #ff6060; }
+
+        /* Banner de contagem staged (pendente de aplicar) */
+        .staged-card {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.35);
+            border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .staged-info { display: flex; align-items: center; gap: 10px; color: #e8e8e8; font-size: 13px; }
+        .staged-info i { color: #fbbf24; width: 20px; height: 20px; flex-shrink: 0; }
+        .staged-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .btn-aplicar {
+            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            background: #fbbf24; color: #1a1a1a; border: none; border-radius: 8px;
+            padding: 9px 16px; font-size: 13px; font-weight: 700; font-family: var(--font);
+        }
+        .btn-aplicar:hover { background: #f0b420; }
+        .btn-aplicar i { width: 16px; height: 16px; }
 
         .info-bar-alert {
             width: 100%; padding: 10px 14px; background: rgba(255,80,80,0.07);
@@ -198,6 +217,8 @@
         </div>
     </div>
 
+    <div id="stagedBar"></div>
+
     <div class="toolbar">
         <input type="text" class="search-box" id="searchBox"
                placeholder="Buscar por código ou nome..." oninput="filtrar()">
@@ -220,7 +241,51 @@
     let todosProdutos = [];
     let categorias = [];
 
-    document.addEventListener('DOMContentLoaded', carregar);
+    document.addEventListener('DOMContentLoaded', () => { carregar(); carregarStaged(); });
+
+    // Contagens salvas mas ainda NÃO aplicadas (não afetam o estoque até você aplicar)
+    async function carregarStaged() {
+        const bar = document.getElementById('stagedBar');
+        try {
+            const json = await fetch('/api/contagens').then(r => r.json());
+            const staged = (json.data || []).filter(c => c.aplicada === false);
+            if (!staged.length) { bar.innerHTML = ''; return; }
+            bar.innerHTML = staged.map(c => {
+                const dt = c.data ? new Date(c.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                return `<div class="staged-card">
+                    <div class="staged-info">
+                        <i data-lucide="clock"></i>
+                        <div>
+                            <strong>${esc(c.numero)}</strong> — contagem pendente (não aplicada)
+                            <div class="staged-sub">${dt} · ${c.total_itens} itens · ${esc(c.responsavel || 'sem responsável')}</div>
+                        </div>
+                    </div>
+                    <button class="btn-aplicar" onclick="aplicarContagem('${esc(c.numero)}')">
+                        <i data-lucide="check-circle"></i> Aplicar ao estoque
+                    </button>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        } catch { bar.innerHTML = ''; }
+    }
+
+    async function aplicarContagem(numero) {
+        const ok = await MF.confirm(
+            `Aplicar a contagem ${numero} como a nova base do estoque?\n\nTudo que saiu ANTES dela fica congelado (não desconta). Só saídas posteriores vão descontar.`,
+            { title: 'Aplicar contagem', confirmText: 'Aplicar' }
+        );
+        if (!ok) return;
+        try {
+            const res = await fetch(`/api/contagens/${encodeURIComponent(numero)}/aplicar`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aplicar: true })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            if (window.MF && MF.toast) MF.toast('Contagem aplicada'); else MF.alert('Contagem aplicada', 'success');
+            await carregar();
+            await carregarStaged();
+        } catch (err) { MF.alert('Erro ao aplicar: ' + err.message); }
+    }
 
     async function carregar() {
         const btn = document.getElementById('btnAtualizar');

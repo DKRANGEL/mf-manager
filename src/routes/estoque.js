@@ -2,11 +2,11 @@
 // GET /api/estoque/atual
 //
 // Calcula o saldo atual de cada produto usando:
-//   baseline = última contagem salva (cx * fator + un_avulsas)
-//   movimentos = saídas/entradas de pedidos após a data da contagem
-//   saldo_un = baseline - saídas + entradas
+//   baseline = última contagem APLICADA (cx * fator + un_avulsas)
+//   movimentos = saídas de pedidos/coletor após a data da contagem
+//   saldo_un = baseline - saídas   (o estoque só cai; não há entradas)
 //
-// Se não houver contagem, retorna baseline null e saldo 0 para todos.
+// Se não houver contagem aplicada, retorna baseline null e saldo 0 para todos.
 
 const express = require('express');
 const path = require('path');
@@ -22,14 +22,20 @@ const PRODUTOS_FILE  = path.join(DATA_DIR, 'produtos.json');
 
 // ---- Helpers ----
 
+// Base do estoque = contagem mais recente que já foi APLICADA.
+// Contagens "staged" (aplicada:false) ficam guardadas mas não afetam o saldo.
+// Contagem legada (sem o campo) conta como aplicada.
 function ultimaContagem() {
     if (!fs.existsSync(CONTAGENS_DIR)) return null;
     const arquivos = fs.readdirSync(CONTAGENS_DIR)
         .filter(f => f.endsWith('.json'))
         .sort()
         .reverse();
-    if (!arquivos.length) return null;
-    return readJSON(path.join(CONTAGENS_DIR, arquivos[0]), null);
+    for (const f of arquivos) {
+        const c = readJSON(path.join(CONTAGENS_DIR, f), null);
+        if (c && c.aplicada !== false) return c;
+    }
+    return null;
 }
 
 function lerTodosMovimentos() {
@@ -90,14 +96,11 @@ router.get('/atual', (req, res) => {
             const movimentos = lerTodosMovimentos().filter(m => new Date(m.data) > baselineDate);
             totalMovimentos = movimentos.length;
 
+            // Só saídas descontam — o estoque só cai (entradas foram removidas do sistema).
             for (const mov of movimentos) {
                 const entrada = saldos.get(mov.codigo);
                 if (!entrada) continue;
-                if (mov.tipo === 'saida') {
-                    entrada.saldo_un -= (mov.qtd_un || 0);
-                } else if (mov.tipo === 'entrada') {
-                    entrada.saldo_un += (mov.qtd_un || 0);
-                }
+                if (mov.tipo === 'saida') entrada.saldo_un -= (mov.qtd_un || 0);
             }
         }
 
