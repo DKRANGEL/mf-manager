@@ -63,6 +63,7 @@ src/
     ├── permissoes.js       # papéis (admin/owner/operador), presets e resolverPermissoes
     ├── catalogoCache.js    # catálogo do bot — 100% local (produtos + saldo)
     ├── initData.js         # cria arquivos/diretórios na inicialização
+    ├── migracaoHistorico.js # limpeza única do histórico (remove entradas/lixo de vai-e-volta)
     ├── parserPedido.js     # parser de texto → itens de pedido
     ├── validadorCatalogo.js
     └── multiplicador.js
@@ -91,6 +92,7 @@ src/
 | DELETE | `/api/pedidos/:numero` | Exclui rascunho |
 | POST | `/api/contagens` | Salva contagem física (nasce `aplicada: false` — staged) |
 | PUT | `/api/contagens/:numero/aplicar` | Aplica/desaplica a contagem como base do estoque |
+| DELETE | `/api/contagens/:numero` | Exclui uma contagem |
 | GET | `/api/contagens/ultima` | Retorna contagem mais recente |
 | GET | `/api/contagens` | Lista todas as contagens (com `aplicada`) |
 | **GET** | `/api/estoque/atual` | **Saldo em tempo real (última contagem APLICADA − saídas posteriores; só saídas)** |

@@ -82,6 +82,19 @@ router.get('/ultima', (req, res) => {
     }
 });
 
+// DELETE /api/contagens/:numero — exclui uma contagem
+router.delete('/:numero', (req, res) => {
+    try {
+        garantirDir();
+        const arq = path.join(CONTAGENS_DIR, `${req.params.numero}.json`);
+        if (!fs.existsSync(arq)) return res.status(404).json({success: false, error: 'Contagem não encontrada'});
+        fs.unlinkSync(arq);
+        res.json({success: true});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 // GET /api/contagens — lista todas
 router.get('/', (req, res) => {
     try {

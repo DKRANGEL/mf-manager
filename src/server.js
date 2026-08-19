@@ -4,12 +4,14 @@ const {createApp} = require('./app');
 const {initData} = require('./utils/initData');
 const {initUsuarios} = require('./routes/auth');
 const {migrarTiposPedidos, migrarTiposClientes} = require('./utils/migracaoTipos');
+const {limparHistoricoV1} = require('./utils/migracaoHistorico');
 const {warmup} = require('./utils/pdf');
 
 initData();
 initUsuarios();
 migrarTiposPedidos();
 migrarTiposClientes();
+limparHistoricoV1(); // limpa entradas/lixo do histórico de movimentos (uma vez)
 
 const app = createApp();
 const PORT = process.env.PORT || 3003;
