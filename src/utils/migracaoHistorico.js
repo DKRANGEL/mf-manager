@@ -19,7 +19,9 @@ const { readJSON, writeJSONAtomic } = require('./storage');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const MOV_DIR = path.join(DATA_DIR, 'movimentos');
 const PED_DIR = path.join(DATA_DIR, 'pedidos');
+const CONT_DIR = path.join(DATA_DIR, 'contagens');
 const FLAG = path.join(DATA_DIR, '.limpeza-historico-v1');
+const FLAG_CONT = path.join(DATA_DIR, '.limpeza-contagens-legado-v1');
 
 function qtdUnDoItem(item) {
     return item.qtd_un
@@ -87,4 +89,29 @@ function limparHistoricoV1() {
     }
 }
 
-module.exports = { limparHistoricoV1 };
+// Apaga as contagens LEGADAS (a "meia boca" antiga, salva antes do recurso
+// de contagem staged — não tem o campo `aplicada`). Contagens novas
+// (aplicada: true/false) são preservadas. Roda uma vez.
+function limparContagensLegadoV1() {
+    try {
+        if (fs.existsSync(FLAG_CONT)) return;
+        if (!fs.existsSync(CONT_DIR)) { fs.writeFileSync(FLAG_CONT, new Date().toISOString()); return; }
+
+        let apagadas = 0;
+        for (const f of fs.readdirSync(CONT_DIR).filter(a => a.endsWith('.json'))) {
+            try {
+                const c = readJSON(path.join(CONT_DIR, f), null);
+                // Legado = sem o campo `aplicada`. Novas contagens têm o campo → mantém.
+                if (c && c.aplicada === undefined) { fs.unlinkSync(path.join(CONT_DIR, f)); apagadas++; }
+            } catch (e) {
+                console.error(`[limpeza-contagens-legado-v1] erro em ${f}:`, e.message);
+            }
+        }
+        fs.writeFileSync(FLAG_CONT, new Date().toISOString());
+        console.log(`[limpeza-contagens-legado-v1] OK — contagens legadas apagadas: ${apagadas}`);
+    } catch (err) {
+        console.error('[limpeza-contagens-legado-v1] falhou:', err.message);
+    }
+}
+
+module.exports = { limparHistoricoV1, limparContagensLegadoV1 };
