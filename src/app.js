@@ -95,6 +95,10 @@ function createApp() {
         res.sendFile(path.join(__dirname, 'public', 'contagem.html'));
     });
 
+    app.get('/contagens', (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', 'contagens.html'));
+    });
+
     app.get('/estoque', (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'estoque.html'));
     });

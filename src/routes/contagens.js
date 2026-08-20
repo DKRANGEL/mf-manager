@@ -82,6 +82,44 @@ router.get('/ultima', (req, res) => {
     }
 });
 
+// GET /api/contagens/:numero — obtém uma contagem completa (para editar)
+router.get('/:numero', (req, res) => {
+    try {
+        garantirDir();
+        const arq = path.join(CONTAGENS_DIR, `${req.params.numero}.json`);
+        if (!fs.existsSync(arq)) return res.status(404).json({success: false, error: 'Contagem não encontrada'});
+        const c = readJSON(arq, null);
+        if (!c) return res.status(404).json({success: false, error: 'Contagem não encontrada'});
+        res.json({success: true, data: c});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// PUT /api/contagens/:numero — atualiza uma contagem (edição)
+// Mantém numero, data_criacao e o estado aplicada/data_aplicacao.
+router.put('/:numero', (req, res) => {
+    try {
+        garantirDir();
+        const arq = path.join(CONTAGENS_DIR, `${req.params.numero}.json`);
+        if (!fs.existsSync(arq)) return res.status(404).json({success: false, error: 'Contagem não encontrada'});
+        const c = readJSON(arq, null);
+        if (!c) return res.status(404).json({success: false, error: 'Contagem não encontrada'});
+
+        const {data, responsavel, observacoes, itens} = req.body;
+        if (data !== undefined) c.data = data;
+        if (responsavel !== undefined) c.responsavel = responsavel || '';
+        if (observacoes !== undefined) c.observacoes = observacoes || '';
+        if (itens !== undefined) c.itens = itens || [];
+        c.data_edicao = new Date().toISOString();
+
+        writeJSONAtomic(arq, c);
+        res.json({success: true, data: c});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
 // DELETE /api/contagens/:numero — exclui uma contagem
 router.delete('/:numero', (req, res) => {
     try {

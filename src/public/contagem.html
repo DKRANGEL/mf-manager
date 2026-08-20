@@ -539,13 +539,14 @@
 <div class="page">
     <div class="page-header">
         <div>
-            <h1>Contagem de Estoque</h1>
+            <h1 id="tituloPagina">Contagem de Estoque</h1>
             <div class="sub">MF Manager · Magic Fireworks</div>
         </div>
         <div class="header-actions">
+            <a href="/contagens" class="btn btn-ghost"><i data-lucide="list"></i> Contagens</a>
             <a href="/" class="btn btn-ghost">← Início</a>
             <button class="btn btn-ghost" onclick="abrirPDF()"><i data-lucide="file-text"></i> Gerar PDF</button>
-            <button class="btn btn-white" onclick="salvarContagem()"><i data-lucide="save"></i> Salvar Contagem</button>
+            <button class="btn btn-white" id="btnSalvar" onclick="salvarContagem()"><i data-lucide="save"></i> Salvar Contagem</button>
         </div>
     </div>
 
@@ -607,6 +608,7 @@
     let toggles = {};        // { categoria: bool }
     let contagens = {};      // { id_produto: { cx: num, un: num } }
     let fatores = {};        // { codigo: fator }
+    let editandoNumero = null; // se setado, salvar faz PUT (edição)
 
     document.addEventListener('DOMContentLoaded', async () => {
         // Data padrão = hoje
@@ -614,8 +616,66 @@
         document.getElementById('dataContagem').value = hoje;
 
         await carregarCatalogo();
-        await carregarUltimaContagem();
+
+        const numero = new URLSearchParams(location.search).get('numero');
+        if (numero) await carregarParaEdicao(numero);
+        else await carregarUltimaContagem();
     });
+
+    // Carrega uma contagem existente para edição (prefill + PUT no salvar)
+    async function carregarParaEdicao(numero) {
+        try {
+            const json = await fetch(`/api/contagens/${encodeURIComponent(numero)}`).then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            const c = json.data;
+            editandoNumero = numero;
+
+            document.getElementById('dataContagem').value = c.data || '';
+            document.getElementById('responsavel').value = c.responsavel || '';
+            document.getElementById('obsContagem').value = c.observacoes || '';
+
+            // Mapa codigo -> {id, cat} para casar itens que não batem por id
+            const porCodigo = {};
+            Object.keys(catalogo).forEach(cat => catalogo[cat].forEach(p => { porCodigo[p.codigo] = { id: p.id, cat }; }));
+
+            (c.itens || []).forEach(item => {
+                let id = item.id, cat = item.categoria;
+                if (contagens[id] === undefined) {
+                    const m = porCodigo[item.codigo];
+                    if (!m) return; // produto saiu do catálogo — ignora
+                    id = m.id; cat = m.cat;
+                }
+                contagens[id] = { cx: item.cx || 0, un: item.un_avulsas || 0 };
+                if (catalogo[cat]) toggles[cat] = true;
+            });
+
+            renderCategorias();
+
+            // Escreve os valores nos inputs e recalcula totais
+            Object.keys(catalogo).forEach(cat => {
+                catalogo[cat].forEach(p => {
+                    const v = contagens[p.id];
+                    if (v && (v.cx > 0 || v.un > 0)) {
+                        const elCx = document.getElementById(`cx-${p.id}`);
+                        const elUn = document.getElementById(`un-${p.id}`);
+                        if (elCx) elCx.value = v.cx;
+                        if (elUn) elUn.value = v.un;
+                        atualizarContagem(p.id, p.codigo, p.fator || 1);
+                    }
+                });
+            });
+            atualizarResumoGeral();
+
+            // Indicadores de edição
+            document.getElementById('tituloPagina').textContent = `Editando ${numero}`;
+            document.getElementById('ultimaContagemInfo').textContent = `Editando a contagem ${numero}`;
+            const btn = document.getElementById('btnSalvar');
+            if (btn) btn.innerHTML = '<i data-lucide="save"></i> Salvar edição';
+            lucide.createIcons();
+        } catch (err) {
+            MF.alert('Erro ao carregar contagem: ' + err.message);
+        }
+    }
 
     async function carregarCatalogo() {
         try {
@@ -843,18 +903,24 @@
         });
 
         try {
-            const res = await fetch('/api/contagens', {
-                method: 'POST',
+            const editando = !!editandoNumero;
+            const res = await fetch(editando ? `/api/contagens/${encodeURIComponent(editandoNumero)}` : '/api/contagens', {
+                method: editando ? 'PUT' : 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.error);
-            MF.alert(
-                `Contagem ${json.data.numero} salva como PENDENTE.\n\nEla ainda não mexe no estoque. Quando quiser, vá em Estoque e clique em "Aplicar ao estoque" — só então ela vira a base.`,
-                'success', 'Contagem salva (pendente)'
-            );
-            carregarUltimaContagem();
+            if (editando) {
+                MF.alert(`Contagem ${json.data.numero} atualizada.`, 'success', 'Edição salva');
+                setTimeout(() => { window.location.href = '/contagens'; }, 800);
+            } else {
+                MF.alert(
+                    `Contagem ${json.data.numero} salva como PENDENTE.\n\nEla ainda não mexe no estoque. Quando quiser, vá em Estoque (ou no hall de Contagens) e clique em "Aplicar" — só então ela vira a base.`,
+                    'success', 'Contagem salva (pendente)'
+                );
+                carregarUltimaContagem();
+            }
         } catch (err) {
             MF.alert('Erro ao salvar: ' + err.message);
         }

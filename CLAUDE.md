@@ -39,7 +39,8 @@ src/
 │   ├── index.html          # home — desktop: gerador OS/recibo | mobile: cards de nav
 │   ├── pedidos.html        # hall de pedidos com cards e preview modal
 │   ├── emitir.html         # criação/edição de pedido de venda
-│   ├── contagem.html       # contagem física de estoque por categoria
+│   ├── contagem.html       # contagem física de estoque por categoria (novo/editar via ?numero=)
+│   ├── contagens.html      # hall de contagens (editar / aplicar / excluir)
 │   ├── estoque.html        # saldo em tempo real (baseline contagem + movimentos)
 │   ├── produtos.html       # CRUD do catálogo de produtos
 │   └── equipamentos.html   # CRUD de equipamentos
@@ -92,6 +93,8 @@ src/
 | DELETE | `/api/pedidos/:numero` | Exclui rascunho |
 | POST | `/api/contagens` | Salva contagem física (nasce `aplicada: false` — staged) |
 | PUT | `/api/contagens/:numero/aplicar` | Aplica/desaplica a contagem como base do estoque |
+| GET | `/api/contagens/:numero` | Contagem completa (para editar) |
+| PUT | `/api/contagens/:numero` | Atualiza a contagem (edição; mantém `aplicada`) |
 | DELETE | `/api/contagens/:numero` | Exclui uma contagem |
 | GET | `/api/contagens/ultima` | Retorna contagem mais recente |
 | GET | `/api/contagens` | Lista todas as contagens (com `aplicada`) |
@@ -250,7 +253,7 @@ Três papéis (presets em `utils/permissoes.js`), customizáveis por usuário no
 
 ## O que ainda pode ser feito
 
-- [ ] Hall de contagens — lista contagens anteriores com preview PDF
+- [x] Hall de contagens (`/contagens`) — lista, editar, aplicar e excluir contagens
 - [ ] Múltiplas seções por pedido (caso Marcio)
 - [ ] Alertas automáticos de estoque negativo
 

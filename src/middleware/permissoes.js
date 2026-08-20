@@ -15,6 +15,7 @@ const PAGINAS = {
     '/emitir':       'emitir',
     '/estoque':      'estoque',
     '/contagem':     'contagem',
+    '/contagens':    'contagem',
     '/produtos':     'produtos',
     '/clientes':     'clientes',
     '/equipamentos': 'equipamentos',

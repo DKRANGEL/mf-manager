@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contagens — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js?v=20260729"></script>
+    <style>
+        .page-container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: #e8e8e8; }
+        .brand-sub { font-size: 12px; color: #666; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+            background: #161618; border: 1px solid #29292e; color: #ccc; border-radius: 8px;
+            padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font);
+        }
+        .btn-back:hover { border-color: #444; color: #fff; }
+        .btn-back.primary { background: #fff; color: #000; border-color: #fff; }
+        .btn-back.primary:hover { background: #e0e0e0; }
+        .btn-back i { width: 16px; height: 16px; }
+
+        .cont-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+        .cont-card {
+            background: #111113; border: 1px solid #29292e; border-radius: 14px; padding: 16px;
+            display: flex; flex-direction: column; gap: 12px; position: relative;
+        }
+        .cont-card.aplicada { border-left: 3px solid #4ade80; }
+        .cont-card.pendente { border-left: 3px solid #fbbf24; }
+        .cont-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .cont-num { font-family: var(--mono); font-size: 15px; font-weight: 700; color: #fff; }
+        .cont-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; letter-spacing: .5px; }
+        .cont-badge.apl { background: rgba(74,222,128,.15); color: #4ade80; }
+        .cont-badge.pend { background: rgba(251,191,36,.15); color: #fbbf24; }
+        .cont-meta { font-size: 12px; color: #888; line-height: 1.7; }
+        .cont-meta strong { color: #ccc; font-weight: 600; }
+        .cont-acoes { display: flex; gap: 8px; margin-top: 2px; }
+        .ca-btn {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            border-radius: 8px; padding: 9px 10px; font-size: 12px; font-weight: 700; cursor: pointer;
+            font-family: var(--font); border: 1px solid #33333a; background: transparent; color: #ccc;
+        }
+        .ca-btn i { width: 15px; height: 15px; }
+        .ca-btn.edit:hover { border-color: #60a5fa; color: #60a5fa; }
+        .ca-btn.aplicar { background: #fbbf24; color: #1a1a1a; border-color: #fbbf24; }
+        .ca-btn.aplicar:hover { background: #f0b420; }
+        .ca-btn.del { flex: 0 0 auto; width: 40px; }
+        .ca-btn.del:hover { border-color: #ff6060; color: #ff6060; }
+        .empty-msg { text-align: center; color: #555; padding: 60px 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Contagens</h1>
+            <span class="brand-sub">MF Manager — Magic Fireworks</span>
+        </div>
+        <div class="header-actions">
+            <a href="/contagem" class="btn-back primary"><i data-lucide="plus"></i> Nova contagem</a>
+            <a href="/estoque" class="btn-back"><i data-lucide="boxes"></i> Estoque</a>
+            <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+        </div>
+    </div>
+
+    <div id="grid"><div class="empty-msg">Carregando...</div></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', carregar);
+
+    async function carregar() {
+        const grid = document.getElementById('grid');
+        try {
+            const json = await fetch('/api/contagens').then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            const lista = json.data || [];
+            if (!lista.length) {
+                grid.innerHTML = `<div class="empty-msg">Nenhuma contagem ainda.<br><br>
+                    <a href="/contagem" class="btn-back primary" style="display:inline-flex;"><i data-lucide="plus"></i> Fazer a primeira contagem</a></div>`;
+                lucide.createIcons();
+                return;
+            }
+            grid.className = 'cont-grid';
+            grid.innerHTML = lista.map(c => {
+                const pend = c.aplicada === false;
+                const dt = c.data ? new Date(c.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                const dtApl = c.data_aplicacao ? new Date(c.data_aplicacao).toLocaleDateString('pt-BR') : null;
+                return `<div class="cont-card ${pend ? 'pendente' : 'aplicada'}">
+                    <div class="cont-top">
+                        <span class="cont-num">${esc(c.numero)}</span>
+                        <span class="cont-badge ${pend ? 'pend' : 'apl'}">${pend ? 'PENDENTE' : 'APLICADA'}</span>
+                    </div>
+                    <div class="cont-meta">
+                        <div><strong>Data:</strong> ${dt}</div>
+                        <div><strong>Responsável:</strong> ${esc(c.responsavel || '—')}</div>
+                        <div><strong>Itens:</strong> ${c.total_itens}</div>
+                        ${dtApl ? `<div><strong>Aplicada em:</strong> ${dtApl}</div>` : ''}
+                    </div>
+                    <div class="cont-acoes">
+                        <button class="ca-btn edit" onclick="editar('${esc(c.numero)}')"><i data-lucide="pencil"></i> Editar</button>
+                        ${pend ? `<button class="ca-btn aplicar" onclick="aplicar('${esc(c.numero)}')"><i data-lucide="check-circle"></i> Aplicar</button>` : ''}
+                        <button class="ca-btn del" onclick="excluir('${esc(c.numero)}')" title="Excluir"><i data-lucide="trash-2"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        } catch (err) {
+            grid.className = '';
+            grid.innerHTML = `<div class="empty-msg">Erro ao carregar: ${esc(err.message)}</div>`;
+        }
+    }
+
+    function editar(numero) {
+        window.location.href = `/contagem?numero=${encodeURIComponent(numero)}`;
+    }
+
+    async function aplicar(numero) {
+        const ok = await MF.confirm(
+            `Aplicar a contagem ${numero} como a nova base do estoque?\n\nTudo que saiu ANTES dela fica congelado (não desconta). Só saídas posteriores vão descontar.`,
+            { title: 'Aplicar contagem', confirmText: 'Aplicar' }
+        );
+        if (!ok) return;
+        try {
+            const res = await fetch(`/api/contagens/${encodeURIComponent(numero)}/aplicar`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aplicar: true })
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            if (window.MF && MF.toast) MF.toast('Contagem aplicada'); else MF.alert('Contagem aplicada', 'success');
+            carregar();
+        } catch (err) { MF.alert('Erro ao aplicar: ' + err.message); }
+    }
+
+    async function excluir(numero) {
+        const ok = await MF.confirm(
+            `Excluir a contagem ${numero}?\n\nSe ela for a base atual do estoque, o saldo fica zerado até você aplicar outra.`,
+            { title: 'Excluir contagem', confirmText: 'Excluir', danger: true }
+        );
+        if (!ok) return;
+        try {
+            const res = await fetch(`/api/contagens/${encodeURIComponent(numero)}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.error);
+            if (window.MF && MF.toast) MF.toast('Contagem excluída'); else MF.alert('Contagem excluída', 'success');
+            carregar();
+        } catch (err) { MF.alert('Erro ao excluir: ' + err.message); }
+    }
+
+    function esc(s) {
+        if (s === null || s === undefined) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>
