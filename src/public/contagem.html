@@ -612,9 +612,11 @@
     let prodById = {};       // { id: produto }
     let editandoNumero = null; // se setado, salvar faz PUT (edição)
 
-    // Categorias que contam em caixa de 400 (4×100) — o resto usa CX (fator) + UN.
-    const CATS_CX400 = ['MFSSS'];
-    const usaCX400 = cat => CATS_CX400.includes(cat);
+    // Micro Mine conta em caixa de 400 (4×100) — o resto usa CX (fator) + UN.
+    // Detecta pelo PREFIXO do código (MFSSS-xxx), pois o nome da categoria varia.
+    const PREFIXOS_CX400 = ['MFSSS'];
+    const codUsaCX400 = cod => PREFIXOS_CX400.some(pre => String(cod || '').toUpperCase().startsWith(pre));
+    const usaCX400 = cat => (catalogo[cat] || []).some(p => codUsaCX400(p.codigo));
 
     document.addEventListener('DOMContentLoaded', async () => {
         // Data padrão = hoje

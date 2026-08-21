@@ -265,9 +265,10 @@
     let todosProdutos = [];
     let categorias = [];
 
-    // Categorias que exibem em caixa de 400 (4×100). O resto usa CX (fator) + Total UN.
-    const CATS_CX400 = ['MFSSS'];
-    const usaCX400 = cat => CATS_CX400.includes(cat);
+    // Micro Mine exibe em caixa de 400 (4×100). O resto usa CX (fator) + Total UN.
+    // Detecta pelo PREFIXO do código (MFSSS-xxx), pois o nome da categoria varia.
+    const PREFIXOS_CX400 = ['MFSSS'];
+    const codUsaCX400 = cod => PREFIXOS_CX400.some(pre => String(cod || '').toUpperCase().startsWith(pre));
 
     document.addEventListener('DOMContentLoaded', () => { carregar(); carregarContagens(); });
 
@@ -437,7 +438,7 @@
         let html = '';
         Object.keys(agrupado).sort().forEach(cat => {
             const itens = agrupado[cat];
-            const cx400Mode = usaCX400(cat);
+            const cx400Mode = itens.some(p => codUsaCX400(p.codigo));
             const negCat = itens.filter(p => p.saldo_negativo).length;
             const negLabel = negCat > 0
                 ? `<span class="cat-alert">▲ ${negCat} negativo${negCat > 1 ? 's' : ''}</span>`
