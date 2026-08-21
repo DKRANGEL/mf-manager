@@ -173,6 +173,14 @@
 
         .empty-msg { text-align: center; padding: 60px 20px; color: #333; }
         .zero-cell { color: #444; }
+        .cat-titulo {
+            margin: 22px 0 8px; padding: 8px 12px; background: #161618; border: 1px solid #29292e;
+            border-radius: 8px; font-size: 13px; font-weight: 700; color: #e8e8e8;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .cat-titulo .cat-count { font-size: 11px; font-weight: 500; color: #666; }
+        .cat-titulo:first-child { margin-top: 0; }
+        .estoque-table { margin-bottom: 4px; }
 
         /* Mobile */
         @media (max-width: 768px) {
@@ -189,11 +197,10 @@
             .search-box   { min-width: 0; }
             .stats        { margin-left: 0; }
 
-            /* Esconde as colunas de caixas no mobile (mantém Saldo UN) */
-            .estoque-table thead th:nth-child(3),
-            .estoque-table tbody td:nth-child(3),
-            .estoque-table thead th:nth-child(4),
-            .estoque-table tbody td:nth-child(4) { display: none; }
+            /* Mobile: esconde as colunas de caixa, mantém Total UN */
+            .tab-cx400 thead th:nth-child(3), .tab-cx400 tbody td:nth-child(3),
+            .tab-cx400 thead th:nth-child(4), .tab-cx400 tbody td:nth-child(4) { display: none; }
+            .tab-fator thead th:nth-child(3), .tab-fator tbody td:nth-child(3) { display: none; }
         }
     </style>
 </head>
@@ -257,6 +264,10 @@
 <script>
     let todosProdutos = [];
     let categorias = [];
+
+    // Categorias que exibem em caixa de 400 (4×100). O resto usa CX (fator) + Total UN.
+    const CATS_CX400 = ['MFSSS'];
+    const usaCX400 = cat => CATS_CX400.includes(cat);
 
     document.addEventListener('DOMContentLoaded', () => { carregar(); carregarContagens(); });
 
@@ -416,54 +427,63 @@
             agrupado[cat].push(p);
         });
 
-        let html = `<table class="estoque-table"><thead><tr>
-            <th style="width:120px;">Código</th>
-            <th>Nome</th>
-            <th style="width:80px;text-align:right;" title="Caixas de 400 unidades">CX 400</th>
-            <th style="width:80px;text-align:right;" title="Caixas de 100 unidades (4 = 1 CX 400)">CX 100</th>
-            <th style="width:80px;text-align:right;" title="Unidades soltas (fora de caixa, 0 a 99)">UN soltas</th>
-            <th style="width:100px;text-align:right;">Total UN</th>
-            <th style="width:100px;text-align:center;">Status</th>
-        </tr></thead><tbody>`;
+        const cel = v => v !== 0 ? v : '<span class="zero-cell">0</span>';
+        const badgeDe = un => un < 0
+            ? `<span class="badge badge-neg"><i data-lucide="alert-triangle"></i> Negativo</span>`
+            : un === 0
+            ? `<span class="badge badge-zero">Zerado</span>`
+            : `<span class="badge badge-ok"><i data-lucide="check"></i> OK</span>`;
 
+        let html = '';
         Object.keys(agrupado).sort().forEach(cat => {
             const itens = agrupado[cat];
+            const cx400Mode = usaCX400(cat);
             const negCat = itens.filter(p => p.saldo_negativo).length;
             const negLabel = negCat > 0
                 ? `<span class="cat-alert">▲ ${negCat} negativo${negCat > 1 ? 's' : ''}</span>`
                 : '';
-            html += `<tr class="cat-row">
-                <td colspan="7">${esc(cat)}<span class="cat-count">${itens.length} produtos</span>${negLabel}</td>
-            </tr>`;
+
+            // MFSSS: CX 400 / CX 100 / UN soltas. Resto: só CX (pelo fator).
+            const thNums = cx400Mode
+                ? `<th style="width:80px;text-align:right;" title="Caixas de 400">CX 400</th>
+                   <th style="width:80px;text-align:right;" title="Caixas de 100 (4 = 1 CX 400)">CX 100</th>
+                   <th style="width:80px;text-align:right;" title="Unidades soltas (0 a 99)">UN soltas</th>`
+                : `<th style="width:90px;text-align:right;" title="Caixas (pelo fator do produto)">CX</th>`;
+
+            html += `<div class="cat-titulo">${esc(cat)}<span class="cat-count">${itens.length} produtos</span>${negLabel}</div>`;
+            html += `<table class="estoque-table ${cx400Mode ? 'tab-cx400' : 'tab-fator'}"><thead><tr>
+                <th style="width:120px;">Código</th>
+                <th>Nome</th>
+                ${thNums}
+                <th style="width:100px;text-align:right;">Total UN</th>
+                <th style="width:100px;text-align:center;">Status</th>
+            </tr></thead><tbody>`;
 
             itens.forEach(p => {
                 const rowClass = p.saldo_negativo ? 'row-neg' : '';
                 const un = p.saldo_un || 0;
                 const saldoClass = un < 0 ? 'negativo' : un === 0 ? 'zerado' : 'positivo';
-                // CX 400 = un/400; CX 100 = resto/100 (0-3, pois 4×100 = 1×400); soltas = resto
-                const cx400 = Math.trunc(un / 400);
-                const cx100 = Math.trunc((un - cx400 * 400) / 100);
-                const soltas = un - cx400 * 400 - cx100 * 100;
-                const cel = v => v !== 0 ? v : '<span class="zero-cell">0</span>';
-                const badge = un < 0
-                    ? `<span class="badge badge-neg"><i data-lucide="alert-triangle"></i> Negativo</span>`
-                    : un === 0
-                    ? `<span class="badge badge-zero">Zerado</span>`
-                    : `<span class="badge badge-ok"><i data-lucide="check"></i> OK</span>`;
-
+                let numCells;
+                if (cx400Mode) {
+                    const cx400 = Math.trunc(un / 400);
+                    const cx100 = Math.trunc((un - cx400 * 400) / 100);
+                    const soltas = un - cx400 * 400 - cx100 * 100;
+                    numCells = `<td class="td-num">${cel(cx400)}</td><td class="td-num">${cel(cx100)}</td><td class="td-num">${cel(soltas)}</td>`;
+                } else {
+                    const f = p.fator || 1;
+                    numCells = `<td class="td-num">${cel(Math.trunc(un / f))}</td>`;
+                }
                 html += `<tr class="${rowClass}">
                     <td class="td-sku">${esc(p.codigo)}</td>
                     <td class="td-nome">${esc(p.nome)}</td>
-                    <td class="td-num">${cel(cx400)}</td>
-                    <td class="td-num">${cel(cx100)}</td>
-                    <td class="td-num">${cel(soltas)}</td>
+                    ${numCells}
                     <td class="td-num ${saldoClass}">${un}</td>
-                    <td class="td-status">${badge}</td>
+                    <td class="td-status">${badgeDe(un)}</td>
                 </tr>`;
             });
+            html += '</tbody></table>';
         });
 
-        html += '</tbody></table>';
         container.innerHTML = html;
         lucide.createIcons();
     }

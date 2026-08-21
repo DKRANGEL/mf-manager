@@ -606,9 +606,15 @@
     // Estado
     let catalogo = {};       // { categoria: [produto, ...] }
     let toggles = {};        // { categoria: bool }
-    let contagens = {};      // { id_produto: { cx: num, un: num } }
+    let contagens = {};      // { id: {cx400,cx100,soltas} } (MFSSS) ou { id: {cx,un} } (resto)
     let fatores = {};        // { codigo: fator }
+    let catById = {};        // { id: categoria }
+    let prodById = {};       // { id: produto }
     let editandoNumero = null; // se setado, salvar faz PUT (edição)
+
+    // Categorias que contam em caixa de 400 (4×100) — o resto usa CX (fator) + UN.
+    const CATS_CX400 = ['MFSSS'];
+    const usaCX400 = cat => CATS_CX400.includes(cat);
 
     document.addEventListener('DOMContentLoaded', async () => {
         // Data padrão = hoje
@@ -645,12 +651,16 @@
                     if (!m) return; // produto saiu do catálogo — ignora
                     id = m.id; cat = m.cat;
                 }
-                // Deriva CX 400 / CX 100 / soltas do total (robusto p/ contagens antigas)
+                // Deriva a representação do total (robusto p/ contagens antigas)
                 const total = item.total_un || 0;
-                const cx400 = Math.trunc(total / 400);
-                const cx100 = Math.trunc((total - cx400 * 400) / 100);
-                const soltas = total - cx400 * 400 - cx100 * 100;
-                contagens[id] = { cx400, cx100, soltas };
+                if (usaCX400(cat)) {
+                    const cx400 = Math.trunc(total / 400);
+                    const cx100 = Math.trunc((total - cx400 * 400) / 100);
+                    contagens[id] = { cx400, cx100, soltas: total - cx400 * 400 - cx100 * 100 };
+                } else {
+                    const f = (prodById[id] && prodById[id].fator) || item.fator || 1;
+                    contagens[id] = { cx: Math.trunc(total / f), un: total % f };
+                }
                 if (catalogo[cat]) toggles[cat] = true;
             });
 
@@ -659,14 +669,12 @@
             // Escreve os valores nos inputs e recalcula totais
             Object.keys(catalogo).forEach(cat => {
                 catalogo[cat].forEach(p => {
+                    if (totalDoItem(p.id) <= 0) return;
                     const v = contagens[p.id];
-                    if (v && totalDoItem(v) > 0) {
-                        const set = (pref, val) => { const el = document.getElementById(`${pref}-${p.id}`); if (el) el.value = val; };
-                        set('cx400', v.cx400);
-                        set('cx100', v.cx100);
-                        set('soltas', v.soltas);
-                        atualizarContagem(p.id);
-                    }
+                    const set = (pref, val) => { const el = document.getElementById(`${pref}-${p.id}`); if (el && val !== undefined) el.value = val; };
+                    if (usaCX400(cat)) { set('cx400', v.cx400); set('cx100', v.cx100); set('soltas', v.soltas); }
+                    else { set('cx', v.cx); set('un', v.un); }
+                    atualizarContagem(p.id);
                 });
             });
             atualizarResumoGeral();
@@ -693,7 +701,9 @@
             Object.keys(catalogo).forEach(cat => {
                 toggles[cat] = false; // começa desativado — usuário ativa o que quer contar
                 catalogo[cat].forEach(p => {
-                    contagens[p.id] = {cx400: 0, cx100: 0, soltas: 0};
+                    catById[p.id] = cat;
+                    prodById[p.id] = p;
+                    contagens[p.id] = usaCX400(cat) ? {cx400: 0, cx100: 0, soltas: 0} : {cx: 0, un: 0};
                     fatores[p.codigo] = p.fator || 1;
                 });
             });
@@ -727,6 +737,19 @@
             const label = CATEGORIAS_LABELS[cat] || cat;
             const itens = catalogo[cat];
             const ativo = toggles[cat];
+            const cx400Mode = usaCX400(cat);
+
+            // Colunas do cabeçalho e inputs mudam conforme o esquema da categoria
+            const thNums = cx400Mode
+                ? `<th class="num" style="width:80px;">CX 400</th><th class="num" style="width:80px;">CX 100</th><th class="num" style="width:80px;">UN soltas</th>`
+                : `<th class="num" style="width:90px;">CX inteiras</th><th class="num" style="width:90px;">UN avulsas</th>`;
+            const inputsDe = p => cx400Mode
+                ? `<td class="td-num"><input type="number" class="input-contagem" min="0" value="0" id="cx400-${p.id}" oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})"></td>
+                   <td class="td-num"><input type="number" class="input-contagem" min="0" value="0" id="cx100-${p.id}" oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})"></td>
+                   <td class="td-num"><input type="number" class="input-contagem" min="0" value="0" id="soltas-${p.id}" oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})"></td>`
+                : `<td class="td-num"><input type="number" class="input-contagem" min="0" value="0" id="cx-${p.id}" oninput="atualizarContagem(${p.id})" onchange="atualizarContagem(${p.id})"></td>
+                   <td class="td-num"><input type="number" class="input-contagem" min="0" value="0" id="un-${p.id}" oninput="atualizarContagem(${p.id})" onchange="atualizarContagem(${p.id})"></td>`;
+            const footerCXlabel = cx400Mode ? 'CX 400' : 'CX';
 
             return `<div class="categoria-bloco ${ativo ? '' : 'desativado'}" id="bloco-${cat}">
             <div class="categoria-header" onclick="toggleCategoria('${cat}')">
@@ -748,9 +771,7 @@
                         <tr>
                             <th style="width:100px;">CÓDIGO</th>
                             <th>NOME</th>
-                            <th class="num" style="width:80px;">CX 400</th>
-                            <th class="num" style="width:80px;">CX 100</th>
-                            <th class="num" style="width:80px;">UN soltas</th>
+                            ${thNums}
                             <th class="num" style="width:100px;">TOTAL UN</th>
                         </tr>
                     </thead>
@@ -759,27 +780,13 @@
                         <tr>
                             <td class="td-cod">${esc(p.codigo)}</td>
                             <td class="td-nome">${esc(p.nome)}</td>
-                            <td class="td-num">
-                                <input type="number" class="input-contagem" min="0" value="0"
-                                    id="cx400-${p.id}"
-                                    oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})">
-                            </td>
-                            <td class="td-num">
-                                <input type="number" class="input-contagem" min="0" value="0"
-                                    id="cx100-${p.id}"
-                                    oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})">
-                            </td>
-                            <td class="td-num">
-                                <input type="number" class="input-contagem" min="0" value="0"
-                                    id="soltas-${p.id}"
-                                    oninput="atualizarContagem(${p.id})" onchange="normalizarContagem(${p.id})">
-                            </td>
+                            ${inputsDe(p)}
                             <td class="td-total-un" id="total-${p.id}">0</td>
                         </tr>`).join('')}
                     </tbody>
                 </table>
                 <div class="cat-footer" id="footer-${cat}">
-                    <div>CX 400: <span id="cat-cx-${cat}">0</span></div>
+                    <div>${footerCXlabel}: <span id="cat-cx-${cat}">0</span></div>
                     <div>UN total: <span id="cat-un-${cat}">0</span></div>
                     <div>Itens preenchidos: <span id="cat-preench-${cat}">0</span></div>
                 </div>
@@ -811,18 +818,30 @@
         atualizarResumoGeral();
     }
 
-    function totalDoItem(c) {
-        c = c || {};
-        return (c.cx400 || 0) * 400 + (c.cx100 || 0) * 100 + (c.soltas || 0);
+    // Total em unidades do item, conforme o esquema da categoria
+    function totalDoItem(id) {
+        const c = contagens[id] || {};
+        if (usaCX400(catById[id])) return (c.cx400 || 0) * 400 + (c.cx100 || 0) * 100 + (c.soltas || 0);
+        const f = (prodById[id] && prodById[id].fator) || 1;
+        return (c.cx || 0) * f + (c.un || 0);
+    }
+
+    function itemPreenchido(id) {
+        const c = contagens[id] || {};
+        return usaCX400(catById[id])
+            ? (c.cx400 || 0) > 0 || (c.cx100 || 0) > 0 || (c.soltas || 0) > 0
+            : (c.cx || 0) > 0 || (c.un || 0) > 0;
     }
 
     function atualizarContagem(id) {
-        const cx400 = parseInt(document.getElementById(`cx400-${id}`)?.value) || 0;
-        const cx100 = parseInt(document.getElementById(`cx100-${id}`)?.value) || 0;
-        const soltas = parseInt(document.getElementById(`soltas-${id}`)?.value) || 0;
-        contagens[id] = {cx400, cx100, soltas};
+        const int = elId => parseInt(document.getElementById(elId)?.value) || 0;
+        if (usaCX400(catById[id])) {
+            contagens[id] = { cx400: int(`cx400-${id}`), cx100: int(`cx100-${id}`), soltas: int(`soltas-${id}`) };
+        } else {
+            contagens[id] = { cx: int(`cx-${id}`), un: int(`un-${id}`) };
+        }
 
-        const total = totalDoItem(contagens[id]);
+        const total = totalDoItem(id);
         const tdTotal = document.getElementById(`total-${id}`);
         if (tdTotal) {
             tdTotal.textContent = total.toLocaleString('pt-BR');
@@ -833,11 +852,12 @@
         atualizarResumoGeral();
     }
 
-    // Ao sair do campo, normaliza: 4 CX 100 viram 1 CX 400, 100 soltas viram
-    // 1 CX 100 — mantendo o total exato. Ex.: 7 CX 100 → 1 CX 400 + 3 CX 100.
+    // Só para categorias CX 400: ao sair do campo, 4 CX 100 viram 1 CX 400
+    // (cascateia; soltas ≥100 viram CX 100), mantendo o total exato.
     function normalizarContagem(id) {
         atualizarContagem(id);
-        const total = totalDoItem(contagens[id]);
+        if (!usaCX400(catById[id])) return;
+        const total = totalDoItem(id);
         const cx400 = Math.trunc(total / 400);
         const cx100 = Math.trunc((total - cx400 * 400) / 100);
         const soltas = total - cx400 * 400 - cx100 * 100;
@@ -857,10 +877,10 @@
 
             let totalCX = 0, totalUN = 0, preench = 0;
             itens.forEach(p => {
-                const c = contagens[p.id] || {cx400: 0, cx100: 0, soltas: 0};
-                totalCX += (c.cx400 || 0);
-                totalUN += totalDoItem(c);
-                if ((c.cx400 || 0) > 0 || (c.cx100 || 0) > 0 || (c.soltas || 0) > 0) preench++;
+                const c = contagens[p.id] || {};
+                totalCX += usaCX400(cat) ? (c.cx400 || 0) : (c.cx || 0);
+                totalUN += totalDoItem(p.id);
+                if (itemPreenchido(p.id)) preench++;
             });
 
             const elCX = document.getElementById(`cat-cx-${cat}`);
@@ -883,10 +903,10 @@
             if (!toggles[cat]) return;
             catAtivas++;
             catalogo[cat].forEach(p => {
-                const c = contagens[p.id] || {cx400: 0, cx100: 0, soltas: 0};
-                if ((c.cx400 || 0) > 0 || (c.cx100 || 0) > 0 || (c.soltas || 0) > 0) itensContados++;
-                totalCX += (c.cx400 || 0);
-                totalUN += totalDoItem(c);
+                const c = contagens[p.id] || {};
+                if (itemPreenchido(p.id)) itensContados++;
+                totalCX += usaCX400(cat) ? (c.cx400 || 0) : (c.cx || 0);
+                totalUN += totalDoItem(p.id);
             });
         });
 
@@ -914,19 +934,14 @@
 
         Object.keys(catalogo).forEach(cat => {
             catalogo[cat].forEach(p => {
-                const c = contagens[p.id] || {cx400: 0, cx100: 0, soltas: 0};
-                const total = totalDoItem(c);
-                if (total > 0) {
-                    payload.itens.push({
-                        id: p.id,
-                        codigo: p.codigo,
-                        nome: p.nome,
-                        categoria: cat,
-                        cx400: c.cx400 || 0,
-                        cx100: c.cx100 || 0,
-                        un_soltas: c.soltas || 0,
-                        total_un: total
-                    });
+                const c = contagens[p.id] || {};
+                const total = totalDoItem(p.id);
+                if (total <= 0) return;
+                const base = { id: p.id, codigo: p.codigo, nome: p.nome, categoria: cat, total_un: total };
+                if (usaCX400(cat)) {
+                    payload.itens.push({ ...base, cx400: c.cx400 || 0, cx100: c.cx100 || 0, un_soltas: c.soltas || 0 });
+                } else {
+                    payload.itens.push({ ...base, fator: p.fator || 1, cx: c.cx || 0, un_avulsas: c.un || 0 });
                 }
             });
         });
@@ -1023,25 +1038,34 @@
         </tr>
     </table>`;
 
-        // Tabela por categoria
+        // Tabela por categoria (colunas conforme o esquema da categoria)
         cats.forEach(cat => {
             const label = CATEGORIAS_LABELS[cat] || cat;
-            const itens = catalogo[cat].filter(p => totalDoItem(contagens[p.id]) > 0);
+            const itens = catalogo[cat].filter(p => totalDoItem(p.id) > 0);
             if (itens.length === 0) return; // pula categoria sem nada contado
+            const cx400Mode = usaCX400(cat);
 
             let catCX = 0, catUN = 0;
             itens.forEach(p => {
-                const c = contagens[p.id] || {cx400: 0, cx100: 0, soltas: 0};
-                catCX += (c.cx400 || 0);
-                catUN += totalDoItem(c);
+                const c = contagens[p.id] || {};
+                catCX += cx400Mode ? (c.cx400 || 0) : (c.cx || 0);
+                catUN += totalDoItem(p.id);
             });
+
+            const thNums = cx400Mode
+                ? `<th style="text-align:center;width:60px;">CX 400</th><th style="text-align:center;width:60px;">CX 100</th><th style="text-align:center;width:70px;">UN SOLTAS</th>`
+                : `<th style="text-align:center;width:70px;">CX</th><th style="text-align:center;width:70px;">UN AVULS.</th>`;
+            const tdsNums = (c) => cx400Mode
+                ? `<td style="text-align:center;font-weight:700;">${c.cx400 || '-'}</td><td style="text-align:center;">${c.cx100 || '-'}</td><td style="text-align:center;">${c.soltas || '-'}</td>`
+                : `<td style="text-align:center;font-weight:700;">${c.cx || '-'}</td><td style="text-align:center;">${c.un || '-'}</td>`;
+            const cxLabel = cx400Mode ? 'CX 400' : 'CX';
 
             html += `
         <table class="client-data-table-title" style="margin-top:20px;margin-bottom:0;">
             <tr>
                 <td class="bg-black-title" style="text-align:left;padding:8px 14px;">${esc(label.toUpperCase())}</td>
                 <td class="data-cell" style="text-align:right;font-size:11px;color:#888;">
-                    ${itens.length} itens &nbsp;·&nbsp; ${catCX} CX 400 &nbsp;·&nbsp; ${catUN.toLocaleString('pt-BR')} UN
+                    ${itens.length} itens &nbsp;·&nbsp; ${catCX} ${cxLabel} &nbsp;·&nbsp; ${catUN.toLocaleString('pt-BR')} UN
                 </td>
             </tr>
         </table>
@@ -1051,23 +1075,19 @@
                     <th class="c-item">Nº</th>
                     <th class="c-sku">CÓDIGO</th>
                     <th class="c-desc">DESCRIÇÃO</th>
-                    <th style="text-align:center;width:60px;">CX 400</th>
-                    <th style="text-align:center;width:60px;">CX 100</th>
-                    <th style="text-align:center;width:70px;">UN SOLTAS</th>
+                    ${thNums}
                     <th style="text-align:center;width:90px;">TOTAL UN</th>
                 </tr>
             </thead>
             <tbody>
                 ${itens.map((p, i) => {
-                const c = contagens[p.id] || {cx400: 0, cx100: 0, soltas: 0};
-                const total = totalDoItem(c);
+                const c = contagens[p.id] || {};
+                const total = totalDoItem(p.id);
                 return `<tr>
                         <td class="c-item">${i + 1}</td>
                         <td class="c-sku">${esc(p.codigo)}</td>
                         <td class="c-desc">${esc(p.nome)}</td>
-                        <td style="text-align:center;font-weight:700;">${c.cx400 || '-'}</td>
-                        <td style="text-align:center;">${c.cx100 || '-'}</td>
-                        <td style="text-align:center;">${c.soltas || '-'}</td>
+                        ${tdsNums(c)}
                         <td style="text-align:center;font-weight:700;">${total.toLocaleString('pt-BR')}</td>
                     </tr>`;
             }).join('')}
