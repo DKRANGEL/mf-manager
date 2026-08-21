@@ -72,6 +72,7 @@ router.post('/item', (req, res) => {
             categoria: categoriaDoCodigo(codigo),
             preco: parseFloat(req.body.preco) || 0,
             unidade: (req.body.unidade || 'UN').trim(),
+            fator: Math.max(1, parseInt(req.body.fator) || 1),
             observacoes: (req.body.observacoes || '').trim(),
             video_id: (req.body.video_id || '').trim(),
             data_cadastro: new Date().toISOString().split('T')[0]
@@ -108,6 +109,7 @@ router.put('/item/:id', (req, res) => {
             categoria: categoriaDoCodigo(novoCodigo),
             preco: req.body.preco !== undefined ? (parseFloat(req.body.preco) || 0) : atual.preco,
             unidade: req.body.unidade !== undefined ? req.body.unidade.trim() : atual.unidade,
+            fator: req.body.fator !== undefined ? Math.max(1, parseInt(req.body.fator) || 1) : (atual.fator || 1),
             observacoes: req.body.observacoes !== undefined ? req.body.observacoes.trim() : atual.observacoes,
             video_id: req.body.video_id !== undefined ? req.body.video_id.trim() : (atual.video_id || '')
         };

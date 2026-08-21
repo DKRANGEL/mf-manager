@@ -454,6 +454,11 @@
                     <label>Unidade</label>
                     <input type="text" class="modal-input" id="modalUnidade" value="UN">
                 </div>
+                <div class="modal-field">
+                    <label>Itens por caixa</label>
+                    <input type="number" class="modal-input" id="modalFator" value="1" min="1" step="1"
+                           title="Quantas unidades/galões vêm em cada caixa (ex.: Silver Jet = 32, Isopar = 4)">
+                </div>
             </div>
             <div class="modal-field">
                 <label>Observações</label>
@@ -587,7 +592,7 @@
                 <td class="td-sku">${esc(p.codigo)}</td>
                 <td class="td-nome">${esc(p.nome)}</td>
                 <td class="td-preco">${fmtPreco(p.preco)}</td>
-                <td class="td-un">${esc(p.unidade || 'UN')}</td>
+                <td class="td-un">${esc(p.unidade || 'UN')}${(p.fator && p.fator > 1) ? ` · ${p.fator}/cx` : ''}</td>
                 <td class="td-obs" title="${esc(p.observacoes || '')}">${esc(p.observacoes || '-')}</td>
                 <td class="td-actions">
                     <div class="td-actions-inner">
@@ -626,6 +631,7 @@
         document.getElementById('modalNome').value = '';
         document.getElementById('modalPreco').value = '0';
         document.getElementById('modalUnidade').value = 'UN';
+        document.getElementById('modalFator').value = '1';
         document.getElementById('modalObs').value = '';
         document.getElementById('modalNovo').classList.add('active');
         document.getElementById('modalCodigo').focus();
@@ -640,6 +646,7 @@
         document.getElementById('modalNome').value = p.nome || '';
         document.getElementById('modalPreco').value = p.preco || 0;
         document.getElementById('modalUnidade').value = p.unidade || 'UN';
+        document.getElementById('modalFator').value = p.fator || 1;
         document.getElementById('modalObs').value = p.observacoes || '';
         document.getElementById('modalNovo').classList.add('active');
         document.getElementById('modalNome').focus();
@@ -656,6 +663,7 @@
             nome: document.getElementById('modalNome').value.trim(),
             preco: document.getElementById('modalPreco').value,
             unidade: document.getElementById('modalUnidade').value.trim() || 'UN',
+            fator: Math.max(1, parseInt(document.getElementById('modalFator').value) || 1),
             observacoes: document.getElementById('modalObs').value.trim()
         };
         if (!dados.nome) {
