@@ -421,7 +421,8 @@
             <th>Nome</th>
             <th style="width:80px;text-align:right;" title="Caixas de 400 unidades">CX 400</th>
             <th style="width:80px;text-align:right;" title="Caixas de 100 unidades (4 = 1 CX 400)">CX 100</th>
-            <th style="width:100px;text-align:right;">Saldo UN</th>
+            <th style="width:80px;text-align:right;" title="Unidades soltas (fora de caixa, 0 a 99)">UN soltas</th>
+            <th style="width:100px;text-align:right;">Total UN</th>
             <th style="width:100px;text-align:center;">Status</th>
         </tr></thead><tbody>`;
 
@@ -432,16 +433,17 @@
                 ? `<span class="cat-alert">▲ ${negCat} negativo${negCat > 1 ? 's' : ''}</span>`
                 : '';
             html += `<tr class="cat-row">
-                <td colspan="6">${esc(cat)}<span class="cat-count">${itens.length} produtos</span>${negLabel}</td>
+                <td colspan="7">${esc(cat)}<span class="cat-count">${itens.length} produtos</span>${negLabel}</td>
             </tr>`;
 
             itens.forEach(p => {
                 const rowClass = p.saldo_negativo ? 'row-neg' : '';
                 const un = p.saldo_un || 0;
                 const saldoClass = un < 0 ? 'negativo' : un === 0 ? 'zerado' : 'positivo';
-                // CX 400 = un/400; CX 100 = resto/100 (0-3, pois 4×100 = 1×400)
+                // CX 400 = un/400; CX 100 = resto/100 (0-3, pois 4×100 = 1×400); soltas = resto
                 const cx400 = Math.trunc(un / 400);
                 const cx100 = Math.trunc((un - cx400 * 400) / 100);
+                const soltas = un - cx400 * 400 - cx100 * 100;
                 const cel = v => v !== 0 ? v : '<span class="zero-cell">0</span>';
                 const badge = un < 0
                     ? `<span class="badge badge-neg"><i data-lucide="alert-triangle"></i> Negativo</span>`
@@ -454,6 +456,7 @@
                     <td class="td-nome">${esc(p.nome)}</td>
                     <td class="td-num">${cel(cx400)}</td>
                     <td class="td-num">${cel(cx100)}</td>
+                    <td class="td-num">${cel(soltas)}</td>
                     <td class="td-num ${saldoClass}">${un}</td>
                     <td class="td-status">${badge}</td>
                 </tr>`;
