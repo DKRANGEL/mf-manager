@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar contagens — MF Manager</title>
+    <link rel="icon" type="image/jpeg" href="/public/MagicFireworksLogo.jpeg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/app.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="/public/js/alerts.js?v=20260729"></script>
+    <style>
+        .page-container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: #e8e8e8; }
+        .brand-sub { font-size: 12px; color: #666; }
+        .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+            background: #161618; border: 1px solid #29292e; color: #ccc; border-radius: 8px;
+            padding: 9px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font);
+        }
+        .btn-back:hover { border-color: #444; color: #fff; }
+        .btn-back.primary { background: #fff; color: #000; border-color: #fff; }
+        .btn-back.primary:hover { background: #e0e0e0; }
+        .btn-back i { width: 16px; height: 16px; }
+
+        .selector {
+            background: #111113; border: 1px solid #29292e; border-radius: 14px; padding: 18px;
+            display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 22px;
+        }
+        .sel-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+        .sel-field label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+        .sel-field select {
+            background: #0c0c0e; border: 1px solid #33333a; color: #eee; border-radius: 8px;
+            padding: 10px 12px; font-size: 13px; font-family: var(--font); cursor: pointer;
+        }
+        .sel-arrow { color: #555; padding-bottom: 10px; }
+        .sel-arrow i { width: 18px; height: 18px; }
+        .btn-comparar {
+            display: inline-flex; align-items: center; gap: 6px; background: #fbbf24; color: #1a1a1a;
+            border: 1px solid #fbbf24; border-radius: 8px; padding: 10px 18px; font-size: 13px;
+            font-weight: 700; cursor: pointer; font-family: var(--font);
+        }
+        .btn-comparar:hover { background: #f0b420; }
+        .btn-comparar i { width: 16px; height: 16px; }
+
+        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .kpi { background: #111113; border: 1px solid #29292e; border-radius: 12px; padding: 14px 16px; }
+        .kpi .v { font-size: 22px; font-weight: 700; color: #fff; font-family: var(--mono); }
+        .kpi .l { font-size: 11px; color: #888; margin-top: 2px; }
+
+        .sec-title { font-size: 15px; font-weight: 700; color: #e8e8e8; margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
+        .sec-title i { width: 17px; height: 17px; color: #fbbf24; }
+        .sec-hint { font-size: 12px; color: #777; font-weight: 400; margin-left: 4px; }
+
+        .tbl-wrap { background: #111113; border: 1px solid #29292e; border-radius: 12px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px 12px; text-align: left; white-space: nowrap; }
+        th { background: #161618; color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 700; position: sticky; top: 0; }
+        td { border-top: 1px solid #1f1f23; color: #ddd; }
+        td.num, th.num { text-align: right; font-family: var(--mono); }
+        .code { font-family: var(--mono); color: #aaa; font-size: 12px; }
+        .pos { color: #ff8585; }
+        .neg { color: #6bd98a; }
+        .zero { color: #666; }
+        .badge-st { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: #26262b; color: #aaa; }
+        tr.diverge td { background: rgba(251,191,36,.05); }
+
+        .grupos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .grupo-card { background: #111113; border: 1px solid #29292e; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .grupo-nome { font-size: 15px; font-weight: 700; color: #fff; }
+        .grupo-rows { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+        .grupo-rows > div { display: flex; justify-content: space-between; align-items: baseline; }
+        .grupo-rows span { color: #888; }
+        .grupo-rows b { color: #ddd; font-family: var(--mono); font-weight: 600; }
+        .grupo-div { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #26262b; }
+        .grupo-div span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #888; }
+        .grupo-div strong { font-family: var(--mono); font-size: 20px; }
+        .grupo-div.pos strong { color: #ff8585; }
+        .grupo-div.neg strong { color: #6bd98a; }
+        .grupo-div.zero strong { color: #6bd98a; }
+        tr.grp-row td { background: #17171a; color: #fbbf24; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+        .empty-msg { text-align: center; color: #555; padding: 50px 20px; font-size: 14px; }
+        .ped-link { color: #60a5fa; text-decoration: none; font-family: var(--mono); font-size: 12px; }
+        .ped-link:hover { text-decoration: underline; }
+        @media (max-width: 768px) {
+            .selector { flex-direction: column; align-items: stretch; }
+            .sel-arrow { display: none; }
+            .btn-comparar { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1>Comparar contagens</h1>
+            <span class="brand-sub">MF Manager — Magic Fireworks</span>
+        </div>
+        <div class="header-actions">
+            <a href="/contagens" class="btn-back"><i data-lucide="list"></i> Contagens</a>
+            <a href="/estoque" class="btn-back"><i data-lucide="boxes"></i> Estoque</a>
+            <a href="/" class="btn-back"><i data-lucide="arrow-left"></i> Início</a>
+        </div>
+    </div>
+
+    <div class="selector">
+        <div class="sel-field">
+            <label>Contagem anterior (base)</label>
+            <select id="selDe"></select>
+        </div>
+        <span class="sel-arrow"><i data-lucide="arrow-right"></i></span>
+        <div class="sel-field">
+            <label>Contagem mais recente</label>
+            <select id="selAte"></select>
+        </div>
+        <button class="btn-comparar" onclick="comparar()"><i data-lucide="git-compare"></i> Comparar</button>
+    </div>
+
+    <div id="resultado"></div>
+</div>
+
+<script>
+    let CONTAGENS = [];
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    async function init() {
+        try {
+            const json = await fetch('/api/contagens').then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            CONTAGENS = (json.data || []).slice().sort((a, b) =>
+                (b.data || '').localeCompare(a.data || '')); // mais recente primeiro
+
+            if (CONTAGENS.length < 2) {
+                document.getElementById('resultado').innerHTML =
+                    `<div class="empty-msg">É preciso ter pelo menos duas contagens para comparar.<br><br>
+                    <a href="/contagem" class="btn-back primary" style="display:inline-flex;"><i data-lucide="plus"></i> Nova contagem</a></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            const opts = CONTAGENS.map(c => {
+                const dt = c.data ? new Date(c.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+                return `<option value="${esc(c.numero)}">${esc(c.numero)} — ${dt}</option>`;
+            }).join('');
+            const selDe = document.getElementById('selDe');
+            const selAte = document.getElementById('selAte');
+            selDe.innerHTML = opts;
+            selAte.innerHTML = opts;
+            // Default: ate = mais recente, de = a anterior
+            selAte.value = CONTAGENS[0].numero;
+            selDe.value = CONTAGENS[1].numero;
+            lucide.createIcons();
+            comparar();
+        } catch (err) {
+            document.getElementById('resultado').innerHTML =
+                `<div class="empty-msg">Erro ao carregar contagens: ${esc(err.message)}</div>`;
+        }
+    }
+
+    async function comparar() {
+        const de = document.getElementById('selDe').value;
+        const ate = document.getElementById('selAte').value;
+        const box = document.getElementById('resultado');
+        if (de === ate) { box.innerHTML = `<div class="empty-msg">Escolha duas contagens diferentes.</div>`; return; }
+        box.innerHTML = `<div class="empty-msg">Comparando...</div>`;
+        try {
+            const json = await fetch(`/api/contagens/comparar?de=${encodeURIComponent(de)}&ate=${encodeURIComponent(ate)}`)
+                .then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            render(json);
+        } catch (err) {
+            box.innerHTML = `<div class="empty-msg">Erro: ${esc(err.message)}</div>`;
+        }
+    }
+
+    function render(d) {
+        const fmt = n => (n === null || n === undefined) ? '—' : Number(n).toLocaleString('pt-BR');
+        const sgn = n => (n === null || n === undefined) ? '—' : (n > 0 ? '+' : '') + Number(n).toLocaleString('pt-BR');
+        const dtIni = d.periodo.inicio ? new Date(d.periodo.inicio + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+        const dtFim = d.periodo.fim ? new Date(d.periodo.fim + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+        const kpis = `<div class="kpis">
+            <div class="kpi"><div class="v">${fmt(d.resumo.total_pedidos)}</div><div class="l">pedidos no período</div></div>
+            <div class="kpi"><div class="v">${fmt(d.resumo.total_itens_distintos)}</div><div class="l">produtos distintos</div></div>
+            <div class="kpi"><div class="v">${fmt(d.resumo.total_un_pedidos)}</div><div class="l">unidades em pedidos</div></div>
+            <div class="kpi"><div class="v" style="font-size:14px;line-height:1.5;padding-top:3px;">${dtIni}<br>→ ${dtFim}</div><div class="l">${esc(d.de.numero)} → ${esc(d.ate.numero)}</div></div>
+        </div>`;
+
+        // ── Resumo por grupo (o nível que realmente bate) ──
+        const gruposCards = `<div class="grupos-grid">${(d.grupos || []).map(g => {
+            const dv = g.divergencia;
+            const dvClass = dv > 0 ? 'pos' : (dv < 0 ? 'neg' : 'zero');
+            return `<div class="grupo-card">
+                <div class="grupo-nome">${esc(g.nome)}</div>
+                <div class="grupo-rows">
+                    <div><span>Contagem anterior</span><b>${fmt(g.un_antiga)} un</b></div>
+                    <div><span>Contagem recente</span><b>${fmt(g.un_nova)} un</b></div>
+                    <div><span>Saída física</span><b class="${g.diferenca_fisica > 0 ? 'pos' : (g.diferenca_fisica < 0 ? 'neg' : 'zero')}">${sgn(g.diferenca_fisica)} un</b></div>
+                    <div><span>Explicado por pedidos</span><b>${fmt(g.qtd_pedidos)} un</b></div>
+                </div>
+                <div class="grupo-div ${dvClass}">
+                    <span>Divergência</span>
+                    <strong>${sgn(dv)} un</strong>
+                </div>
+            </div>`;
+        }).join('')}</div>`;
+
+        // ── Pedidos no período ──
+        let pedidosTbl;
+        if (!d.pedidos.length) {
+            pedidosTbl = `<div class="empty-msg" style="padding:30px;">Nenhum pedido emitido nesse período.</div>`;
+        } else {
+            pedidosTbl = `<div class="tbl-wrap"><table>
+                <thead><tr><th>Pedido</th><th>Data</th><th>Cliente</th><th>Status</th><th class="num">Itens</th></tr></thead>
+                <tbody>${d.pedidos.map(p => `<tr>
+                    <td><a class="ped-link" href="/api/pedidos/${encodeURIComponent(p.numero)}/pdf?doc=pedido" target="_blank" rel="noopener">${esc(p.numero)}</a></td>
+                    <td>${p.data_emissao ? new Date(p.data_emissao + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+                    <td>${esc(p.cliente || '—')}</td>
+                    <td><span class="badge-st">${esc(p.status)}</span></td>
+                    <td class="num">${fmt(p.total_itens)}</td>
+                </tr>`).join('')}</tbody>
+            </table></div>`;
+        }
+
+        // ── Reconciliação item a item ──
+        const linha = (i) => {
+            const div = i.divergencia;
+            const divClass = div === null ? 'zero' : (div > 0 ? 'pos' : (div < 0 ? 'neg' : 'zero'));
+            const divergente = div !== null && Math.abs(div) > 0;
+            const difClass = i.diferenca_fisica === null ? 'zero' : (i.diferenca_fisica > 0 ? 'pos' : (i.diferenca_fisica < 0 ? 'neg' : 'zero'));
+            return `<tr class="${divergente ? 'diverge' : ''}">
+                <td><span class="code">${esc(i.codigo)}</span></td>
+                <td>${esc(i.nome)}</td>
+                <td class="num">${fmt(i.un_antiga)}</td>
+                <td class="num">${fmt(i.un_nova)}</td>
+                <td class="num ${difClass}">${i.diferenca_fisica === null ? '—' : (i.diferenca_fisica > 0 ? '+' : '') + fmt(i.diferenca_fisica)}</td>
+                <td class="num">${fmt(i.qtd_pedidos)}</td>
+                <td class="num ${divClass}">${div === null ? '—' : (div > 0 ? '+' : '') + fmt(div)}</td>
+            </tr>`;
+        };
+        let reconTbl;
+        if (!d.itens.length) {
+            reconTbl = `<div class="empty-msg" style="padding:30px;">Nenhuma movimentação detectada nos grupos acompanhados.</div>`;
+        } else {
+            const GN = { micromine: 'Micromine', single12: 'Singleshot 1.2', single12a: 'Singleshot 1.2 Antigo' };
+            let rows = '', lastG = null;
+            for (const i of d.itens) {
+                if (i.grupo !== lastG) { rows += `<tr class="grp-row"><td colspan="7">${esc(GN[i.grupo] || i.grupo)}</td></tr>`; lastG = i.grupo; }
+                rows += linha(i);
+            }
+            reconTbl = `<div class="tbl-wrap"><table>
+                <thead><tr>
+                    <th>Código</th><th>Produto</th>
+                    <th class="num">Cont. anterior</th><th class="num">Cont. recente</th>
+                    <th class="num">Dif. física</th><th class="num">Pedidos</th><th class="num">Divergência</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table></div>`;
+        }
+
+        document.getElementById('resultado').innerHTML = kpis
+            + `<div class="sec-title"><i data-lucide="scale"></i> Resumo por grupo <span class="sec-hint">saída física (contagens) × o que os pedidos explicam</span></div>`
+            + gruposCards
+            + `<div class="sec-title"><i data-lucide="file-text"></i> Pedidos emitidos no período <span class="sec-hint">${dtIni} a ${dtFim} · só pedidos que tocam os grupos</span></div>`
+            + pedidosTbl
+            + `<div class="sec-title"><i data-lucide="list-tree"></i> Detalhe por produto <span class="sec-hint">efeito a efeito dentro de cada grupo</span></div>`
+            + reconTbl
+            + `<div style="font-size:12px;color:#777;margin-top:14px;line-height:1.7;">
+                <strong style="color:#aaa;">Como ler:</strong><br>
+                • A comparação que vale é o <strong style="color:#aaa;">resumo por grupo</strong> — como o efeito exato nem sempre é lançado (usa-se o <span class="code">INS-001</span> genérico), o total do grupo é o que bate.<br>
+                • <span class="pos">Divergência positiva</span> = saiu mais do que os pedidos mostram (brinde/perda/pedido não lançado).<br>
+                • <span class="neg">Divergência negativa</span> = voltou material ou a contagem subiu (devolução/erro de contagem).<br>
+                • No detalhe, o <span class="code">INS-001</span> aparece com pedidos mas sem contagem (ele não é contado fisicamente) — por isso o que fecha é o total do grupo.
+               </div>`;
+        lucide.createIcons();
+    }
+
+    function esc(s) {
+        if (s === null || s === undefined) return '';
+        const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+</script>
+</body>
+</html>

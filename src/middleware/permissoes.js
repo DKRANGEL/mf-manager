@@ -16,6 +16,7 @@ const PAGINAS = {
     '/estoque':      'estoque',
     '/contagem':     'contagem',
     '/contagens':    'contagem',
+    '/comparar':     'contagem',
     '/produtos':     'produtos',
     '/clientes':     'clientes',
     '/equipamentos': 'equipamentos',
