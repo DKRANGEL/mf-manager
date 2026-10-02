@@ -245,7 +245,10 @@ router.get('/comparar', (req, res) => {
             const diferenca_fisica = temAmbas ? (refA.total_un - refB.total_un) : null;
             const qtd_pedidos = porPedido[codigo]?.qtd_un || 0;
             const n_pedidos = porPedido[codigo]?.pedidos.size || 0;
-            const divergencia = temAmbas ? (diferenca_fisica - qtd_pedidos) : null;
+            // divergência = pedidos − saída física.
+            // Negativa  → saiu mais do que os pedidos mostram (perda/brinde/não lançado).
+            // Positiva  → a contagem subiu / sobrou (devolução/entrada/erro de contagem).
+            const divergencia = temAmbas ? (qtd_pedidos - diferenca_fisica) : null;
 
             // Acumula no grupo (totais somam tudo, mesmo item só-contagem ou só-pedido)
             const b = ensureG(grupo);
@@ -275,7 +278,7 @@ router.get('/comparar', (req, res) => {
             return {
                 ...b,
                 diferenca_fisica,
-                divergencia: diferenca_fisica - b.qtd_pedidos,
+                divergencia: b.qtd_pedidos - diferenca_fisica,
             };
         });
 
