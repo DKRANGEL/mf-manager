@@ -24,6 +24,52 @@ function categoriaDoCodigo(codigo) {
     return match || 'Sem categoria';
 }
 
+// ---- Código: identidade imutável ----
+// O código é a chave que liga produto ↔ pedidos, contagens, movimentos, imagens
+// e os QR das etiquetas JÁ IMPRESSAS nas caixas. Por isso ele nasce uma vez e
+// nunca mais muda (o PUT ignora qualquer tentativa de alterá-lo). Para organizar
+// visualmente usa-se o campo `ordem`, que é livre e não quebra nada.
+
+const prefixoDoCodigo = (codigo) => String(codigo || '').split(/[-_]/)[0];
+const numeroDoCodigo = (codigo) => {
+    const parte = String(codigo || '').split(/[-_]/).slice(1).join('-');
+    const n = parseInt(parte, 10);
+    return isNaN(n) ? null : n;
+};
+
+// Prefixo de uma categoria = o mais usado entre os produtos dela.
+// Categoria nova (sem produtos) → null, aí o usuário informa o código na mão.
+function prefixoDaCategoria(db, categoria) {
+    const cat = String(categoria || '').trim();
+    if (!cat) return null;
+    const contagem = {};
+    for (const p of db.produtos) {
+        if ((p.categoria || '') !== cat) continue;
+        const pre = prefixoDoCodigo(p.codigo);
+        if (pre) contagem[pre] = (contagem[pre] || 0) + 1;
+    }
+    const top = Object.entries(contagem).sort((a, b) => b[1] - a[1])[0];
+    return top ? top[0] : null;
+}
+
+// Próximo código da categoria: prefixo + (maior número do prefixo + 1), 3 dígitos.
+// Olha TODOS os produtos do prefixo (não só os da categoria) para nunca colidir.
+function proximoCodigo(db, categoria) {
+    const pre = prefixoDaCategoria(db, categoria);
+    if (!pre) return null;
+    let maior = 0;
+    for (const p of db.produtos) {
+        if (prefixoDoCodigo(p.codigo) !== pre) continue;
+        const n = numeroDoCodigo(p.codigo);
+        if (n !== null && n > maior) maior = n;
+    }
+    const usados = new Set(db.produtos.map(p => p.codigo));
+    let n = maior + 1;
+    let cod = `${pre}-${String(n).padStart(3, '0')}`;
+    while (usados.has(cod)) cod = `${pre}-${String(++n).padStart(3, '0')}`;
+    return cod;
+}
+
 function lerProdutos() {
     return readJSON(PRODUTOS_FILE, {proximo_id: 1, produtos: []});
 }
@@ -44,10 +90,68 @@ router.get('/catalogo', (req, res) => {
             if (!agrupado[cat]) agrupado[cat] = [];
             agrupado[cat].push(p);
         });
+        // Ordem manual (arrastada pelo admin) manda; quem ainda não tem `ordem`
+        // cai depois, em ordem de código — assim nada "pula" antes da 1ª arrastada.
         Object.values(agrupado).forEach(lista =>
-            lista.sort((a, b) => (a.codigo || '').localeCompare(b.codigo || ''))
+            lista.sort((a, b) => {
+                const oa = a.ordem, ob = b.ordem;
+                if (oa != null && ob != null && oa !== ob) return oa - ob;
+                if (oa != null && ob == null) return -1;
+                if (oa == null && ob != null) return 1;
+                return (a.codigo || '').localeCompare(b.codigo || '');
+            })
         );
         res.json({success: true, data: agrupado, total: db.produtos.length});
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// GET /api/catalogo/proximo-codigo?categoria=INSUMOS — sugere o próximo código
+// da categoria (prefixo + sequencial). Usado pelo modal de novo produto.
+router.get('/proximo-codigo', (req, res) => {
+    try {
+        const db = lerProdutos();
+        const categoria = (req.query.categoria || '').trim();
+        const codigo = proximoCodigo(db, categoria);
+        res.json({
+            success: true,
+            codigo,                                  // null se a categoria é nova
+            prefixo: prefixoDaCategoria(db, categoria),
+        });
+    } catch (err) {
+        res.status(500).json({success: false, error: err.message});
+    }
+});
+
+// PUT /api/catalogo/ordem — salva a ordem de exibição (arrasta-e-solta).
+// Só admin. Recebe { ids: [12, 7, 30, ...] } na ordem desejada; grava `ordem`
+// sequencial nesses produtos. NÃO toca em código algum.
+router.put('/ordem', (req, res) => {
+    try {
+        if (!req.permissoes?.admin) {
+            return res.status(403).json({success: false, error: 'Apenas administradores podem reordenar o catálogo'});
+        }
+        const ids = Array.isArray(req.body.ids) ? req.body.ids.map(Number) : null;
+        if (!ids || !ids.length) {
+            return res.status(400).json({success: false, error: 'Envie a lista de ids na nova ordem'});
+        }
+
+        const db = lerProdutos();
+        const porId = new Map(db.produtos.map(p => [p.id, p]));
+        // A listagem ordena DENTRO de cada categoria, então 1..N por lista basta —
+        // não há risco de embaralhar as outras categorias.
+        let n = 0, aplicados = 0;
+        for (const id of ids) {
+            const p = porId.get(id);
+            if (!p) continue;
+            p.ordem = ++n;
+            aplicados++;
+        }
+        if (!aplicados) return res.status(404).json({success: false, error: 'Nenhum produto encontrado'});
+
+        salvarProdutos(db);
+        res.json({success: true, total: aplicados});
     } catch (err) {
         res.status(500).json({success: false, error: err.message});
     }
@@ -59,9 +163,22 @@ router.get('/catalogo', (req, res) => {
 router.post('/item', (req, res) => {
     try {
         const db = lerProdutos();
-        const codigo = (req.body.codigo || '').trim();
+        const categoria = (req.body.categoria || '').trim();
 
-        if (codigo && db.produtos.find(p => p.codigo === codigo)) {
+        // Código em branco → gera sequencial a partir do prefixo da categoria
+        // (INSUMOS → INS-033). Se a categoria é nova, não há prefixo: exige o código.
+        let codigo = (req.body.codigo || '').trim();
+        if (!codigo) {
+            codigo = proximoCodigo(db, categoria) || '';
+            if (!codigo) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Categoria nova ainda não tem prefixo — informe o código do primeiro produto (ex.: XYZ-001)'
+                });
+            }
+        }
+
+        if (db.produtos.find(p => p.codigo === codigo)) {
             return res.status(400).json({success: false, error: `Código ${codigo} já existe`});
         }
 
@@ -69,13 +186,15 @@ router.post('/item', (req, res) => {
             id: db.proximo_id++,
             codigo,
             nome: (req.body.nome || '').trim(),
-            categoria: (req.body.categoria || '').trim() || categoriaDoCodigo(codigo),
+            categoria: categoria || categoriaDoCodigo(codigo),
             preco: parseFloat(req.body.preco) || 0,
             unidade: (req.body.unidade || 'UN').trim(),
             fator: Math.max(1, parseInt(req.body.fator) || 1),
             observacoes: (req.body.observacoes || '').trim(),
             video_id: (req.body.video_id || '').trim(),
-            data_cadastro: new Date().toISOString().split('T')[0]
+            data_cadastro: new Date().toISOString().split('T')[0],
+            // Nasce no fim da categoria; o admin arrasta para o lugar certo depois.
+            ordem: db.produtos.reduce((m, p) => Math.max(m, p.ordem || 0), 0) + 1
         };
 
         db.produtos.push(novo);
@@ -96,21 +215,26 @@ router.put('/item/:id', (req, res) => {
 
         const atual = db.produtos[idx];
 
-        // Se mudou o código, garante que não duplica outro
-        const novoCodigo = req.body.codigo !== undefined ? req.body.codigo.trim() : atual.codigo;
-        if (novoCodigo !== atual.codigo && db.produtos.find(p => p.codigo === novoCodigo && p.id !== id)) {
-            return res.status(400).json({success: false, error: `Código ${novoCodigo} já existe`});
+        // CÓDIGO É IMUTÁVEL. Ele identifica o produto em pedidos, contagens,
+        // movimentos, no nome do arquivo de imagem e nos QR já impressos nas
+        // caixas — renomear desconectaria o histórico silenciosamente.
+        // Tentativa de mudar é rejeitada (não ignorada, pra ninguém achar que salvou).
+        if (req.body.codigo !== undefined && String(req.body.codigo).trim() !== atual.codigo) {
+            return res.status(400).json({
+                success: false,
+                error: 'O código do produto não pode ser alterado — ele liga o produto ao histórico de pedidos, contagens e às etiquetas QR já impressas.'
+            });
         }
 
         db.produtos[idx] = {
             ...atual,
-            codigo: novoCodigo,
+            codigo: atual.codigo,
             nome: req.body.nome !== undefined ? req.body.nome.trim() : atual.nome,
             // Categoria explícita (select) tem prioridade; senão MANTÉM a atual
             // (não reseta pelo código — era o bug que jogava o produto de volta).
             categoria: (req.body.categoria !== undefined && String(req.body.categoria).trim())
                 ? String(req.body.categoria).trim()
-                : (atual.categoria || categoriaDoCodigo(novoCodigo)),
+                : (atual.categoria || categoriaDoCodigo(atual.codigo)),
             preco: req.body.preco !== undefined ? (parseFloat(req.body.preco) || 0) : atual.preco,
             unidade: req.body.unidade !== undefined ? req.body.unidade.trim() : atual.unidade,
             fator: req.body.fator !== undefined ? Math.max(1, parseInt(req.body.fator) || 1) : (atual.fator || 1),

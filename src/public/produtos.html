@@ -11,8 +11,25 @@
     <link rel="stylesheet" href="/public/css/app.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
     <script src="/public/js/alerts.js?v=20260729"></script>
     <style>
+        /* Arrasta-e-solta da ordem de exibição (admin) */
+        .drag-handle {
+            cursor: grab; color: #555; display: inline-flex; align-items: center;
+            padding: 2px; touch-action: none;
+        }
+        .drag-handle:hover { color: #fbbf24; }
+        .drag-handle i { width: 15px; height: 15px; }
+        .row-ghost { opacity: .35; background: #1d1d22 !important; }
+        .row-chosen { background: #1a1a1f !important; }
+        .ordem-aviso {
+            display: none; align-items: center; gap: 7px; background: rgba(251,191,36,.1);
+            border: 1px solid rgba(251,191,36,.3); color: #fbbf24; border-radius: 8px;
+            padding: 8px 12px; font-size: 12px; font-weight: 600; margin-bottom: 12px;
+        }
+        .ordem-aviso.show { display: flex; }
+        .ordem-aviso i { width: 15px; height: 15px; }
         body {
             overflow: auto;
         }
@@ -429,6 +446,11 @@
         <div class="stats" id="stats"></div>
     </div>
 
+    <div class="ordem-aviso" id="ordemAviso">
+        <i data-lucide="info"></i>
+        <span id="ordemAvisoTxt"></span>
+    </div>
+
     <div id="tabelaContainer"></div>
 
     <div class="modal-overlay" id="modalNovo">
@@ -437,8 +459,9 @@
             <input type="hidden" id="modalEditId" value="">
             <div class="modal-field">
                 <label>Código</label>
-                <input type="text" class="modal-input" id="modalCodigo" placeholder="Ex: MFSS-006"
+                <input type="text" class="modal-input" id="modalCodigo" placeholder="Escolha a categoria..."
                        style="font-family: var(--mono);">
+                <div id="modalCodigoHint" style="font-size:11px;color:#777;margin-top:5px;line-height:1.5;"></div>
             </div>
             <div class="modal-field">
                 <label>Categoria</label>
@@ -480,8 +503,14 @@
 <script>
     let todosProdutos = [];
     let categorias = [];
+    let IS_ADMIN = false;          // só admin reordena o catálogo
+    let _sortables = [];
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const me = await fetch('/api/auth/me').then(r => r.json());
+            IS_ADMIN = !!(me.admin ?? me.data?.admin);
+        } catch { IS_ADMIN = false; }
         carregarDados();
     });
 
@@ -560,7 +589,26 @@
             agrupado[cat].push(p);
         });
 
+        // Arrastar só faz sentido com a categoria inteira à vista: com busca ativa
+        // a lista é parcial e gravar a ordem bagunçaria os itens escondidos.
+        const buscando = !!document.getElementById('searchBox').value.trim();
+        const podeArrastar = IS_ADMIN && !buscando;
+        const nCols = podeArrastar ? 8 : 7;
+
+        const aviso = document.getElementById('ordemAviso');
+        const avisoTxt = document.getElementById('ordemAvisoTxt');
+        if (IS_ADMIN && buscando) {
+            avisoTxt.textContent = 'Limpe a busca para reordenar os produtos arrastando.';
+            aviso.classList.add('show');
+        } else if (podeArrastar) {
+            avisoTxt.textContent = 'Arraste pela alça ⠿ para reordenar os produtos dentro da categoria. O código não muda.';
+            aviso.classList.add('show');
+        } else {
+            aviso.classList.remove('show');
+        }
+
         let html = `<table class="equip-table"><thead><tr>
+        ${podeArrastar ? '<th style="width:28px;"></th>' : ''}
         <th style="width:50px;text-align:center;">IMG</th>
         <th style="width:110px;">CÓDIGO</th>
         <th>NOME</th>
@@ -568,11 +616,11 @@
         <th style="width:50px;text-align:center;">UN</th>
         <th style="width:180px;">OBS</th>
         <th style="width:110px;text-align:right;">AÇÕES</th>
-    </tr></thead><tbody>`;
+    </tr></thead>`;
 
         Object.keys(agrupado).sort().forEach(cat => {
             const itens = agrupado[cat];
-            html += `<tr class="cat-row"><td colspan="7">
+            html += `<tbody><tr class="cat-row"><td colspan="${nCols}">
                 ${esc(cat)}<span class="cat-count">${itens.length} produtos</span>
                 <button class="cat-rename-btn" onclick="renomearCategoria('${esc(cat)}')" title="Renomear categoria">
                     <i data-lucide="pencil"></i>
@@ -580,7 +628,8 @@
                 <button class="cat-rename-btn" onclick="excluirCategoria('${esc(cat)}')" title="Excluir categoria">
                     <i data-lucide="trash-2"></i>
                 </button>
-            </td></tr>`;
+            </td></tr></tbody>`;
+            html += `<tbody class="cat-body" data-cat="${esc(cat)}">`;
 
             itens.forEach(p => {
                 // cache-bust por versão: muda apenas quando a imagem é trocada
@@ -589,7 +638,10 @@
                     ? `<img src="/data/produtos/${esc(p.imagem)}?v=${v}" style="width:36px;height:36px;object-fit:contain;border-radius:4px;background:#1a1a1e;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #555;display:none;align-items:center;justify-content:center;color:#555;font-size:10px;">?</div>`
                     : `<div style="width:36px;height:36px;background:#1a1a1e;border-radius:4px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;color:#444;"><i data-lucide="image"></i></div>`;
 
-                html += `<tr>
+                html += `<tr data-id="${p.id}">
+                ${podeArrastar ? `<td style="text-align:center;padding:6px 2px;">
+                    <span class="drag-handle" title="Arraste para reordenar"><i data-lucide="grip-vertical"></i></span>
+                </td>` : ''}
                 <td style="text-align:center;padding:6px;">
                     <label style="cursor:pointer;" title="Trocar imagem">
                         ${imgTag}
@@ -611,11 +663,52 @@
                 </td>
             </tr>`;
             });
+            html += '</tbody>';
         });
 
-        html += '</tbody></table>';
+        html += '</table>';
         container.innerHTML = html;
         lucide.createIcons();
+        if (podeArrastar) initSortables();
+    }
+
+    // Arrasta-e-solta por categoria — grava só o campo `ordem` (admin)
+    function initSortables() {
+        _sortables.forEach(s => { try { s.destroy(); } catch {} });
+        _sortables = [];
+        document.querySelectorAll('tbody.cat-body').forEach(tbody => {
+            _sortables.push(new Sortable(tbody, {
+                animation: 180,
+                handle: '.drag-handle',
+                ghostClass: 'row-ghost',
+                chosenClass: 'row-chosen',
+                forceFallback: true,
+                fallbackTolerance: 5,
+                onEnd: () => salvarOrdem(tbody),
+            }));
+        });
+    }
+
+    async function salvarOrdem(tbody) {
+        const ids = Array.from(tbody.querySelectorAll('tr[data-id]')).map(tr => parseInt(tr.dataset.id));
+        if (!ids.length) return;
+        try {
+            const json = await fetch('/api/catalogo/ordem', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ids})
+            }).then(r => r.json());
+            if (!json.success) throw new Error(json.error);
+            // Atualiza a ordem em memória para a próxima renderização não "pular"
+            ids.forEach((id, i) => {
+                const p = todosProdutos.find(x => x.id === id);
+                if (p) p.ordem = i + 1;
+            });
+            MF.toast('Ordem salva');
+        } catch (err) {
+            MF.alert('Erro ao salvar a ordem: ' + err.message);
+            recarregarProdutos();
+        }
     }
 
     function fmtPreco(v) {
@@ -641,9 +734,53 @@
         document.getElementById('modalUnidade').value = 'UN';
         document.getElementById('modalFator').value = '1';
         document.getElementById('modalObs').value = '';
+        // Código é gerado pela categoria; editável só se a categoria for nova
+        travarCodigo(false);
         preencherSelectCategoria(document.getElementById('filterCategoria').value || '');
+        sugerirCodigo();
         document.getElementById('modalNovo').classList.add('active');
-        document.getElementById('modalCodigo').focus();
+        document.getElementById('modalNome').focus();
+    }
+
+    // Código é a identidade do produto: liga aos pedidos, contagens, movimentos,
+    // à imagem e aos QR já impressos nas caixas. Por isso não se edita.
+    function travarCodigo(travado) {
+        const campo = document.getElementById('modalCodigo');
+        campo.readOnly = travado;
+        campo.style.opacity = travado ? '.6' : '1';
+        campo.style.cursor = travado ? 'not-allowed' : 'text';
+        document.getElementById('modalCodigoHint').innerHTML = travado
+            ? '<i data-lucide="lock" style="width:11px;height:11px;vertical-align:-1px;"></i> O código não muda — ele liga o produto ao histórico e às etiquetas QR já impressas.'
+            : '';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    // Busca o próximo código da categoria escolhida (ex.: INSUMOS → INS-033)
+    async function sugerirCodigo() {
+        if (document.getElementById('modalEditId').value) return; // edição: não mexe
+        const cat = categoriaEscolhida();
+        const campo = document.getElementById('modalCodigo');
+        const hint = document.getElementById('modalCodigoHint');
+        if (!cat) { campo.value = ''; campo.readOnly = false; hint.textContent = ''; return; }
+        try {
+            const json = await fetch('/api/catalogo/proximo-codigo?categoria=' + encodeURIComponent(cat))
+                .then(r => r.json());
+            if (json.codigo) {
+                campo.value = json.codigo;
+                campo.readOnly = true;
+                campo.style.opacity = '.75';
+                hint.textContent = `Gerado automaticamente a partir de ${json.prefixo}-`;
+            } else {
+                // Categoria nova: ainda não há prefixo, o usuário define o 1º código
+                campo.value = '';
+                campo.readOnly = false;
+                campo.style.opacity = '1';
+                hint.textContent = 'Categoria nova — defina o código do primeiro produto (ex.: XYZ-001).';
+            }
+        } catch {
+            campo.readOnly = false;
+            hint.textContent = '';
+        }
     }
 
     function editarProduto(id) {
@@ -652,6 +789,7 @@
         document.getElementById('modalTitulo').textContent = 'Editar Produto';
         document.getElementById('modalEditId').value = id;
         document.getElementById('modalCodigo').value = p.codigo || '';
+        travarCodigo(true);
         document.getElementById('modalNome').value = p.nome || '';
         document.getElementById('modalPreco').value = p.preco || 0;
         document.getElementById('modalUnidade').value = p.unidade || 'UN';
@@ -669,7 +807,6 @@
     async function salvarProduto() {
         const editId = document.getElementById('modalEditId').value;
         const dados = {
-            codigo: document.getElementById('modalCodigo').value.trim(),
             nome: document.getElementById('modalNome').value.trim(),
             preco: document.getElementById('modalPreco').value,
             unidade: document.getElementById('modalUnidade').value.trim() || 'UN',
@@ -685,9 +822,13 @@
             MF.alert('Preencha o nome', 'warning', 'Campo obrigatório');
             return;
         }
-        if (!dados.codigo) {
-            MF.alert('Preencha o código', 'warning', 'Campo obrigatório');
-            return;
+        // Só na criação o código viaja — na edição ele é imutável no servidor.
+        if (!editId) {
+            dados.codigo = document.getElementById('modalCodigo').value.trim();
+            if (!dados.codigo) {
+                MF.alert('Preencha o código', 'warning', 'Campo obrigatório');
+                return;
+            }
         }
 
         try {
@@ -777,6 +918,7 @@
         const ehNova = document.getElementById('modalCategoria').value === '__nova__';
         nova.style.display = ehNova ? 'block' : 'none';
         if (ehNova) nova.focus();
+        sugerirCodigo(); // categoria define o prefixo do código
     }
 
     // Retorna a categoria escolhida, ou null se "nova" sem nome
